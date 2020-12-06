@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "scdv"
+version = "0.1.0"
+description = "StarCitizen Data Viewer"
+authors = ["Ventorvar <ventorvar@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+QtPy = "^1.9.0"
+PySide2 = "^5.15.2"
+scdatatools = "^0.1.2"
+Pillow = "^8.0.1"
+qtconsole = "^5.0.1"
+
+
+[tool.poetry.dev-dependencies]
+toml = "^0.10.2"
+briefcase = "^0.3.3"
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.briefcase]
+project_name = "SCDV"
+bundle = "scdatatools.scdv"
+version = "0.1.0"
+url = "https://gitlab.com/scmods/scdv"
+license = "MIT license"
+author = 'Ventorvar'
+author_email = "ventorvar@gmail.com"
+
+[tool.briefcase.app.scdv]
+formal_name = "SCDV"
+description = "Star Citizen Data Viewer"
+icon = "scdv/resources/scdv"
+installer_icon = "scdv/resources/scdv"
+sources = ['scdv']
+requires = [ "-r", "dist/requirements.txt",]
+
+
+[tool.briefcase.app.scdv.macOS]
+requires = []
+
+[tool.briefcase.app.scdv.linux]
+requires = []
+system_requires = []
+
+[tool.briefcase.app.scdv.windows]
+requires = []
+
+# Mobile deployments
+[tool.briefcase.app.scdv.iOS]
+requires = []
+
+[tool.briefcase.app.scdv.android]
+requires = []

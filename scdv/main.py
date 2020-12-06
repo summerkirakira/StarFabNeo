@@ -1,0 +1,57 @@
+import sys
+import ctypes
+import asyncio
+from qtpy.QtWidgets import QApplication
+from qtpy.QtCore import Qt
+
+import qtmodern.styles
+
+from .app import MainWindow
+
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+# Back up the reference to the exceptionhook
+sys._excepthook = sys.excepthook
+
+
+def exception_hook(exctype, value, traceback):
+    # Catch PySide2 exceptions
+    # https://stackoverflow.com/questions/43039048/pyqt5-fails-with-cryptic-message
+
+    # Print the error and traceback
+    print(exctype, value, traceback)
+    # Call the normal Exception hook after
+    sys._excepthook(exctype, value, traceback)
+    sys.exit(1)
+
+
+sys.excepthook = exception_hook
+
+
+def main():
+    if sys.platform == 'win32':
+        appid = u'scdatatools.scdv'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appid)
+
+    app = QApplication(sys.argv)
+    app.setOrganizationName('scdatatools')
+    app.setApplicationDisplayName('SCDV')
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)
+
+    try:
+        qtmodern.styles.dark(app)
+        mw = MainWindow()
+        mw.show()
+
+        sys.exit(app.exec_())
+    except SystemExit:
+        app.exit(0)
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == '__main__':
+    main()
