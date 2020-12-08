@@ -4,14 +4,14 @@ import requests
 import subprocess
 from pathlib import Path
 
-ORIGINS_TOKEN = os.environ.get('ORIGINS_TOKEN')
+SCDV_TOKEN = os.environ.get('SCDV_TOKEN')
 
-API_URL = f'https://gitlab.com/api/v4/projects/22161441/packages/generic'
+API_URL = f'https://gitlab.com/api/v4/projects/22934039/packages/generic'
 
 
 def run():
-    if not ORIGINS_TOKEN:
-        print('Missing origins token, set ORIGINS_TOKEN')
+    if not SCDV_TOKEN:
+        print('Missing scdv token, set SCDV_TOKEN')
         sys.exit(1)
 
     release = Path(sys.argv[1])
@@ -23,7 +23,7 @@ def run():
 
     input(f'Uploading {release.name} as {version}. Press enter to continue.')
     print(subprocess.check_output(
-        f'curl --header "PRIVATE-TOKEN: {ORIGINS_TOKEN}" --upload-file "{release.absolute()}" '
+        f'curl --header "PRIVATE-TOKEN: {SCDV_TOKEN}" --upload-file "{release.absolute()}" '
         f'{API_URL}/{name}/{version}/{release.name}'
     ))
 

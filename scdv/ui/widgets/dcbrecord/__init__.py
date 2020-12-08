@@ -194,7 +194,7 @@ class DCBRecordItemView(qtw.QWidget):
         l.setReadOnly(True)
         self.record_info.addRow('Path', l)
 
-        b = qtw.QPushButton('View XML')
+        b = qtw.QPushButton('View JSON')
         b.clicked.connect(self._on_view_xml)
         self.record_actions.insertWidget(self.record_actions.count() - 1, b)
 

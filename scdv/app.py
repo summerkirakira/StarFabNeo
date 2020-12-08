@@ -8,6 +8,8 @@ from qtpy.QtWidgets import QApplication, QMainWindow
 
 import qtmodern.styles
 import qtmodern.windows
+import scdv.ui.widgets.dock_widgets.file_view
+import scdv.ui.widgets.dock_widgets.sc_archive
 from scdatatools.sc import StarCitizen
 
 from .ui import qtg, qtw, qtc
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow):
 
         uic.loadUi(str(RES_PATH / 'ui' / 'mainwindow.ui'), self)  # Load the ui into self
         self.setWindowTitle('SCDV')
+        self.setWindowIcon(qtg.QIcon(str(RES_PATH / 'scdv.png')))
 
         self.task_started.connect(self._handle_task_started)
         self.update_status_progress.connect(self._handle_update_statusbar_progress)
@@ -48,6 +51,7 @@ class MainWindow(QMainWindow):
         self.actionDatacore.triggered.connect(self.show_dcb_view)
         self.actionLocal_Files.triggered.connect(self.show_local_files)
         self.actionConsole.triggered.connect(self.show_console)
+        self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmods/scdv'))
 
         self.status_bar_progress = qtw.QProgressBar(self)
         self.statusBar.addPermanentWidget(self.status_bar_progress)
@@ -66,9 +70,6 @@ class MainWindow(QMainWindow):
         self.sc_tree_model = None
         self.sc = None
 
-        self.sc_thread = qtc.QThread()
-        self.sc_thread.start()
-
         self.dock_widgets = {}
         self.setup_dock_widgets()
         self._progress_tasks = {}
@@ -77,20 +78,20 @@ class MainWindow(QMainWindow):
             self.open_sc_dir(os.environ['SCDV_SC_PATH'])
 
     def setup_dock_widgets(self):
-        dv = dock_widgets.DCBViewDock(self)
+        dv = scdv.ui.widgets.dock_widgets.sc_archive.DCBViewDock(self)
         dv.setObjectName('dcb_view')
         dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
         self.dock_widgets['dcb_view'] = dv
         self.addDockWidget(qtc.Qt.LeftDockWidgetArea, dv)
 
-        pv = dock_widgets.P4KViewDock(self)
+        pv = scdv.ui.widgets.dock_widgets.sc_archive.P4KViewDock(self)
         pv.setObjectName('p4k_view')
         pv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
         self.dock_widgets['p4k_view'] = pv
         self.addDockWidget(qtc.Qt.LeftDockWidgetArea, pv)
         self.resizeDocks([pv], [950], qtc.Qt.Horizontal)
 
-        fv = dock_widgets.FileViewDock(self)
+        fv = scdv.ui.widgets.dock_widgets.file_view.FileViewDock(self)
         fv.setObjectName('file_view')
         fv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
         self.dock_widgets['file_view'] = fv
