@@ -237,6 +237,8 @@ class MainWindow(QMainWindow):
     def handle_file_open(self):
         dlg = qtw.QFileDialog(self)
         dlg.setFileMode(qtw.QFileDialog.DirectoryOnly)
+        dlg.setDirectory(qtc.QDir.homePath())
+        dlg.setWindowTitle("Select Star Citizen Installation folder (e.g. LIVE)")
 
         if dlg.exec_():
             scdir = Path(dlg.selectedFiles()[0]).absolute()

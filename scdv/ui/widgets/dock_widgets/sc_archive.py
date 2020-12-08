@@ -378,7 +378,7 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
             loader.signals.finished.connect(self._finished_loading)
             self.sc_tree_thread_pool.start(loader)
 
-    def _handle_item_action(self, item):
+    def _handle_item_action(self, item, model, index):
         if isinstance(item, DCBViewNode) and item.record is not None:
             widget = DCBRecordItemView(item, self.scdv)
             self.scdv.add_tab_widget(item.path, widget, item.name, tooltip=item.path.as_posix())

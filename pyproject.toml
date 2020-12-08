@@ -23,7 +23,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.briefcase]
 project_name = "SCDV"
 bundle = "scdatatools.scdv"
-version = "0.1.0"
+version = "0.2.0"
 url = "https://gitlab.com/scmods/scdv"
 license = "MIT license"
 author = 'Ventorvar'

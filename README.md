@@ -4,6 +4,7 @@ A UI on top of `scdatatools`.
 
 ### NOTE: scdv is considered pre-alpha. It's more of a proof of concept than a fully functional tool
 
+If you have any problems or suggestions, create an [issue](https://gitlab.com/scmods/scdv/-/issues/new)!
 
 # Installation
 
