@@ -45,8 +45,8 @@ class P4KFileLoader(qtc.QRunnable):
             if (time.time() - t) > 0.5:
                 self.scdv.update_status_progress.emit('load_p4k', i, 0, 0, '')
                 t = time.time()
-            # if i > 10000:
-            #     break
+            if i > 10000:
+                break
             path = Path(f.filename)
             item = self._node_cls(path, info=f, parent_archive=p4k)
             tmp.setdefault(path.parent.as_posix(), []).append(item)
@@ -119,11 +119,11 @@ class SCFileViewNode(qtg.QStandardItem):
     def contents(self):
         try:
             if self.path.suffix == '.xml':
-                with self.parent_archive.open(str(self.path)) as f:
+                with self.parent_archive.open(self.path.as_posix()) as f:
                     if f.read(7) == b'CryXmlB':
                         c = self._read_cryxml().encode('utf-8')
             else:
-                with self.parent_archive.open(str(self.path), 'r') as f:
+                with self.parent_archive.open(self.path.as_posix(), 'r') as f:
                     c = f.read()
         except Exception as e:
             c = f'Failed to read {self.name}: {e}'.encode('utf-8')
@@ -146,7 +146,7 @@ class SCFileViewNode(qtg.QStandardItem):
         return ''
 
     def extract_to(self, extract_path):
-        self.parent_archive.extract(str(self.path), extract_path)
+        self.parent_archive.extract(str(self.path.as_posix()), extract_path)
 
     def __repr__(self):
         return f'<SCFileViewNode "{self.path.as_posix()}" archive:{self.parent_archive}>'
