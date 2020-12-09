@@ -12,7 +12,7 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 
 ### View and Convert textures (dds)
 
-To view or convert textutre (.dds*) files, SCDV relies on [compressonator](https://gpuopen.com/compressonator/). Ensure that the `compressonatorcli` is installed and in your system `PATH`.
+To view or convert textures (.dds*) files, SCDV relies on [compressonator](https://gpuopen.com/compressonator/). Ensure that the `compressonatorcli` is installed and in your system `PATH`.
 
 ## Release
 
