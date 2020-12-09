@@ -72,6 +72,7 @@ class ImageConverter:
         """
         self._check_bin()
 
+        # TODO: throw up a loading dialog?
         if isinstance(outfile, str):
             outfile = Path(outfile)
         if outfile.exists():
@@ -87,17 +88,18 @@ class ImageConverter:
             tmpin = tempfile.NamedTemporaryFile(suffix=Path(infile.name).suffix, delete=False)
             tmpin.write(infile.read())
 
-        # Make sure we're preventing access to the in file
-        tmpin.close()
-        # TODO: logging...
-        cmd = f'{self.compressonatorcli} {tmpin.name} {outfile.absolute()}'
         try:
-            r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
-        except subprocess.CalledProcessError as e:
-            return False, e.output.decode('utf-8')
-
-        if _delete:
-            os.unlink(tmpin.name)
+            # Make sure we're preventing access to the in file
+            tmpin.close()
+            # TODO: logging...
+            cmd = f'{self.compressonatorcli} {tmpin.name} {outfile.absolute()}'
+            try:
+                r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+            except subprocess.CalledProcessError as e:
+                return False, e.output.decode('utf-8')
+        finally:
+            if _delete:
+                os.unlink(tmpin.name)
 
         return True, r.stdout.decode('utf-8')
 

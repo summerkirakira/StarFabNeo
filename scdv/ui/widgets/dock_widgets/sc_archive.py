@@ -66,6 +66,7 @@ class DCBLoader(P4KFileLoader):
     @Slot()
     def run(self):
         self.scdv.task_started.emit('load_dcb', 'Opening Datacore', 0, 1)
+        # TODO: Handle failing to open the datacore
         datacore = self.scdv.sc.datacore
 
         tmp = {}
@@ -118,11 +119,11 @@ class SCFileViewNode(qtg.QStandardItem):
     def contents(self):
         try:
             if self.path.suffix == '.xml':
-                with self.parent_archive.open(self.path.as_posix()) as f:
+                with self.parent_archive.open(str(self.path)) as f:
                     if f.read(7) == b'CryXmlB':
                         c = self._read_cryxml().encode('utf-8')
             else:
-                with self.parent_archive.open(self.path.as_posix(), 'r') as f:
+                with self.parent_archive.open(str(self.path), 'r') as f:
                     c = f.read()
         except Exception as e:
             c = f'Failed to read {self.name}: {e}'.encode('utf-8')
@@ -145,7 +146,7 @@ class SCFileViewNode(qtg.QStandardItem):
         return ''
 
     def extract_to(self, extract_path):
-        self.parent_archive.extract(self.path.as_posix(), extract_path)
+        self.parent_archive.extract(str(self.path), extract_path)
 
     def __repr__(self):
         return f'<SCFileViewNode "{self.path.as_posix()}" archive:{self.parent_archive}>'
@@ -289,6 +290,7 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
             return
 
         if action == 'extract':
+            # TODO: add extraction dialog with options, like auto_convert_cryxmlb and auto unsplit dds
             edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Extract to...')
             if edir:
                 total = len(selected_items)

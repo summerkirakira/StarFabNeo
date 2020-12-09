@@ -2,6 +2,7 @@
  Based on https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py
 """
 
+import sys
 from io import BytesIO
 from pathlib import Path
 
@@ -10,9 +11,15 @@ from qtpy.QtCore import Slot, Signal
 
 from scdv.ui import qtc, qtg, qtw
 from scdv.utils import image_converter
+from scdv.ui.utils import ScrollMessageBox
 
 Image.init()
 SUPPORTED_IMG_FORMATS = list(Image.EXTENSION.keys())
+DDS_CONV_FALLBACK = 'png'
+DDS_CONV_FORMAT = {
+    'linux': 'png',
+    'win32': 'tif'
+}
 
 
 class QImageViewer(qtw.QGraphicsView):
@@ -48,6 +55,12 @@ class QImageViewer(qtw.QGraphicsView):
         self.setFrameShape(qtw.QFrame.NoFrame)
         self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
         self.setBackgroundBrush(qtg.QBrush(qtg.QColor(30, 30, 30)))
+        self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._handle_ctx_menu)
+
+        self.ctx_menu = qtw.QMenu()
+        self.act_save_as = self.ctx_menu.addAction('Save As...')
+        self.act_save_as.triggered.connect(self._handle_save_as)
 
         # Store a local handle to the scene's current image pixmap.
         self.image = qtw.QGraphicsPixmapItem()
@@ -62,6 +75,23 @@ class QImageViewer(qtw.QGraphicsView):
 
         self._empty = True
         self._zoom = 0
+
+    @Slot(qtc.QPointF)
+    def _handle_ctx_menu(self, pos):
+        self.act_save_as.setEnabled(self.hasImage())
+        self.ctx_menu.exec_(self.mapToGlobal(pos))
+
+    @Slot()
+    def _handle_save_as(self):
+        if not self.hasImage():
+            return
+        img_formats = qtg.QImageReader.supportedImageFormats()
+        text_filter = "Images ({})".format(" ".join([f"*.{_.data().decode('utf-8')}" for _ in img_formats]))
+        save_path, _ = qtw.QFileDialog.getSaveFileName(self, 'Save Image As...', filter=text_filter)
+        if save_path:
+            # TODO: handle setting quality
+            # TODO: handle confirm overwrite
+            self.image.pixmap().save(save_path)
 
     def hasImage(self):
         """ Returns whether or not the scene contains an image pixmap.
@@ -149,7 +179,7 @@ class QImageViewer(qtw.QGraphicsView):
                 img = Image.open(fp)
                 image = ImageQt.ImageQt(img)
         except Exception as e:
-            qtw.QMessageBox.information(self, "Image Viewer", f"Cannot load {fp}: {e}")
+            ScrollMessageBox.critical(self, "Image Viewer", f"Cannot load {fp}: {e}")
             return False
         self.setImage(image)
         return True
@@ -170,27 +200,35 @@ class DDSImageViewer(qtw.QWidget):
         if self.dds_files:
             self.tabs = qtw.QTabWidget()
             hdr = self.dds_header.contents()
-            _loaded_tab = False
+            _loading_errors = []
             for dds in dds_files:
                 image = QImageViewer()
+                # TODO: this could be made async
                 try:
-                    data = BytesIO(image_converter.convert_buffer(hdr.getvalue() + dds.contents().getvalue(), 'dds'))
+                    data = BytesIO(image_converter.convert_buffer(hdr.getvalue() + dds.contents().getvalue(),
+                                                                  'dds',
+                                                                  DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
                     if image.load_from_file(data):
                         self.tabs.addTab(image, dds.path.name)
-                        _loaded_tab = True
-                except RuntimeError:
-                    pass  # try the next one...
-            if not _loaded_tab:
-                raise ValueError('Unsupported dds format') # non of them loaded
+                except RuntimeError as e:
+                    _loading_errors.append(f"Error parsing {dds.path}. {e}")
+            if _loading_errors:
+                ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
+                                 '\n\n'.join(_loading_errors), parent=self)
+                raise ValueError('Unsupported dds format')  # non of them loaded
             layout.addWidget(self.tabs)
         else:
             image = QImageViewer()
             try:
-                data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue(), 'dds'))
+                data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue(),
+                                                              'dds',
+                                                              DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
                 if not image.load_from_file(data):
                     raise RuntimeError
-            except RuntimeError:
-                raise ValueError('Unsupported dds format')
+            except RuntimeError as e:
+                ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
+                                 f"Error parsing {self.dds_header.path}. {e}", parent=self)
+                raise
             layout.addWidget(image)
 
         self.setLayout(layout)
