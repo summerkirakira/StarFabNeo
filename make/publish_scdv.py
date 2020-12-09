@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import requests
 import subprocess
 from pathlib import Path
@@ -19,12 +20,17 @@ def run():
         print('Invalid release file: {release}')
         sys.exit()
 
-    name, version = release.stem.split('-')
+    curl = shutil.which('curl')
+    if not curl:
+        raise RuntimeError('Could not find curl')
+
+    name, version, *_ = release.stem.split('-')
 
     input(f'Uploading {release.name} as {version}. Press enter to continue.')
     print(subprocess.check_output(
-        f'curl --header "PRIVATE-TOKEN: {SCDV_TOKEN}" --upload-file "{release.absolute()}" '
-        f'{API_URL}/{name}/{version}/{release.name}'
+        f'{curl} --header "PRIVATE-TOKEN: {SCDV_TOKEN}" --upload-file "{release.absolute()}" '
+        f'{API_URL}/{name}/{version}/{release.name}',
+        shell=True
     ))
 
 
