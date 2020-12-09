@@ -1,4 +1,5 @@
 import io
+import os
 import time
 from functools import cached_property, partial
 from pathlib import Path
@@ -40,13 +41,20 @@ class P4KFileLoader(qtc.QRunnable):
 
         filelist = p4k.filelist.copy()
         self.scdv.p4k_opened.emit()
+        try:
+            p4k_limit = int(os.environ.get('SCDV_P4K_LIMIT', -1))
+        except ValueError:
+            p4k_limit = -1
 
         for i, f in enumerate(filelist):
             if (time.time() - t) > 0.5:
                 self.scdv.update_status_progress.emit('load_p4k', i, 0, 0, '')
                 t = time.time()
-            if i > 10000:
+
+            # This is for dev/debugging purposes
+            if p4k_limit >= 0 and i > p4k_limit:
                 break
+
             path = Path(f.filename)
             item = self._node_cls(path, info=f, parent_archive=p4k)
             tmp.setdefault(path.parent.as_posix(), []).append(item)

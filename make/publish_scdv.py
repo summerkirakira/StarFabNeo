@@ -28,7 +28,7 @@ def run():
 
     input(f'Uploading {release.name} as {version}. Press enter to continue.')
     print(subprocess.check_output(
-        f'{curl} --header "PRIVATE-TOKEN: {SCDV_TOKEN}" --upload-file "{release.absolute()}" '
+        f'curl --header "PRIVATE-TOKEN: {SCDV_TOKEN}" --upload-file "{release.absolute()}" '
         f'{API_URL}/{name}/{version}/{release.name}',
         shell=True
     ))
