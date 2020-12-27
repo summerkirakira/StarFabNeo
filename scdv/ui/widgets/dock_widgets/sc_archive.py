@@ -21,10 +21,11 @@ class LoaderSignals(qtc.QObject):
 
 
 class P4KFileLoader(qtc.QRunnable):
-    def __init__(self, scdv, model, *args, **kwargs):
+    def __init__(self, scdv, model, archive, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scdv = scdv
         self.model = model
+        self.archive = archive
         self.signals = LoaderSignals()
         self._node_cls = SCFileViewNode
 
@@ -68,7 +69,7 @@ class P4KFileLoader(qtc.QRunnable):
 
 class DCBLoader(P4KFileLoader):
     def __init__(self, scdv, model, *args, **kwargs):
-        super().__init__(scdv, model, *args, **kwargs)
+        super().__init__(scdv, model, 'datacore', *args, **kwargs)
         self._node_cls = DCBViewNode
 
     @Slot()
@@ -116,22 +117,21 @@ class SCFileViewNode(qtg.QStandardItem):
             else:
                 self.setIcon(icon_provider.icon(icon_provider.Folder))
 
-    def _read_cryxml(self):
+    def _read_cryxml(self, f):
         try:
-            with self.parent_archive.open(self.path.as_posix()) as f:
-                c = pprint_xml_tree(etree_from_cryxml_file(f))
+            c = pprint_xml_tree(etree_from_cryxml_file(f))
         except Exception as e:
             c = f'Failed to convert CryXmlB {self.name}: {e}'
         return c
 
     def contents(self):
         try:
-            if self.path.suffix == '.xml':
-                with self.parent_archive.open(self.path.as_posix()) as f:
-                    if f.read(7) == b'CryXmlB':
-                        c = self._read_cryxml().encode('utf-8')
-            else:
-                with self.parent_archive.open(self.path.as_posix(), 'r') as f:
+            with self.parent_archive.open(self.path.as_posix()) as f:
+                if f.read(7) == b'CryXmlB':
+                    f.seek(0)
+                    c = self._read_cryxml(f).encode('utf-8')
+                else:
+                    f.seek(0)
                     c = f.read()
         except Exception as e:
             c = f'Failed to read {self.name}: {e}'.encode('utf-8')
@@ -221,6 +221,7 @@ class DCBViewNode(qtg.QStandardItem):
         self.guid = info.id.value if info is not None else ''
         self.type = info.type if info is not None else ''
         self.record = info
+        self.contents_mode = 'json'
 
         self.parent_archive = parent_archive
         super().__init__(self.name, *args, **kwargs)
@@ -230,6 +231,10 @@ class DCBViewNode(qtg.QStandardItem):
 
     def contents(self):
         if self.guid is not None:
+            if self.contents_mode == 'xml':
+                return io.BytesIO(
+                    self.parent_archive.dump_record_xml(self.parent_archive.records_by_guid[self.guid]).encode('utf-8')
+                )
             return io.BytesIO(
                 self.parent_archive.dump_record_json(self.parent_archive.records_by_guid[self.guid]).encode('utf-8')
             )
@@ -333,7 +338,7 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         if self.scdv.sc is not None:
             self.show()
             self.sc_tree_model = SCFileViewModel(self.scdv.sc, parent=self)
-            loader = P4KFileLoader(self.scdv, self.sc_tree_model)
+            loader = P4KFileLoader(self.scdv, self.sc_tree_model, 'p4k')
             loader.signals.finished.connect(self._finished_loading)
             self.sc_tree_thread_pool.start(loader)
 

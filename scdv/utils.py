@@ -92,7 +92,7 @@ class ImageConverter:
             # Make sure we're preventing access to the in file
             tmpin.close()
             # TODO: logging...
-            cmd = f'{self.compressonatorcli} {tmpin.name} {outfile.absolute()}'
+            cmd = f'{self.compressonatorcli} -noprogress {tmpin.name} {outfile.absolute()}'
             try:
                 r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
             except subprocess.CalledProcessError as e:

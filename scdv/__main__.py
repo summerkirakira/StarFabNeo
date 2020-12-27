@@ -1,4 +1,3 @@
-from .main import main
-
+from scdv.main import main
 
 main()

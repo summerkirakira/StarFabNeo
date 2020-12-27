@@ -194,41 +194,26 @@ class DDSImageViewer(qtw.QWidget):
         self.dds_files = dds_files
         self.dds_header = [_ for _ in dds_files if _.path.suffix == '.dds'][0]
         self.dds_files.remove(self.dds_header)
+        self.dds_files = sorted(self.dds_files, key=lambda d: d.path.suffix, reverse=True)
 
         layout = qtw.QVBoxLayout()
+        image = QImageViewer()
 
-        if self.dds_files:
-            self.tabs = qtw.QTabWidget()
-            hdr = self.dds_header.contents()
-            _loading_errors = []
-            for dds in dds_files:
-                image = QImageViewer()
-                # TODO: this could be made async
-                try:
-                    data = BytesIO(image_converter.convert_buffer(hdr.getvalue() + dds.contents().getvalue(),
-                                                                  'dds',
-                                                                  DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
-                    if image.load_from_file(data):
-                        self.tabs.addTab(image, dds.path.name)
-                except RuntimeError as e:
-                    _loading_errors.append(f"Error parsing {dds.path}. {e}")
-            if _loading_errors:
-                ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
-                                 '\n\n'.join(_loading_errors), parent=self)
-                raise ValueError('Unsupported dds format')  # non of them loaded
-            layout.addWidget(self.tabs)
-        else:
-            image = QImageViewer()
-            try:
+        try:
+            if self.dds_files:
+                data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue() +
+                                                              self.dds_files[0].contents().getvalue(),
+                                                              'dds',
+                                                              DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
+            else:
                 data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue(),
                                                               'dds',
                                                               DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
-                if not image.load_from_file(data):
-                    raise RuntimeError
-            except RuntimeError as e:
-                ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
-                                 f"Error parsing {self.dds_header.path}. {e}", parent=self)
-                raise
-            layout.addWidget(image)
-
+            if not image.load_from_file(data):
+                raise RuntimeError
+        except RuntimeError as e:
+            ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
+                             f"Error parsing {self.dds_header.path}. {e}", parent=self)
+            raise
+        layout.addWidget(image)
         self.setLayout(layout)

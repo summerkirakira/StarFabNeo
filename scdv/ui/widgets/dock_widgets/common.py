@@ -24,7 +24,6 @@ class SCDVContextMenuManager(qtc.QObject):
         collapse_all.triggered.connect(partial(self.handle_action, 'collapse_all'))
         self._menus = {}
 
-
     @Slot(str)
     def handle_action(self, action):
         self.action_triggered.emit(action)

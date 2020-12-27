@@ -194,8 +194,12 @@ class DCBRecordItemView(qtw.QWidget):
         l.setReadOnly(True)
         self.record_info.addRow('Path', l)
 
-        b = qtw.QPushButton('View JSON')
+        b = qtw.QPushButton('View XML')
         b.clicked.connect(self._on_view_xml)
+        self.record_actions.insertWidget(self.record_actions.count() - 1, b)
+
+        b = qtw.QPushButton('View JSON')
+        b.clicked.connect(self._on_view_json)
         self.record_actions.insertWidget(self.record_actions.count() - 1, b)
 
         self.scrollArea.setWidgetResizable(True)
@@ -204,6 +208,13 @@ class DCBRecordItemView(qtw.QWidget):
         self.record_widget.show()
 
     def _on_view_xml(self):
+        self.record_item.contents_mode = 'xml'
         widget = Editor(self.record_item)
         if widget is not None:
-            self.scdv.add_tab_widget(f'{self.record_item.path}:editor', widget, self.record_item.path.name)
+            self.scdv.add_tab_widget(f'{self.record_item.path}:xml_editor', widget, self.record_item.path.name)
+
+    def _on_view_json(self):
+        self.record_item.contents_mode = 'json'
+        widget = Editor(self.record_item)
+        if widget is not None:
+            self.scdv.add_tab_widget(f'{self.record_item.path}:json_editor', widget, self.record_item.path.name)

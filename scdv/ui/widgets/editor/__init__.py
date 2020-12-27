@@ -6,7 +6,8 @@ from . import embedrc
 from scdv.ui import qtc, qtw, qtg
 
 
-SUPPORTED_EDITOR_FORMATS = ['json', 'cfg', 'ini', 'txt', 'xml', 'log']
+SUPPORTED_EDITOR_FORMATS = ['json', 'cfg', 'ini', 'txt', 'xml', 'log', 'id', 'cdf', 'chrparams',
+                            'dpl', 'eco', 'obj', 'sample', 'opr', 'mtl']
 html = """
 <!DOCTYPE html><html lang="en"><head><title>scdv editor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
