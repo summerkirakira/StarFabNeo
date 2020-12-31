@@ -4,11 +4,13 @@ A UI on top of `scdatatools`.
 
 ### NOTE: scdv is considered pre-alpha. It's more of a proof of concept than a fully functional tool
 
-If you have any problems or suggestions, create an [issue](https://gitlab.com/scmods/scdv/-/issues/new)!
+If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/tools/scdv/-/issues/new)!
+
+![SCDV Screenshot](docs/assets/SCDV_screenshot.png "SCDV Screenshot")
 
 # Installation
 
-Check the [releases](https://gitlab.com/scmods/scdv/-/releases) for pre-built packages.
+Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre-built packages.
 
 ## From source
 
@@ -20,3 +22,10 @@ cd scdv
 poetry install
 poetry run python -m scdv
 ```
+
+![MadeByTheCommunity](docs/assets/MadeByTheCommunity_Black.png "Made By The Community")
+
+This project is not endorsed by or affiliated with the Cloud Imperium or Roberts Space Industries group of companies.
+All game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd..  Star Citizen®,
+Squadron 42®, Roberts Space Industries®, and Cloud Imperium® are registered trademarks of Cloud Imperium Rights LLC.
+All rights reserved.

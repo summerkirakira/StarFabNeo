@@ -11,9 +11,11 @@ from scdatatools.cryxml import pprint_xml_tree, etree_from_cryxml_file
 from scdv.ui.widgets.dcbrecord import DCBRecordItemView
 from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget
 from scdv.utils import show_file_in_filemanager
+from scdv.ui.utils import ScrollMessageBox
 
 SCFILEVIEW_COLUMNS = ['Name', 'Size', 'Kind', 'Date Modified', 'SearchColumn']
 DCBVIEW_COLUMNS = ['Name', 'Type', 'GUID', 'SearchColumn']
+RECORDS_ROOT_PATH = Path('libs/foundry/records')
 
 
 class LoaderSignals(qtc.QObject):
@@ -90,7 +92,7 @@ class DCBLoader(P4KFileLoader):
 
             path = Path(r.filename)
             item = self._node_cls(path, info=r, parent_archive=datacore)
-            tmp.setdefault(path.parent.as_posix(), []).append(item)
+            tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), []).append(item)
 
         for parent_path, rows in tmp.items():
             self.model.appendRowsToPath(parent_path, rows)
@@ -345,17 +347,20 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
     def _on_doubleclick(self, index):
         index = self.proxy_model.mapToSource(index)
         item = self.sc_tree_model.itemFromIndex(index)
-        if item is not None:
-            if '.dds' in item.path.name:
-                parent = self.sc_tree_model.itemForPath(item.path.parent)
-                basename = f'{item.path.name.split(".dds")[0]}.dds'
-                items = [parent.child(i) for i in range(parent.rowCount())]
-                items = sorted([_ for _ in items if _.path.name.startswith(basename)],
-                               key=lambda item: item.path.as_posix())
+        try:
+            if item is not None:
+                if '.dds' in item.path.name:
+                    parent = self.sc_tree_model.itemForPath(item.path.parent)
+                    basename = f'{item.path.name.split(".dds")[0]}.dds'
+                    items = [parent.child(i) for i in range(parent.rowCount())]
+                    items = sorted([_ for _ in items if _.path.name.startswith(basename)],
+                                   key=lambda item: item.path.as_posix())
 
-                self._handle_item_action({items[0].path.as_posix(): items}, self.sc_tree_model, index)
-            else:
-                self._handle_item_action(item, self.sc_tree_model, index)
+                    self._handle_item_action({items[0].path.as_posix(): items}, self.sc_tree_model, index)
+                else:
+                    self._handle_item_action(item, self.sc_tree_model, index)
+        except Exception as e:
+            ScrollMessageBox.critical(self, "Error opening file", f"{e}")
 
 
 class DCBViewDock(SCDVSearchableTreeDockWidget):

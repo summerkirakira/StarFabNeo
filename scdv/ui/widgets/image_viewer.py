@@ -192,23 +192,22 @@ class DDSImageViewer(qtw.QWidget):
             dds_files = [dds_files]
 
         self.dds_files = dds_files
-        self.dds_header = [_ for _ in dds_files if _.path.suffix == '.dds'][0]
+        try:
+            self.dds_header = [_ for _ in dds_files if _.path.suffix == '.dds'][0]
+        except IndexError:
+            raise ValueError(f'Could not determine the DDS header file')
         self.dds_files.remove(self.dds_header)
         self.dds_files = sorted(self.dds_files, key=lambda d: d.path.suffix, reverse=True)
+        self.dds_file = b''
+        for d in [self.dds_header] + self.dds_files:
+            self.dds_file += d.contents().getvalue()
 
         layout = qtw.QVBoxLayout()
         image = QImageViewer()
 
         try:
-            if self.dds_files:
-                data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue() +
-                                                              self.dds_files[0].contents().getvalue(),
-                                                              'dds',
-                                                              DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
-            else:
-                data = BytesIO(image_converter.convert_buffer(self.dds_header.contents().getvalue(),
-                                                              'dds',
-                                                              DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
+            data = BytesIO(image_converter.convert_buffer(self.dds_file, 'dds',
+                                                          DDS_CONV_FORMAT.get(sys.platform, DDS_CONV_FALLBACK)))
             if not image.load_from_file(data):
                 raise RuntimeError
         except RuntimeError as e:

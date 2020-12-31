@@ -50,11 +50,8 @@ class SCDVDockWidget(qtw.QDockWidget):
         widget = None
 
         if isinstance(item, dict):
-            try:
-                widget = DDSImageViewer(list(item.values())[0])
-                item = widget.dds_header
-            except (ValueError, RuntimeError):
-                widget = None
+            widget = DDSImageViewer(list(item.values())[0])
+            item = widget.dds_header
         elif item.path.suffix.lower()[1:] in SUPPORTED_EDITOR_FORMATS:
             widget = Editor(item)
         elif item.path.suffix.lower() in SUPPORTED_IMG_FORMATS:
