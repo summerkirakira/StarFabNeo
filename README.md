@@ -10,7 +10,16 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 
 # Installation
 
+## Optional Dependencies
+
+### View and Convert textures (dds)
+
+To view or convert textures (.dds*) files, SCDV relies on [texconv](https://github.com/microsoft/DirectXTex/releases) or [compressonator](https://gpuopen.com/compressonator/). Ensure that `texconv` or `compressonatorcli` is installed and in your system `PATH`.
+
+## Releases
+
 Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre-built packages.
+
 
 ## From source
 
@@ -22,6 +31,8 @@ cd scdv
 poetry install
 poetry run python -m scdv
 ```
+
+###
 
 ![MadeByTheCommunity](docs/assets/MadeByTheCommunity_Black.png "Made By The Community")
 
