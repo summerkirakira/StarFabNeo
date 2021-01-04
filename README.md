@@ -1,12 +1,20 @@
 # StarCitizen Data Viewer - SCDV
 
-A UI on top of `scdatatools`.
+A GUI built on top of [scdatatools](https://gitlab.com/scmodding/frameworks/scdatatools).
 
 ### NOTE: scdv is considered pre-alpha. It's more of a proof of concept than a fully functional tool
 
 If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/tools/scdv/-/issues/new)!
 
 ![SCDV Screenshot](docs/assets/SCDV_screenshot.png "SCDV Screenshot")
+
+# Features
+
+- Browse and export files from `Data.p4k`
+- Automatically converts `CryXmlB` files
+- File viewer for human readable files
+- Image viewer with support for Star Citizen `.dds` textures
+- Integrated Python console for scripted access to the `p4k` and `datacore`
 
 # Installation
 
@@ -26,7 +34,7 @@ Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre
 SCDV uses [poetry](https://python-poetry.org/) and Python >= 3.8
 
 ```
-git clone --recursive git@gitlab.com:scmods/scdv.git
+git clone --recursive git@gitlab.com:scmodding/tools/scdv.git
 cd scdv
 poetry install
 poetry run python -m scdv
