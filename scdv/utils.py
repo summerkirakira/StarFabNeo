@@ -2,7 +2,6 @@ import os
 import io
 import sys
 import typing
-import subprocess
 import shutil
 import tempfile
 import subprocess
@@ -37,6 +36,7 @@ class ImageConverter:
 
         self.converter = self.texconv if self.texconv else self.compressonatorcli
 
+    def _check_bin(self):
         if not self.converter:
             qtw.QMessageBox.information(
                 None, "Image Converter",
@@ -50,7 +50,7 @@ class ImageConverter:
 
     def convert_buffer(self, inbuf, in_format, out_format='tif') -> bytes:
         """ Converts a buffer `inbuf` to the output format `out_format` """
-
+        self._check_bin()
         _ = tempfile.NamedTemporaryFile(suffix=f'.{out_format.lstrip(".")}')
         tmpout = Path(_.name)
         _.close()
@@ -75,6 +75,7 @@ class ImageConverter:
             utility
         """
 
+        self._check_bin()
         # TODO: throw up a loading dialog?
         if isinstance(outfile, str):
             outfile = Path(outfile)

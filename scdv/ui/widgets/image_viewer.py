@@ -3,6 +3,7 @@
 """
 
 import sys
+import struct
 from io import BytesIO
 from pathlib import Path
 
@@ -196,11 +197,22 @@ class DDSImageViewer(qtw.QWidget):
             self.dds_header = [_ for _ in dds_files if _.path.suffix == '.dds'][0]
         except IndexError:
             raise ValueError(f'Could not determine the DDS header file')
+
         self.dds_files.remove(self.dds_header)
-        self.dds_files = sorted(self.dds_files, key=lambda d: d.path.suffix, reverse=True)
-        self.dds_file = b''
-        for d in [self.dds_header] + self.dds_files:
-            self.dds_file += d.contents().getvalue()
+        # unsplit files should be largest to smallest
+
+        hdr_data = self.dds_header.contents().getvalue()
+        dds_magic, dds_hdr_len = struct.unpack('<4sI', hdr_data[:8])
+        dds_hdr_len += 4  # does not include the magic bytes
+        if dds_magic != b'DDS ':
+            raise ValueError(f'Invalid DDS header')
+
+        self.dds_file = hdr_data[:dds_hdr_len]
+        if self.dds_files:
+            self.dds_files = sorted(self.dds_files, key=lambda d: d.path.suffix, reverse=True)
+            for d in self.dds_files:
+                self.dds_file += d.contents().getvalue()
+        self.dds_file += hdr_data[dds_hdr_len:]
 
         layout = qtw.QVBoxLayout()
         image = QImageViewer()
