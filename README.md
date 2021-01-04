@@ -34,7 +34,7 @@ Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre
 SCDV uses [poetry](https://python-poetry.org/) and Python >= 3.8
 
 ```
-git clone --recursive git@gitlab.com:scmods/scdv.git
+git clone --recursive git@gitlab.com:scmodding/tools/scdv.git
 cd scdv
 poetry install
 poetry run python -m scdv
