@@ -17,6 +17,8 @@ PLAT_EXCLUDES = {
 
 def run():
     reqs = check_output('poetry export --without-hashes', shell=True, encoding='utf-8').split('\n')
+    if 'Warning' in reqs[0]:
+        reqs = reqs[1:]  # skip the warning
     reqs.extend(INCLUDED_PLUGINS)
     reqs = '\n'.join(r for r in reqs if not any(e in r for e in PLAT_EXCLUDES.get(platform, [])))
 

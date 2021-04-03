@@ -8,10 +8,6 @@ import toml
 
 def run():
     pyproject_file = (Path(__file__).parent.parent / 'pyproject.toml').absolute()
-    version_file = (Path(__file__).parent.parent / 'src' / 'scdv' / '_version.py').absolute()
-
-    if version_file.is_file():
-        os.unlink(version_file)
 
     # this must go here
     import scdv
@@ -26,9 +22,6 @@ def run():
 
     with pyproject_file.open('w') as p:
         toml.dump(pyproject, p)
-
-    with version_file.open('w') as v:
-        v.write(f'version = "{version}"\n')
 
     if tag and tag == version:
         if 'y' not in input('Update tag? [y/n] ').lower():
