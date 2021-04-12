@@ -13,8 +13,8 @@ BANNER = f"""scdv console {__version__}
 scdatatools {__version__}
 
 Local variables:
-  scdv  -  The scdv Qt MainWindow
-  sc    -  The currently opened StarCitizen
+    scdv       -  The scdv application
+    scdv.sc    -  The currently opened StarCitizen
 
 """
 
@@ -31,7 +31,6 @@ class PyConsoleDockWidget(qtw.QDockWidget):
         self.kernel_manager.kernel.shell.push({
             'scdv': scdv,
             'scdatatools': scdatatools,
-            'sc': scdv.sc
         })
 
         self.ipython_widget = RichJupyterWidget()

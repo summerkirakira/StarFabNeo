@@ -9,10 +9,13 @@ import qtmodern.styles
 from . import __version__
 from .app import MainWindow
 
+import logging
+logging.basicConfig(filename='scdv.log', filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S', level=logging.INFO)
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 
 # Back up the reference to the exceptionhook
 sys._excepthook = sys.excepthook
@@ -30,6 +33,10 @@ def exception_hook(exctype, value, traceback):
 
 
 sys.excepthook = exception_hook
+logging.info(f'SCDV {__version__}')
+if sys.executable.endswith('pythonw.exe'):
+    sys.stdout = open('scdv.out', 'w')
+    sys.stderr = open('scdv.err', 'w')
 
 
 def main():
