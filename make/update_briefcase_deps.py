@@ -1,3 +1,4 @@
+import urllib.request
 from sys import platform
 from pathlib import Path
 from subprocess import check_output
@@ -24,6 +25,13 @@ def run():
 
     with open(DIST_DIR / 'requirements.txt', 'w') as r:
         r.write(reqs)
+
+    if platform == 'win32':
+        print('Fetching latest texconv')
+        CONTRIB_DIR = (DIST_DIR.parent / 'scdv' / 'contrib')
+        urllib.request.urlretrieve('https://github.com/Microsoft/DirectXTex/releases/latest/download/texconv.exe',
+                                   str(CONTRIB_DIR / 'texconv.exe'))
+
 
 
 if __name__ == "__main__":

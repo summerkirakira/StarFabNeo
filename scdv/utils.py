@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 from scdv.ui import qtw
+from scdv import CONTRIB_DIR
 
 
 def show_file_in_filemanager(path):
@@ -33,6 +34,8 @@ class ImageConverter:
     def __init__(self):
         self.compressonatorcli = shutil.which('compressonatorcli')
         self.texconv = shutil.which('texconv')
+        if self.texconv is None and (CONTRIB_DIR / 'texconv.exe').is_file():
+            self.texconv = str(CONTRIB_DIR / 'texconv.exe')
 
         self.converter = self.texconv if self.texconv else self.compressonatorcli
 
@@ -103,10 +106,9 @@ class ImageConverter:
                 try:
                     r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True,
                                        cwd=outfile.parent)
+                    shutil.move(outfile.parent / f'{Path(tmpin.name).stem}.{ft}', outfile.absolute())
                 except subprocess.CalledProcessError as e:
                     texconv_err = e.output.decode('utf-8')
-
-                shutil.move(outfile.parent / f'{Path(tmpin.name).stem}.{ft}', outfile.absolute())
 
             if not self.texconv or texconv_err:
                 cmd = f'{self.compressonatorcli} -noprogress {tmpin.name} {outfile.absolute()}'
@@ -114,8 +116,8 @@ class ImageConverter:
                     r = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
                 except subprocess.CalledProcessError as e:
                     if texconv_err:
-                        raise RuntimeError(f'Error converting with texconv: {texconv_err}')
-                    raise RuntimeError(f'Error converting with compressonator: {e}')
+                        return False, f'Error converting with texconv: {texconv_err}'
+                    return False, f'Error converting with compressonator: {e}'
 
         finally:
             if _delete:

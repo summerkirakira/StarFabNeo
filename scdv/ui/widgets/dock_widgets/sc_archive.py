@@ -140,9 +140,39 @@ class SCFileViewNode(qtg.QStandardItem):
         return io.BytesIO(c)
 
     @cached_property
+    def raw_size(self):
+        if self.info is not None:
+            return self.info.file_size
+        elif self.hasChildren():
+            return sum(
+                self.child(r, 0).raw_size for r in range(self.rowCount())
+            )
+        return 0
+
+    @cached_property
+    def raw_time(self):
+        if self.info is not None:
+            return self.info.date_time
+        elif self.hasChildren():
+            return max(
+                self.child(r, 0).raw_time for r in range(self.rowCount())
+            )
+
+    def clear_cache(self):
+        for c in ['raw_size', 'raw_time', 'size', 'type', 'date_modified']:
+            if c in self.__dict__:
+                del self.__dict__[c]
+
+    @cached_property
     def size(self):
         if self.info is not None:
             return qtc.QLocale().formattedDataSize(self.info.file_size)
+        if self.hasChildren():
+            return qtc.QLocale().formattedDataSize(self.raw_size)
+        return ''
+
+    @cached_property
+    def type(self):
         return ''
 
     @cached_property
@@ -152,7 +182,9 @@ class SCFileViewNode(qtg.QStandardItem):
     @cached_property
     def date_modified(self):
         if self.info is not None:
-            return qtc.QDateTime(*self.info.date_time).toString(qtc.Qt.DateFormat.SystemLocaleDate)
+            return qtc.QDateTime(*self.info.date_time)  #.toString(qtc.Qt.DateFormat.SystemLocaleDate)
+        if self.hasChildren():
+            return qtc.QDateTime(*self.raw_time)  # .toString(qtc.Qt.DateFormat.SystemLocaleDate)
         return ''
 
     def extract_to(self, extract_path):
@@ -179,17 +211,23 @@ class SCFileViewModel(qtg.QStandardItemModel):
         return super().flags(index) & ~qtc.Qt.ItemIsEditable
 
     def data(self, index, role):
-        if index.column() >= 1 and role == qtc.Qt.DisplayRole:
+        if index.column() >= 1:
             i = self.itemFromIndex(self.createIndex(index.row(), 0, index.internalId()))
             if i is not None:
-                if index.column() == 1:
-                    return i.size
-                elif index.column() == 2:
-                    return i.type
-                elif index.column() == 3:
-                    return i.date_modified
-                elif index.column() == 4:
-                    return i.path.as_posix()
+                if role == qtc.Qt.DisplayRole:
+                    if index.column() == 1:
+                        return i.size
+                    elif index.column() == 2:
+                        return i.type
+                    elif index.column() == 3:
+                        return i.date_modified
+                    elif index.column() == 4:
+                        return i.path.as_posix()
+                elif role == qtc.Qt.UserRole:
+                    if index.column() == 1:
+                        return i.raw_size
+                    elif index.column() == 3:
+                        return i.raw_time
         return super().data(index, role)
 
     def itemForPath(self, path):
@@ -211,6 +249,8 @@ class SCFileViewModel(qtg.QStandardItemModel):
         parent = get_or_create_parent(path)
         if parent is not None:
             parent.appendRows(rows)
+            if hasattr(parent, 'clear_cache'):
+                parent.clear_cache()
             for row in rows:
                 self._cache[row.path.as_posix()] = row
 
@@ -277,6 +317,15 @@ class DCBFileViewModel(SCFileViewModel):
         return qtg.QStandardItemModel.data(self, index, role)
 
 
+class P4KSortFilterProxyModel(qtc.QSortFilterProxyModel):
+    def lessThan(self, source_left, source_right):
+        if self.sortColumn() in [1, 3]:
+            return (self.sourceModel().data(source_left, qtc.Qt.UserRole) <
+                    self.sourceModel().data(source_right, qtc.Qt.UserRole))
+        else:
+            return super().lessThan(source_left, source_right)
+
+
 class P4KViewDock(SCDVSearchableTreeDockWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -289,7 +338,8 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         extract = self.ctx_manager.default_menu.addAction('Extract to...')
         extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
 
-        self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
+        # self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
+        self.proxy_model = P4KSortFilterProxyModel(parent=self)
         self.proxy_model.setDynamicSortFilter(False)
         self.proxy_model.setRecursiveFilteringEnabled(True)
         self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)

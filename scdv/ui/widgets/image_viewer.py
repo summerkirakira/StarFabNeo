@@ -223,8 +223,6 @@ class DDSImageViewer(qtw.QWidget):
             if not image.load_from_file(data):
                 raise RuntimeError
         except RuntimeError as e:
-            ScrollMessageBox(qtw.QMessageBox.Critical, "Image Viewer",
-                             f"Error parsing {self.dds_header.path}. {e}", parent=self)
-            raise
+            raise RuntimeError(f"Error parsing {self.dds_header.path}: {e}")
         layout.addWidget(image)
         self.setLayout(layout)

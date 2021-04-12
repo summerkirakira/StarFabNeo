@@ -66,6 +66,9 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         super().__init__(*args, **kwargs)
         uic.loadUi(str(RES_PATH / 'ui' / 'FileViewDock.ui'), self)
 
+        self.sc_breadcrumbs.setVisible(False)
+        self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
+
         self.sc_tree_thread_pool = qtc.QThreadPool(self)
         self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
@@ -80,6 +83,9 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         shortcut.setKey(qtg.QKeySequence("Return"))
         shortcut.setContext(qtc.Qt.WidgetShortcut)
         shortcut.activated.connect(self._on_enter_pressed)
+
+    def _handle_breadcrumbs(self, link):
+        pass
 
     def _on_enter_pressed(self):
         selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]

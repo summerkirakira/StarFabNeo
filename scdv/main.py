@@ -6,6 +6,7 @@ from qtpy.QtCore import Qt
 
 import qtmodern.styles
 
+from . import __version__
 from .app import MainWindow
 
 
@@ -38,7 +39,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setOrganizationName('scdatatools')
-    app.setApplicationDisplayName('SCDV')
+    app.setApplicationDisplayName(f'SCDV {__version__}')
     app.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     try:
