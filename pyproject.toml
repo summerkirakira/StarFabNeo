@@ -12,13 +12,13 @@ authors = [ "Ventorvar <ventorvar@gmail.com>",]
 project_name = "SCDV"
 bundle = "scdatatools.scdv"
 version = "0.2.5"
-url = "https://gitlab.com/scmods/scdv"
+url = "https://gitlab.com/scmodding/tools/scdv"
 license = "MIT license"
 author = "Ventorvar"
 author_email = "ventorvar@gmail.com"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.9"
+python = ">=3.8"
 QtPy = "^1.9.0"
 PySide2 = "^5.15.2"
 Pillow = "^8.0.1"

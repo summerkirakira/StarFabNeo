@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.actionDatacore.triggered.connect(self.show_dcb_view)
         self.actionLocal_Files.triggered.connect(self.show_local_files)
         self.actionConsole.triggered.connect(self.show_console)
-        self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmods/scdv'))
+        self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
 
         self.status_bar_progress = qtw.QProgressBar(self)
         self.statusBar.addPermanentWidget(self.status_bar_progress)
