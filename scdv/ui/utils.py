@@ -1,3 +1,4 @@
+import io
 from scdv.ui import qtc, qtg, qtw
 
 
@@ -15,3 +16,13 @@ class ScrollMessageBox(qtw.QMessageBox):
         grd.addWidget(scrll, 0, 1)
         chldn[1].setText('')
         self.exec_()
+
+
+class ContentItem:
+    def __init__(self, name, path, contents=''):
+        self._contents = io.BytesIO(contents.encode('utf-8'))
+        self.name = name
+        self.path = path
+
+    def contents(self):
+        return self._contents

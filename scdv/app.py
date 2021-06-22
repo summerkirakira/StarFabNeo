@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from functools import partial
 
@@ -8,20 +9,25 @@ from qtpy.QtWidgets import QApplication, QMainWindow
 
 import qtmodern.styles
 import qtmodern.windows
+
+from scdatatools.sc import StarCitizen
+
 import scdv.ui.widgets.dock_widgets.file_view
 import scdv.ui.widgets.dock_widgets.sc_archive
-from scdatatools.sc import StarCitizen
 
 from .ui import qtg, qtw, qtc
 from .resources import RES_PATH
 from .ui.widgets import dock_widgets
 from .ui.widgets.editor import Editor
+from .ui.dialogs.ship_entity_exporter import ShipEntityExporterDialog
 
 
 class MainWindow(QMainWindow):
     task_started = Signal(str, str, int, int)
     update_status_progress = Signal(str, int, int, int, str)
     task_finished = Signal(str, bool, str)
+
+    open_scdir = Signal(str)
 
     opened = Signal(str)
     p4k_opened = Signal()
@@ -35,13 +41,19 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('SCDV')
         self.setWindowIcon(qtg.QIcon(str(RES_PATH / 'scdv.png')))
 
+        self.settings = qtc.QSettings('SCModding', 'SCDV')
+        self._refresh_recent()
+
         self.task_started.connect(self._handle_task_started)
         self.update_status_progress.connect(self._handle_update_statusbar_progress)
         self.task_finished.connect(self._handle_task_finished)
+        self.open_scdir.connect(self._handle_open_scdir)
 
         self.resize(1900, 900)
         self.actionLightTheme.triggered.connect(self.set_light_theme)
         self.actionDarkTheme.triggered.connect(self.set_dark_theme)
+
+        self.actionSettings.triggered.connect(self.show_settings_dialog)
 
         self.actionOpen.triggered.connect(self.handle_file_open)
         self.actionClose.triggered.connect(self.handle_file_close)
@@ -51,7 +63,11 @@ class MainWindow(QMainWindow):
         self.actionDatacore.triggered.connect(self.show_dcb_view)
         self.actionLocal_Files.triggered.connect(self.show_local_files)
         self.actionConsole.triggered.connect(self.show_console)
-        self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmods/scdv'))
+        self.actionExportShipEntity.triggered.connect(self.show_export_ship_entity_dialog)
+        self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
+        self.actionClear_Recent.triggered.connect(self.clear_recent)
+
+        self.datacore_loaded.connect(lambda: self.actionExportShipEntity.setEnabled(True))
 
         self.status_bar_progress = qtw.QProgressBar(self)
         self.statusBar.addPermanentWidget(self.status_bar_progress)
@@ -75,7 +91,34 @@ class MainWindow(QMainWindow):
         self._progress_tasks = {}
 
         if os.environ.get('SCDV_SC_PATH'):
-            self.open_sc_dir(os.environ['SCDV_SC_PATH'])
+            self.open_scdir.emit(os.environ['SCDV_SC_PATH'])
+        elif len(sys.argv) > 1:
+            arg_dir = Path(sys.argv[-1])
+            if arg_dir.is_dir():
+                self.open_scdir.emit(str(arg_dir))
+
+    def _refresh_recent(self, recent=None):
+        if recent is None:
+            recent = self.settings.value('recent', [])
+
+        recent = list({_: '' for _ in recent}.keys())  # remove duplicates without loosing the order
+
+        prev_actions = self.menuRecent.actions()
+        for a in prev_actions[:-2]:
+            self.menuRecent.removeAction(a)
+        prev_actions = prev_actions[-2:]
+
+        labels = []
+        for r in recent:
+            label = Path(r).name if Path(r).name not in labels else str(r)
+            a = qtw.QAction(label)
+            a.triggered.connect(partial(self._handle_recent_selected, r))
+            labels.append(label)
+            self.menuRecent.insertAction(prev_actions[0], a)
+        self.settings.setValue('recent', recent[:10])
+
+    def _handle_recent_selected(self, scdir):
+        self.open_scdir.emit(scdir)
 
     def setup_dock_widgets(self):
         dv = scdv.ui.widgets.dock_widgets.sc_archive.DCBViewDock(self)
@@ -100,6 +143,13 @@ class MainWindow(QMainWindow):
         self.tabifyDockWidget(pv, fv)
         dv.hide()
         pv.hide()
+
+    def show_export_ship_entity_dialog(self):
+        dlg = ShipEntityExporterDialog(self)
+        dlg.exec_()
+
+    def show_settings_dialog(self):
+        pass
 
     def show_p4k_view(self):
         self.dock_widgets['p4k_view'].show()
@@ -136,10 +186,7 @@ class MainWindow(QMainWindow):
             max += task['max']
 
         msg = ', '.join(msgs).strip()
-        if msg:
-            self.statusBar.showMessage(msg)
-        elif self.sc is not None:
-            self.statusBar.showMessage(f'{self.sc.version_label}')
+        self.status_bar_progress.setFormat(f'{msg} - %v / %m - %p%' if msg else '%v / %m - %p%')
         if min != max:
             self.status_bar_progress.setRange(min, max)
             self.status_bar_progress.setValue(value)
@@ -192,6 +239,7 @@ class MainWindow(QMainWindow):
     def _handle_tab_ctx_close_all(self):
         for i in range(self.sc_tabs.count()):
             self._handle_close_tab(0)
+        self._open_tabs = {}
 
     @Slot(int)
     def _handle_close_tab(self, index):
@@ -219,20 +267,29 @@ class MainWindow(QMainWindow):
         if show_after_add:
             return self.sc_tabs.setCurrentIndex(self._open_tabs[obj_id])
 
-    def open_sc_dir(self, path):
+    @Slot(str)
+    def _handle_open_scdir(self, scdir):
         if self.sc is not None:
             # TODO: handle asking if we want to close the current one first
+            qm = qtw.QMessageBox(self)
+            ret = qm.question(self, '', "This will close the current environment, continue?", qm.Yes | qm.No)
+            if ret == qm.No:
+                return
             self.handle_file_close()
 
         try:
-            self.sc = StarCitizen(path)
-            self.opened.emit(str(path))
-            self.setWindowTitle(f'{path} ({self.sc.version_label})')
-            self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {path}')
+            self.sc = StarCitizen(scdir)
+            self._refresh_recent(set([scdir] + self.settings.value('recent', [])))
+            self.opened.emit(str(scdir))
+            self.setWindowTitle(f'{scdir} ({self.sc.version_label})')
+            self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {scdir}')
         except Exception as e:
             dlg = qtw.QErrorMessage(self)
             dlg.setWindowTitle('Could not open Star Citizen directory')
-            dlg.showMessage(f'Could not open {path}: {e}')
+            dlg.showMessage(f'Could not open {scdir}: {e}')
+
+    def clear_recent(self):
+        self._refresh_recent([])
 
     def handle_file_open(self):
         dlg = qtw.QFileDialog(self)
@@ -245,7 +302,7 @@ class MainWindow(QMainWindow):
         else:
             return
 
-        self.open_sc_dir(scdir)
+        self.open_scdir.emit(str(scdir))
 
     def handle_file_close(self):
         if self.sc is not None:
@@ -253,13 +310,15 @@ class MainWindow(QMainWindow):
             for w in self.dock_widgets.values():
                 self.removeDockWidget(w)
                 w.deleteLater()
-            self.dock_widgets = self.setup_dock_widgets()
+            self.dock_widgets = {}
+            self.setup_dock_widgets()
             self.setWindowTitle('SCDV')
+            self.status_bar_progress.hide()
             self.sc = None
+            qtg.QGuiApplication.processEvents()
 
     def set_light_theme(self):
         qtmodern.styles.light(QApplication.instance())
 
     def set_dark_theme(self):
         qtmodern.styles.dark(QApplication.instance())
-

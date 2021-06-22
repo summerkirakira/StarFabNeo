@@ -34,7 +34,7 @@ def exception_hook(exctype, value, traceback):
 
 sys.excepthook = exception_hook
 logging.info(f'SCDV {__version__}')
-if sys.executable.endswith('pythonw.exe'):
+if sys.executable.lower().endswith('pythonw.exe') or sys.executable.lower().endswith('scdv.exe'):
     sys.stdout = open('scdv.out', 'w')
     sys.stderr = open('scdv.err', 'w')
 
@@ -50,8 +50,9 @@ def main():
     app.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     try:
-        qtmodern.styles.dark(app)
+        # qtmodern.styles.dark(app)
         mw = MainWindow()
+        mw.set_dark_theme()
         mw.show()
 
         sys.exit(app.exec_())

@@ -1,13 +1,13 @@
 from functools import partial
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Signal
 
 from scdatatools.forge import dftypes
 
 from scdv import get_scdv
-from scdv.ui import qtc, qtw, qtg
+from scdv.ui import qtw
 from scdv.resources import RES_PATH
+from scdv.ui.widgets.common import CollapseableWidget
 from scdv.ui.widgets.editor import Editor
 
 
@@ -78,49 +78,6 @@ def widget_for_dcb_obj(obj, inline=False):
 
     widget.setLayout(layout)
     return widget
-
-
-class CollapseableWidget(qtw.QWidget):
-    def __init__(self, label, expand=False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.label = label
-        self.expanded = expand
-
-        self.main_layout = qtw.QVBoxLayout()
-        self.main_layout.setMargin(0)
-        self.main_layout.setSpacing(0)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.expand_button = qtw.QPushButton(label)
-        self.expand_button.setStyleSheet('text-align: left; padding-left: 5px;')
-
-        self.content = qtw.QWidget()
-        self.content.setLayout(qtw.QFormLayout())
-        self.main_layout.addWidget(self.expand_button, 0, qtc.Qt.AlignTop)
-        self.main_layout.addWidget(self.content, 0, qtc.Qt.AlignTop)
-        self.expand_button.clicked.connect(self.toggle)
-        self.setLayout(self.main_layout)
-
-        if expand:
-            self.expand()
-        else:
-            self.collapse()
-
-    def collapse(self):
-        self.content.hide()
-        self.expand_button.setText(f'▼  {self.label}')
-        self.expanded = False
-
-    def expand(self):
-        self.content.show()
-        self.expand_button.setText(f'▲  {self.label}')
-        self.expanded = True
-
-    @Slot()
-    def toggle(self):
-        if self.expanded:
-            self.collapse()
-        else:
-            self.expand()
 
 
 class DCBLazyCollapsableObjWidget(CollapseableWidget):

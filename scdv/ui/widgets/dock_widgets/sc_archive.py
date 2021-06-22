@@ -1,17 +1,18 @@
 import io
 import os
 import time
+import shutil
 from functools import cached_property, partial
 from pathlib import Path
 
 from qtpy.QtCore import Signal, Slot
 
 from scdv.ui import qtc, qtw, qtg
-from scdatatools.cryxml import pprint_xml_tree, etree_from_cryxml_file
+from scdatatools.cry.cryxml import pprint_xml_tree, etree_from_cryxml_file
 from scdv.ui.widgets.dcbrecord import DCBRecordItemView
 from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget
 from scdv.utils import show_file_in_filemanager
-from scdv.ui.utils import ScrollMessageBox
+from scdv.ui.utils import ScrollMessageBox, ContentItem
 
 SCFILEVIEW_COLUMNS = ['Name', 'Size', 'Kind', 'Date Modified', 'SearchColumn']
 DCBVIEW_COLUMNS = ['Name', 'Type', 'GUID', 'SearchColumn']
@@ -19,6 +20,7 @@ RECORDS_ROOT_PATH = Path('libs/foundry/records')
 
 
 class LoaderSignals(qtc.QObject):
+    cancel = Signal()
     finished = Signal()
 
 
@@ -30,8 +32,12 @@ class P4KFileLoader(qtc.QRunnable):
         self.archive = archive
         self.signals = LoaderSignals()
         self._node_cls = SCFileViewNode
+        self._should_cancel = False
+        self.signals.cancel.connect(self._handle_cancel)
 
-    @Slot()
+    def _handle_cancel(self):
+        self._should_cancel = True
+
     def run(self):
         self.scdv.task_started.emit('load_p4k', 'Opening Data.p4k', 0, 1)
 
@@ -50,6 +56,9 @@ class P4KFileLoader(qtc.QRunnable):
             p4k_limit = -1
 
         for i, f in enumerate(filelist):
+            if self._should_cancel:
+                return  # immediately break
+
             if (time.time() - t) > 0.5:
                 self.scdv.update_status_progress.emit('load_p4k', i, 0, 0, '')
                 t = time.time()
@@ -63,6 +72,8 @@ class P4KFileLoader(qtc.QRunnable):
             tmp.setdefault(path.parent.as_posix(), []).append(item)
 
         for parent_path, rows in tmp.items():
+            if self._should_cancel:
+                return  # immediately break
             self.model.appendRowsToPath(parent_path, rows)
 
         self.scdv.task_finished.emit('load_p4k', True, '')
@@ -86,6 +97,9 @@ class DCBLoader(P4KFileLoader):
 
         self.scdv.update_status_progress.emit('load_dcb', 1, 0, max, 'Loading Datacore')
         for i, r in enumerate(datacore.records):
+            if self._should_cancel:
+                return  # immediately break
+
             if (time.time() - t) > 0.5:
                 self.scdv.update_status_progress.emit('load_dcb', i, 0, max, 'Loading Datacore')
                 t = time.time()
@@ -95,18 +109,18 @@ class DCBLoader(P4KFileLoader):
             tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), []).append(item)
 
         for parent_path, rows in tmp.items():
+            if self._should_cancel:
+                return  # immediately break
             self.model.appendRowsToPath(parent_path, rows)
 
         self.scdv.task_finished.emit('load_dcb', True, '')
         self.signals.finished.emit()
 
 
-class SCFileViewNode(qtg.QStandardItem):
+class SCFileViewNode(qtg.QStandardItem, ContentItem):
     def __init__(self, path: Path, info=None, parent_archive=None, *args, **kwargs):
-        self.path = path
-        self.name = path.name
-
-        super().__init__(self.name, *args, **kwargs)
+        super().__init__(path.name, *args, **kwargs)
+        ContentItem.__init__(self, path.name, path)
 
         self.setColumnCount(len(SCFILEVIEW_COLUMNS))
         self.setEditable(False)
@@ -182,13 +196,16 @@ class SCFileViewNode(qtg.QStandardItem):
     @cached_property
     def date_modified(self):
         if self.info is not None:
-            return qtc.QDateTime(*self.info.date_time)  #.toString(qtc.Qt.DateFormat.SystemLocaleDate)
+            return qtc.QDateTime(*self.info.date_time)  # .toString(qtc.Qt.DateFormat.SystemLocaleDate)
         if self.hasChildren():
             return qtc.QDateTime(*self.raw_time)  # .toString(qtc.Qt.DateFormat.SystemLocaleDate)
         return ''
 
     def extract_to(self, extract_path):
-        self.parent_archive.extract(str(self.path.as_posix()), extract_path)
+        self.parent_archive.extract(str(self.path.as_posix()), extract_path, convert_cryxml=True)
+
+    def save_to(self, extract_path):
+        self.parent_archive.save_to(str(self.path.as_posix()), extract_path, convert_cryxml=True)
 
     def __repr__(self):
         return f'<SCFileViewNode "{self.path.as_posix()}" archive:{self.parent_archive}>'
@@ -255,18 +272,19 @@ class SCFileViewModel(qtg.QStandardItemModel):
                 self._cache[row.path.as_posix()] = row
 
 
-class DCBViewNode(qtg.QStandardItem):
+class DCBViewNode(qtg.QStandardItem, ContentItem):
     def __init__(self, path, info=None, parent_archive=None, *args, **kwargs):
-        self.path = path
+        name = info.name if info is not None else path.name
 
-        self.name = info.name if info is not None else self.path.name
+        super().__init__(name, *args, **kwargs)
+        ContentItem.__init__(self, name, path)
+
         self.guid = info.id.value if info is not None else ''
         self.type = info.type if info is not None else ''
         self.record = info
         self.contents_mode = 'json'
 
         self.parent_archive = parent_archive
-        super().__init__(self.name, *args, **kwargs)
 
         self.setColumnCount(len(DCBVIEW_COLUMNS))
         self.setEditable(False)
@@ -335,7 +353,11 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         self.sc_tree_model = None
 
         self.ctx_manager.default_menu.addSeparator()
+        save_file = self.ctx_manager.default_menu.addAction('Save To...')
+        save_file.triggered.connect(partial(self.ctx_manager.handle_action, 'save_to'))
         extract = self.ctx_manager.default_menu.addAction('Extract to...')
+        extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
+        extract = self.ctx_manager.menus[''].addAction('Extract to...')
         extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
 
         # self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
@@ -370,8 +392,22 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
 
                 self.scdv.task_finished.emit('extract', True, '')
                 show_file_in_filemanager(Path(edir))
+        elif action == 'save_to':
+            edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Save To...')
+            if edir:
+                total = len(selected_items)
+                self.scdv.task_started.emit('extract', f'Saving to {edir}', 0, total)
+                for i, item in enumerate(selected_items):
+                    self.scdv.update_status_progress.emit('extract', 1, 0, total,
+                                                          f'Extracting {item.path.name} to {edir}')
+                    try:
+                        item.save_to(edir)
+                    except Exception as e:
+                        print(e)
 
-    @Slot()
+                self.scdv.task_finished.emit('extract', True, '')
+                show_file_in_filemanager(Path(edir))
+
     def _finished_loading(self):
         self.proxy_model.paths = list(self.scdv.sc.p4k.NameToInfo.keys())
         self.proxy_model.setSourceModel(self.sc_tree_model)
@@ -391,6 +427,7 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
             self.show()
             self.sc_tree_model = SCFileViewModel(self.scdv.sc, parent=self)
             loader = P4KFileLoader(self.scdv, self.sc_tree_model, 'p4k')
+            self.closing.connect(lambda: loader.signals.cancel.emit())
             loader.signals.finished.connect(self._finished_loading)
             self.sc_tree_thread_pool.start(loader)
 
@@ -439,12 +476,14 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
         header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
         self.sc_tree.hideColumn(3)
         self.raise_()
+        self.scdv.datacore_loaded.emit()
 
     def handle_p4k_opened(self):
         if self.scdv.sc is not None:
             self.show()
             self.sc_tree_model = DCBFileViewModel(self.scdv.sc, parent=self)
             loader = DCBLoader(self.scdv, self.sc_tree_model)
+            self.closing.connect(lambda: loader.signals.cancel.emit())
             loader.signals.finished.connect(self._finished_loading)
             self.sc_tree_thread_pool.start(loader)
 

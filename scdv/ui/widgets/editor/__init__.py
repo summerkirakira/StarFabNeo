@@ -7,7 +7,7 @@ from scdv.ui import qtc, qtw, qtg
 
 
 SUPPORTED_EDITOR_FORMATS = ['json', 'cfg', 'ini', 'txt', 'xml', 'log', 'id', 'cdf', 'chrparams',
-                            'dpl', 'eco', 'obj', 'sample', 'opr', 'mtl']
+                            'dpl', 'eco', 'obj', 'sample', 'opr', 'mtl', 'rmp', 'entxml']
 html = """
 <!DOCTYPE html><html lang="en"><head><title>scdv editor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
@@ -182,6 +182,8 @@ class Editor(QWebEngineView):
         if path:
             download.setPath(path)
             download.accept()
+        else:
+            download.cancel()
 
     @Slot()
     def _on_ace_ready(self):

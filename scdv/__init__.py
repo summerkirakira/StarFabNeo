@@ -4,7 +4,7 @@ from pathlib import Path
 from qtpy.QtWidgets import QApplication, QMainWindow
 
 CONTRIB_DIR = Path(__file__).parent / 'contrib'
-__version__ = '0.2.5'
+__version__ = '0.2.8'
 
 
 if CONTRIB_DIR.is_dir() and str(CONTRIB_DIR) not in sys.path:

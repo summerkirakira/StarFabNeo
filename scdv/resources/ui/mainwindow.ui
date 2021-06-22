@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>854</width>
-    <height>893</height>
+    <width>940</width>
+    <height>540</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>854</width>
+     <width>940</width>
      <height>21</height>
     </rect>
    </property>
@@ -46,7 +46,15 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuRecent">
+     <property name="title">
+      <string>Recent</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionClear_Recent"/>
+    </widget>
     <addaction name="actionOpen"/>
+    <addaction name="menuRecent"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
@@ -62,35 +70,38 @@
     <property name="title">
      <string>View</string>
     </property>
-    <widget class="QMenu" name="menuStyle">
-     <property name="title">
-      <string>Theme</string>
-     </property>
-     <addaction name="actionLightTheme"/>
-     <addaction name="actionDarkTheme"/>
-    </widget>
     <addaction name="actionP4K"/>
     <addaction name="actionDatacore"/>
     <addaction name="actionLocal_Files"/>
     <addaction name="actionConsole"/>
-    <addaction name="separator"/>
-    <addaction name="menuStyle"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionExportShipEntity"/>
+   </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <widget class="QMenu" name="menuTheme">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="actionDarkTheme"/>
+     <addaction name="actionLightTheme"/>
+    </widget>
+    <addaction name="actionSettings"/>
+    <addaction name="menuTheme"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionLight">
-   <property name="text">
-    <string>Light</string>
-   </property>
-  </action>
-  <action name="actionDark">
-   <property name="text">
-    <string>Dark</string>
-   </property>
-  </action>
   <action name="actionOpen">
    <property name="text">
     <string>&amp;Open...</string>
@@ -140,14 +151,32 @@
     <string>Console</string>
    </property>
   </action>
-  <action name="actionLightTheme">
+  <action name="actionExportShipEntity">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>Light</string>
+    <string>Export Ship Entity</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionClear_Recent">
+   <property name="text">
+    <string>Clear Recent</string>
    </property>
   </action>
   <action name="actionDarkTheme">
    <property name="text">
     <string>Dark</string>
+   </property>
+  </action>
+  <action name="actionLightTheme">
+   <property name="text">
+    <string>Light</string>
    </property>
   </action>
  </widget>

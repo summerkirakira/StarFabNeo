@@ -33,6 +33,5 @@ def run():
                                    str(CONTRIB_DIR / 'texconv.exe'))
 
 
-
 if __name__ == "__main__":
     run()

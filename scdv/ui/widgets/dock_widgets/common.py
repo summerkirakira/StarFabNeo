@@ -8,6 +8,7 @@ from scdv.ui import qtc, qtw, qtg
 from scdv.resources import RES_PATH
 from scdv.ui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
 from scdv.ui.widgets.image_viewer import SUPPORTED_IMG_FORMATS, QImageViewer, DDSImageViewer
+from scdv.ui.widgets.chunked_file_viewer import SUPPORTED_CHUNK_FILE_FORMATS, ChunkedObjView
 
 icon_provider = qtw.QFileIconProvider()
 
@@ -18,11 +19,14 @@ class SCDVContextMenuManager(qtc.QObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.default_menu = qtw.QMenu()
-        expand_all = self.default_menu.addAction('Expand All')
+        open = self.default_menu.addAction('Open')
+        open.triggered.connect(partial(self.handle_action, 'doubleclick'))
+
+        self.menus = {'': qtw.QMenu()}
+        expand_all = self.menus[''].addAction('Expand All')
         expand_all.triggered.connect(partial(self.handle_action, 'expand_all'))
-        collapse_all = self.default_menu.addAction('Collapse All')
+        collapse_all = self.menus[''].addAction('Collapse All')
         collapse_all.triggered.connect(partial(self.handle_action, 'collapse_all'))
-        self._menus = {}
 
     @Slot(str)
     def handle_action(self, action):
@@ -31,10 +35,12 @@ class SCDVContextMenuManager(qtc.QObject):
     def menu_for_path(self, path):
         if isinstance(path, str):
             path = Path(path)
-        return self._menus.get(path.suffix, self.default_menu)
+        return self.menus.get(path.suffix, self.default_menu)
 
 
 class SCDVDockWidget(qtw.QDockWidget):
+    closing = Signal()
+
     def __init__(self, scdv, *args, **kwargs):
         super().__init__(parent=scdv, *args, **kwargs)
         self.scdv = scdv
@@ -54,6 +60,8 @@ class SCDVDockWidget(qtw.QDockWidget):
             item = widget.dds_header
         elif item.path.suffix.lower()[1:] in SUPPORTED_EDITOR_FORMATS:
             widget = Editor(item)
+        elif item.path.suffix.lower()[1:] in SUPPORTED_CHUNK_FILE_FORMATS:
+            widget = ChunkedObjView(item)
         elif item.path.suffix.lower() in SUPPORTED_IMG_FORMATS:
             widget = QImageViewer.fromFile(item.contents())
 
@@ -100,7 +108,14 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
     @Slot(qtc.QPoint)
     def _show_ctx_menu(self, pos):
         self._ctx_item = self.sc_tree.indexAt(pos)
-        menu = self.ctx_manager.menu_for_path("")
+        try:
+            if isinstance(self.sc_tree_model, qtw.QFileSystemModel):
+                path = self.sc_tree_model.filePath(self.proxy_model.mapToSource(self._ctx_item))
+            else:
+                path = self.sc_tree_model.itemFromIndex(self.proxy_model.mapToSource(self._ctx_item)).path
+        except Exception as e:
+            path = ""
+        menu = self.ctx_manager.menu_for_path(path)
         menu.exec_(self.sc_tree.mapToGlobal(pos))
 
     @Slot(str)
@@ -108,6 +123,8 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         if action == 'collapse_all':
             self.sc_tree.collapseAll()
             return []
+        elif action == 'doubleclick':
+            return self._on_doubleclick(self._ctx_item) if self._ctx_item is not None else None
 
         selected_items = []
 
@@ -139,5 +156,6 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         self.proxy_model.setFilterRegExp(text)
 
     def deleteLater(self):
-        self.sc_tree_thread_pool.stop()
+        self.closing.emit()
+        self.sc_tree_thread_pool.waitForDone()
         super().deleteLater()
