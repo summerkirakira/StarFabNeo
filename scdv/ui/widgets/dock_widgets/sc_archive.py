@@ -104,9 +104,12 @@ class DCBLoader(P4KFileLoader):
                 self.scdv.update_status_progress.emit('load_dcb', i, 0, max, 'Loading Datacore')
                 t = time.time()
 
-            path = Path(r.filename)
-            item = self._node_cls(path, info=r, parent_archive=datacore)
-            tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), []).append(item)
+            try:
+                path = Path(r.filename)
+                item = self._node_cls(path, info=r, parent_archive=datacore)
+                tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), []).append(item)
+            except Exception as e:
+                print(f'Failed to open datacore record {r.filename}: {e}')
 
         for parent_path, rows in tmp.items():
             if self._should_cancel:
