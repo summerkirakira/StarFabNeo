@@ -1,6 +1,8 @@
+import os
 import sys
 import ctypes
 import asyncio
+from pathlib import Path
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import Qt
 
@@ -37,6 +39,14 @@ logging.info(f'SCDV {__version__}')
 if sys.executable.lower().endswith('pythonw.exe') or sys.executable.lower().endswith('scdv.exe'):
     sys.stdout = open('scdv.out', 'w')
     sys.stderr = open('scdv.err', 'w')
+else:
+    # if we've got a console, log to it as well as the log file
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    root = logging.getLogger()
+    root.addHandler(handler)
 
 
 def main():
@@ -54,6 +64,13 @@ def main():
         mw = MainWindow()
         mw.set_dark_theme()
         mw.show()
+
+        if os.environ.get('SCDV_SC_PATH'):
+            mw.open_scdir.emit(os.environ['SCDV_SC_PATH'])
+        elif len(sys.argv) > 1:
+            arg_dir = Path(sys.argv[-1])
+            if arg_dir.is_dir():
+                mw.open_scdir.emit(str(arg_dir))
 
         sys.exit(app.exec_())
     except SystemExit:

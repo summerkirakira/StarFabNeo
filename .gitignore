@@ -3,6 +3,10 @@ dist
 windows
 linux
 texconv.exe
+ww2ogg.exe
+revorb.exe
+packed_codebooks_aoTuV_603.bin
+scdv.*
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm+iml,linux,windows,vim,python,qt,qtcreator
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm+iml,linux,windows,vim,python,qt,qtcreator

@@ -158,6 +158,8 @@ class SCFileViewNode(qtg.QStandardItem, ContentItem):
 
     @cached_property
     def raw_size(self):
+        if os.environ.get('SCDV_QUICK'):
+            return 0
         if self.info is not None:
             return self.info.file_size
         elif self.hasChildren():
@@ -168,6 +170,8 @@ class SCFileViewNode(qtg.QStandardItem, ContentItem):
 
     @cached_property
     def raw_time(self):
+        if os.environ.get('SCDV_QUICK'):
+            return None
         if self.info is not None:
             return self.info.date_time
         elif self.hasChildren():
@@ -182,6 +186,8 @@ class SCFileViewNode(qtg.QStandardItem, ContentItem):
 
     @cached_property
     def size(self):
+        if os.environ.get('SCDV_QUICK'):
+            return 0
         if self.info is not None:
             return qtc.QLocale().formattedDataSize(self.info.file_size)
         if self.hasChildren():
@@ -198,6 +204,8 @@ class SCFileViewNode(qtg.QStandardItem, ContentItem):
 
     @cached_property
     def date_modified(self):
+        if os.environ.get('SCDV_QUICK'):
+            return ''
         if self.info is not None:
             return qtc.QDateTime(*self.info.date_time)  # .toString(qtc.Qt.DateFormat.SystemLocaleDate)
         if self.hasChildren():
@@ -353,8 +361,6 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         self.setWindowTitle(self.tr('Data.p4k'))
         self.scdv.opened.connect(self.handle_sc_opened)
 
-        self.sc_tree_model = None
-
         self.ctx_manager.default_menu.addSeparator()
         save_file = self.ctx_manager.default_menu.addAction('Save To...')
         save_file.triggered.connect(partial(self.ctx_manager.handle_action, 'save_to'))
@@ -363,13 +369,12 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         extract = self.ctx_manager.menus[''].addAction('Extract to...')
         extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
 
-        # self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
         self.proxy_model = P4KSortFilterProxyModel(parent=self)
-        self.proxy_model.setDynamicSortFilter(False)
         self.proxy_model.setRecursiveFilteringEnabled(True)
         self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.proxy_model.setFilterKeyColumn(4)
+        self.handle_sc_opened()
 
     @Slot(str)
     def _on_ctx_triggered(self, action):
@@ -423,7 +428,6 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
         self.sc_tree.hideColumn(4)
         self.raise_()
-        self.scdv.p4k_loaded.emit()
 
     def handle_sc_opened(self):
         if self.scdv.sc is not None:
@@ -459,14 +463,9 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
         self.setWindowTitle(self.tr('Datacore'))
         self.scdv.p4k_loaded.connect(self.handle_p4k_opened)
         self.sc_tree_thread_pool = qtc.QThreadPool()
-
-        self.sc_tree_model = None
-        self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
-        self.proxy_model.setDynamicSortFilter(False)
-        self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.proxy_model.setFilterKeyColumn(3)
+        if self.scdv.sc.is_loaded:
+            self.handle_p4k_opened()
 
     @Slot()
     def _finished_loading(self):

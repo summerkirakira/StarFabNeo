@@ -37,12 +37,7 @@ class FileViewDock(SCDVSearchableTreeDockWidget):
         self.scdv.opened.connect(self.handle_file_opened)
 
         self.sc_tree_model = qtw.QFileSystemModel()
-        self.proxy_model = SCFileSystemProxyModel(self)
         self.proxy_model.setSourceModel(self.sc_tree_model)
-        self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setFilterKeyColumn(0)
-        self.sc_tree.setModel(self.proxy_model)
 
     def _on_doubleclick(self, index):
         index = self.proxy_model.mapToSource(index)

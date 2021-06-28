@@ -39,10 +39,14 @@ class SCDVContextMenuManager(qtc.QObject):
 
 
 class SCDVDockWidget(qtw.QDockWidget):
+    __ui_file__ = None
+
     closing = Signal()
 
     def __init__(self, scdv, *args, **kwargs):
         super().__init__(parent=scdv, *args, **kwargs)
+        if self.__ui_file__ is not None:
+            uic.loadUi(self.__ui_file__, self)
         self.scdv = scdv
         self.ctx_manager = SCDVContextMenuManager()
         self.ctx_manager.action_triggered.connect(self._on_ctx_triggered)
@@ -70,9 +74,10 @@ class SCDVDockWidget(qtw.QDockWidget):
 
 
 class SCDVSearchableTreeDockWidget(SCDVDockWidget):
+    __ui_file__ = str(RES_PATH / 'ui' / 'FileViewDock.ui')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi(str(RES_PATH / 'ui' / 'FileViewDock.ui'), self)
 
         self.sc_breadcrumbs.setVisible(False)
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
@@ -91,6 +96,15 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         shortcut.setKey(qtg.QKeySequence("Return"))
         shortcut.setContext(qtc.Qt.WidgetShortcut)
         shortcut.activated.connect(self._on_enter_pressed)
+
+        self.sc_tree_model = None
+        self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
+        self.proxy_model.setDynamicSortFilter(False)
+        self.proxy_model.setRecursiveFilteringEnabled(True)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterKeyColumn(0)
+        self.sc_tree.setModel(self.proxy_model)
 
     def _handle_breadcrumbs(self, link):
         pass
@@ -118,14 +132,7 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         menu = self.ctx_manager.menu_for_path(path)
         menu.exec_(self.sc_tree.mapToGlobal(pos))
 
-    @Slot(str)
-    def _on_ctx_triggered(self, action):
-        if action == 'collapse_all':
-            self.sc_tree.collapseAll()
-            return []
-        elif action == 'doubleclick':
-            return self._on_doubleclick(self._ctx_item) if self._ctx_item is not None else None
-
+    def get_selected_items(self):
         selected_items = []
 
         def _add_indexes(indexes):
@@ -141,14 +148,25 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         if not selection and self._ctx_item is not None:
             selection = [self._ctx_item]
 
-        # Index Actions
-        if action == 'expand_all':
+        _add_indexes(selection)
+        return selected_items
+
+    @Slot(str)
+    def _on_ctx_triggered(self, action):
+        if action == 'collapse_all':
+            self.sc_tree.collapseAll()
+            return []
+        elif action == 'doubleclick':
+            return self._on_doubleclick(self._ctx_item) if self._ctx_item is not None else None
+        elif action == 'expand_all':
+            selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
+            if not selection and self._ctx_item is not None:
+                selection = [self._ctx_item]
             for index in selection:
                 self.sc_tree.expandRecursively(index)
             return []
+        return self.get_selected_items()
 
-        _add_indexes(selection)
-        return selected_items
 
     @Slot(str)
     def on_search_changed(self):

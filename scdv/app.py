@@ -59,10 +59,12 @@ class MainWindow(QMainWindow):
         self.actionClose.triggered.connect(self.handle_file_close)
         self.actionQuit.triggered.connect(self.close)
 
-        self.actionP4K.triggered.connect(self.show_p4k_view)
+        self.actionAudio.triggered.connect(self.show_audio)
+        self.actionConsole.triggered.connect(self.show_console)
         self.actionDatacore.triggered.connect(self.show_dcb_view)
         self.actionLocal_Files.triggered.connect(self.show_local_files)
-        self.actionConsole.triggered.connect(self.show_console)
+        self.actionP4K.triggered.connect(self.show_p4k_view)
+
         self.actionExportShipEntity.triggered.connect(self.show_export_ship_entity_dialog)
         self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
         self.actionClear_Recent.triggered.connect(self.clear_recent)
@@ -90,13 +92,6 @@ class MainWindow(QMainWindow):
         self.setup_dock_widgets()
         self._progress_tasks = {}
 
-        if os.environ.get('SCDV_SC_PATH'):
-            self.open_scdir.emit(os.environ['SCDV_SC_PATH'])
-        elif len(sys.argv) > 1:
-            arg_dir = Path(sys.argv[-1])
-            if arg_dir.is_dir():
-                self.open_scdir.emit(str(arg_dir))
-
     def _refresh_recent(self, recent=None):
         if recent is None:
             recent = self.settings.value('recent', [])
@@ -121,28 +116,11 @@ class MainWindow(QMainWindow):
         self.open_scdir.emit(scdir)
 
     def setup_dock_widgets(self):
-        dv = scdv.ui.widgets.dock_widgets.sc_archive.DCBViewDock(self)
-        dv.setObjectName('dcb_view')
-        dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
-        self.dock_widgets['dcb_view'] = dv
-        self.addDockWidget(qtc.Qt.LeftDockWidgetArea, dv)
-
-        pv = scdv.ui.widgets.dock_widgets.sc_archive.P4KViewDock(self)
-        pv.setObjectName('p4k_view')
-        pv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
-        self.dock_widgets['p4k_view'] = pv
-        self.addDockWidget(qtc.Qt.LeftDockWidgetArea, pv)
-        self.resizeDocks([pv], [950], qtc.Qt.Horizontal)
-
         fv = scdv.ui.widgets.dock_widgets.file_view.FileViewDock(self)
         fv.setObjectName('file_view')
         fv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
         self.dock_widgets['file_view'] = fv
         self.addDockWidget(qtc.Qt.LeftDockWidgetArea, fv)
-
-        self.tabifyDockWidget(pv, fv)
-        dv.hide()
-        pv.hide()
 
     def show_export_ship_entity_dialog(self):
         dlg = ShipEntityExporterDialog(self)
@@ -152,10 +130,25 @@ class MainWindow(QMainWindow):
         pass
 
     def show_p4k_view(self):
+        if 'p4k_view' not in self.dock_widgets:
+            pv = scdv.ui.widgets.dock_widgets.sc_archive.P4KViewDock(self)
+            pv.setObjectName('p4k_view')
+            pv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            self.dock_widgets['p4k_view'] = pv
+            self.addDockWidget(qtc.Qt.LeftDockWidgetArea, pv)
+            self.resizeDocks([pv], [950], qtc.Qt.Horizontal)
+            if 'file_view' in self.dock_widgets:
+                self.tabifyDockWidget(pv, self.dock_widgets['file_view'])
         self.dock_widgets['p4k_view'].show()
         self.dock_widgets['p4k_view'].raise_()
 
     def show_dcb_view(self):
+        if 'dcb_view' not in self.dock_widgets:
+            dv = scdv.ui.widgets.dock_widgets.sc_archive.DCBViewDock(self)
+            dv.setObjectName('dcb_view')
+            dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            self.dock_widgets['dcb_view'] = dv
+            self.addDockWidget(qtc.Qt.LeftDockWidgetArea, dv)
         self.dock_widgets['dcb_view'].show()
         self.dock_widgets['dcb_view'].raise_()
 
@@ -163,11 +156,22 @@ class MainWindow(QMainWindow):
         self.dock_widgets['file_view'].show()
         self.dock_widgets['file_view'].raise_()
 
+    def show_audio(self):
+        if 'audio_view' not in self.dock_widgets:
+            d = scdv.ui.widgets.dock_widgets.audio.AudioViewDock(self)
+            d.setObjectName('audio_view')
+            d.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            self.dock_widgets['audio_view'] = d
+            self.addDockWidget(qtc.Qt.RightDockWidgetArea, d)
+        self.dock_widgets['audio_view'].show()
+        self.dock_widgets['audio_view'].raise_()
+
     def show_console(self):
         if 'console' not in self.dock_widgets:
             cw = dock_widgets.PyConsoleDockWidget(self)
             cw.setObjectName('console')
-            cw.setAllowedAreas(qtc.Qt.BottomDockWidgetArea)
+            cw.setAllowedAreas(qtc.Qt.BottomDockWidgetArea | qtc.Qt.LeftDockWidgetArea |
+                               qtc.Qt.RightDockWidgetArea | qtc.Qt.TopDockWidgetArea)
             self.dock_widgets['console'] = cw
             self.addDockWidget(qtc.Qt.BottomDockWidgetArea, cw)
         self.dock_widgets['console'].show()
@@ -283,6 +287,17 @@ class MainWindow(QMainWindow):
             self.opened.emit(str(scdir))
             self.setWindowTitle(f'{scdir} ({self.sc.version_label})')
             self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {scdir}')
+            self.task_started.emit('load_p4k', 'Opening Data.p4k', 0, 1)
+            prog = qtw.QProgressDialog("Opening Data.p4k", "", 0, 1)
+            prog.setWindowModality(qtc.Qt.WindowModal)
+            prog.setCancelButton(None)
+            prog.forceShow()
+            qtg.QGuiApplication.processEvents()
+            p4k = self.sc.p4k
+            prog.setValue(1)
+            self.task_finished.emit('load_p4k', True, '')
+            self.p4k_loaded.emit()
+            qtg.QGuiApplication.processEvents()
         except Exception as e:
             dlg = qtw.QErrorMessage(self)
             dlg.setWindowTitle('Could not open Star Citizen directory')

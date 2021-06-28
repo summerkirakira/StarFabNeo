@@ -18,12 +18,13 @@ author = "Ventorvar"
 author_email = "ventorvar@gmail.com"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8,<3.9"
 QtPy = "^1.9.0"
 PySide2 = "^5.15.2"
 Pillow = "^8.0.1"
 qtconsole = "^5.0.1"
-scdatatools = "^0.1.7"
+scdatatools = "^0.1.8"
+humanize = "^3.9.0"
 
 [tool.poetry.dev-dependencies]
 toml = "^0.10.2"

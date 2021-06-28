@@ -40,7 +40,11 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLineEdit" name="sc_tree_search"/>
+        <widget class="QLineEdit" name="sc_tree_search">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="sc_search">

@@ -62,28 +62,29 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
-     <string>View</string>
+     <string>&amp;View</string>
     </property>
-    <addaction name="actionP4K"/>
+    <addaction name="actionAudio"/>
+    <addaction name="actionConsole"/>
     <addaction name="actionDatacore"/>
     <addaction name="actionLocal_Files"/>
-    <addaction name="actionConsole"/>
+    <addaction name="actionP4K"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>Tools</string>
+     <string>&amp;Tools</string>
     </property>
     <addaction name="actionExportShipEntity"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>&amp;Settings</string>
     </property>
     <widget class="QMenu" name="menuTheme">
      <property name="title">
@@ -135,20 +136,32 @@
    <property name="text">
     <string>P4K</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionDatacore">
    <property name="text">
     <string>Datacore</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
    </property>
   </action>
   <action name="actionLocal_Files">
    <property name="text">
     <string>Local Files</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+4</string>
+   </property>
   </action>
   <action name="actionConsole">
    <property name="text">
     <string>Console</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
    </property>
   </action>
   <action name="actionExportShipEntity">
@@ -177,6 +190,14 @@
   <action name="actionLightTheme">
    <property name="text">
     <string>Light</string>
+   </property>
+  </action>
+  <action name="actionAudio">
+   <property name="text">
+    <string>Audio</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
    </property>
   </action>
  </widget>

@@ -1,5 +1,10 @@
 import io
+import time
 from scdv.ui import qtc, qtg, qtw
+
+
+def seconds_to_str(secs):
+    return time.strftime("%M:%S" if secs < 60*60 else "%H:%M:%S", time.gmtime(secs))
 
 
 class ScrollMessageBox(qtw.QMessageBox):
