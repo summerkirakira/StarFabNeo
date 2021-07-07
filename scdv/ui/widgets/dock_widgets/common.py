@@ -88,7 +88,7 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         self.sc_tree.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
         self.sc_tree.setSortingEnabled(True)
 
-        self.sc_tree_search.returnPressed.connect(self.on_search_changed)
+        self.sc_tree_search.editingFinished.connect(self.on_search_changed)
         self.sc_search.clicked.connect(self.on_search_changed)
         self.sc_tree.doubleClicked.connect(self._on_doubleclick)
 

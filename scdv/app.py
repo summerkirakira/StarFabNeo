@@ -149,6 +149,7 @@ class MainWindow(QMainWindow):
             dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
             self.dock_widgets['dcb_view'] = dv
             self.addDockWidget(qtc.Qt.LeftDockWidgetArea, dv)
+            self.resizeDocks([dv], [950], qtc.Qt.Horizontal)
         self.dock_widgets['dcb_view'].show()
         self.dock_widgets['dcb_view'].raise_()
 
@@ -163,6 +164,8 @@ class MainWindow(QMainWindow):
             d.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
             self.dock_widgets['audio_view'] = d
             self.addDockWidget(qtc.Qt.RightDockWidgetArea, d)
+            self.resizeDocks([d], [500], qtc.Qt.Horizontal)
+
         self.dock_widgets['audio_view'].show()
         self.dock_widgets['audio_view'].raise_()
 
@@ -219,12 +222,13 @@ class MainWindow(QMainWindow):
 
     @Slot(str, bool, str)
     def _handle_task_finished(self, task, success=True, msg=''):
-        if msg:
-            self._progress_tasks[task]['msg'] = msg
-        elif not success:
-            self._progress_tasks[task]['msg'] = msg if msg else f'{self._progress_tasks[task]["msg"]} failed'
-        else:
-            del self._progress_tasks[task]
+        if task in self._progress_tasks:
+            if msg:
+                self._progress_tasks[task]['msg'] = msg
+            elif not success:
+                self._progress_tasks[task]['msg'] = msg if msg else f'{self._progress_tasks[task]["msg"]} failed'
+            else:
+                del self._progress_tasks[task]
         self._update_status_bar()
 
     @Slot(qtc.QPoint)

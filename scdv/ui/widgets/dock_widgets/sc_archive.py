@@ -1,7 +1,8 @@
 import io
 import os
-import time
 import shutil
+import time
+import logging
 from functools import cached_property, partial
 from pathlib import Path
 
@@ -14,6 +15,9 @@ from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTre
 from scdv.utils import show_file_in_filemanager
 from scdv.ui.utils import ScrollMessageBox, ContentItem
 
+
+logger = logging.getLogger(__name__)
+
 SCFILEVIEW_COLUMNS = ['Name', 'Size', 'Kind', 'Date Modified', 'SearchColumn']
 DCBVIEW_COLUMNS = ['Name', 'Type', 'GUID', 'SearchColumn']
 RECORDS_ROOT_PATH = Path('libs/foundry/records')
@@ -25,11 +29,10 @@ class LoaderSignals(qtc.QObject):
 
 
 class P4KFileLoader(qtc.QRunnable):
-    def __init__(self, scdv, model, archive, *args, **kwargs):
+    def __init__(self, scdv, model, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scdv = scdv
         self.model = model
-        self.archive = archive
         self.signals = LoaderSignals()
         self._node_cls = SCFileViewNode
         self._should_cancel = False
@@ -107,14 +110,17 @@ class DCBLoader(P4KFileLoader):
             try:
                 path = Path(r.filename)
                 item = self._node_cls(path, info=r, parent_archive=datacore)
-                tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), []).append(item)
+                parent = tmp.setdefault(path.relative_to(RECORDS_ROOT_PATH).parent.as_posix(), {})
+                if item.name in parent:
+                    item.name = f'{item.name}.{item.guid}'
+                parent[item.name] = item
             except Exception as e:
-                print(f'Failed to open datacore record {r.filename}: {e}')
+                logger.exception(f'Failed to load datacore record {r.filename}', exc_info=e)
 
         for parent_path, rows in tmp.items():
             if self._should_cancel:
                 return  # immediately break
-            self.model.appendRowsToPath(parent_path, rows)
+            self.model.appendRowsToPath(parent_path, list(rows.values()))
 
         self.scdv.task_finished.emit('load_dcb', True, '')
         self.signals.finished.emit()
@@ -320,7 +326,7 @@ class DCBFileViewModel(SCFileViewModel):
         super().__init__(*args, **kwargs)
         self.setColumnCount(len(DCBVIEW_COLUMNS))
         self.setHorizontalHeaderLabels(DCBVIEW_COLUMNS)
-        self.parent_archive = self.sc.datacore
+        # self.parent_archive = self.sc.datacore
         self._node_cls = DCBViewNode
         self._guid_cache = {}
 
@@ -389,14 +395,14 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
             edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Extract to...')
             if edir:
                 total = len(selected_items)
-                self.scdv.task_started.emit('extract', f'Extraction to {edir}', 0, total)
+                self.scdv.task_started.emit('extract', f'Extracting to {edir}', 0, total)
                 for i, item in enumerate(selected_items):
                     self.scdv.update_status_progress.emit('extract', 1, 0, total,
                                                           f'Extracting {item.path.name} to {edir}')
                     try:
                         item.extract_to(edir)
                     except Exception as e:
-                        print(e)
+                        logger.exception(f'Exception while extraction', exc_info=e)
 
                 self.scdv.task_finished.emit('extract', True, '')
                 show_file_in_filemanager(Path(edir))
@@ -411,7 +417,7 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
                     try:
                         item.save_to(edir)
                     except Exception as e:
-                        print(e)
+                        logger.exception(exc_info=e)
 
                 self.scdv.task_finished.emit('extract', True, '')
                 show_file_in_filemanager(Path(edir))
@@ -433,7 +439,7 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         if self.scdv.sc is not None:
             self.show()
             self.sc_tree_model = SCFileViewModel(self.scdv.sc, parent=self)
-            loader = P4KFileLoader(self.scdv, self.sc_tree_model, 'p4k')
+            loader = P4KFileLoader(self.scdv, self.sc_tree_model)
             self.closing.connect(lambda: loader.signals.cancel.emit())
             loader.signals.finished.connect(self._finished_loading)
             self.sc_tree_thread_pool.start(loader)
@@ -467,6 +473,14 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
         if self.scdv.sc.is_loaded:
             self.handle_p4k_opened()
 
+        self.ctx_manager.default_menu.addSeparator()
+        extract = self.ctx_manager.default_menu.addAction('Extract to...')
+        extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
+        extract = self.ctx_manager.menus[''].addAction('Extract to...')
+        extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
+        extract_all = self.ctx_manager.menus[''].addAction('Extract All...')
+        extract_all.triggered.connect(partial(self.ctx_manager.handle_action, 'extract_all'))
+
     @Slot()
     def _finished_loading(self):
         self.proxy_model.setSourceModel(self.sc_tree_model)
@@ -494,3 +508,40 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
             widget = DCBRecordItemView(item, self.scdv)
             self.scdv.add_tab_widget(item.path, widget, item.name, tooltip=item.path.as_posix())
             # TODO: error dialog
+
+    def extract_items(self, items):
+        items = [i for i in items if i.guid]
+        edir = Path(qtw.QFileDialog.getExistingDirectory(self.scdv, 'Extract to...'))
+        if edir:
+            total = len(items)
+            self.scdv.task_started.emit('extract_dcb', f'Extracting to {edir.name}', 0, total)
+            t = time.time()
+            for i, item in enumerate(items):
+                if (time.time() - t) > 0.5:
+                    self.scdv.update_status_progress.emit('extract_dcb', i, 0, total,
+                                                          f'Extracting records to {edir.name}')
+                    t = time.time()
+                try:
+                    outfile = edir / item.path.relative_to(RECORDS_ROOT_PATH)
+                    outfile.parent.mkdir(parents=True, exist_ok=True)
+                    if outfile.is_file():
+                        outfile = outfile.parent / f'{outfile.stem}.{item.guid}{outfile.suffix}'
+                    with outfile.open('wb') as o:
+                        shutil.copyfileobj(item.contents(), o)
+                    qtg.QGuiApplication.processEvents()
+                except Exception as e:
+                    logger.exception(f'Exception extracting record {item.path}', exc_info=e)
+
+            self.scdv.task_finished.emit('extract_dcb', True, '')
+            show_file_in_filemanager(Path(edir))
+
+    @Slot(str)
+    def _on_ctx_triggered(self, action):
+        if action == 'extract':
+            selected_items = self.get_selected_items()
+            # Item Actions
+            if not selected_items:
+                return
+            self.extract_items(selected_items)
+        elif action == 'extract_all':
+            self.extract_items(self.sc_tree_model._guid_cache.values())
