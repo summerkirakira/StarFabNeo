@@ -4,18 +4,13 @@ import shutil
 import logging
 from pathlib import Path
 from functools import partial
-from tempfile import NamedTemporaryFile
-from subprocess import check_output, CalledProcessError, STDOUT
 
 from qtpy.QtCore import Signal, Slot
 from qtpy import QtMultimedia
 
 from scdv.ui import qtc, qtw, qtg
 from scdv import CONTRIB_DIR, get_scdv
-from scdatatools.cry.cryxml import is_cryxmlb_file, dict_from_cryxml_string
-from scdatatools.wwise.utils import wwise_id_for_string
-from scdatatools.utils import dict_search
-from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget
+from scdv.ui.widgets.dock_widgets.common import SCDVSearchableTreeDockWidget, AudioConverter, BackgroundRunnerSignals
 from scdv.utils import show_file_in_filemanager
 from scdv.ui.utils import ScrollMessageBox, ContentItem, seconds_to_str
 from scdv.resources import RES_PATH
@@ -41,9 +36,14 @@ else:
     REVORB = Path(REVORB)
 
 
-class LoaderSignals(qtc.QObject):
-    cancel = Signal()
-    finished = Signal()
+class _AudioCleanup(qtc.QRunnable):
+    def __init__(self, ogg_path, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ogg_path = ogg_path
+
+    def run(self):
+        time.sleep(0.5)  # makes sure it's unloaded from media_player
+        Path(self.ogg_path).unlink(missing_ok=True)
 
 
 class SCAudioViewLoader(qtc.QRunnable):
@@ -51,7 +51,7 @@ class SCAudioViewLoader(qtc.QRunnable):
         super().__init__(*args, **kwargs)
         self.scdv = scdv
         self.model = model
-        self.signals = LoaderSignals()
+        self.signals = BackgroundRunnerSignals()
         self._node_cls = SCP4kAudioViewNode
         self._should_cancel = False
         self.signals.cancel.connect(self._handle_cancel)
@@ -94,7 +94,18 @@ class SCAudioViewLoader(qtc.QRunnable):
                 ])
 
         self.scdv.task_finished.emit('load_gameaudio', True, '')
-        self.signals.finished.emit()
+
+        # TODO: create a nice way to browse/play wem files directly
+        # tmp = {}
+        # self.scdv.task_started.emit('load_wems', 'Reading Wems', 0, len(self.scdv.sc.wwise.wems))
+        # for wem in sorted(self.scdv.sc.wwise.wems):
+        #     item =
+        #     if wem.startswith('ext'):
+        #         wem_path = Path(wem[:3]) / wem[3:5] / wem[5:7] / wem[7:]
+        #     else:
+        #         wem_path = Path(wem[:2]) / wem[2:4] / wem[4:]
+        # self.scdv.task_finished.emit('load_wems', True, '')
+        self.signals.finished.emit({})
 
 
 class SCP4kAudioViewNode(qtg.QStandardItem, ContentItem):
@@ -133,11 +144,16 @@ class SCAudioViewModel(SCFileViewModel):
 class AudioViewDock(SCDVSearchableTreeDockWidget):
     __ui_file__ = str(RES_PATH / 'ui' / 'AudioViewDock.ui')
 
+    audio_conversion_complete = Signal(str, Path, str)
+    play_wem = Signal(str)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle(self.tr('Audio'))
         self.scdv.p4k_loaded.connect(self.handle_p4k_opened)
         self.handle_p4k_opened()  # check if the p4k is opened
+
+        self.play_wem.connect(self._handle_play_wem)
 
         self._currently_playing = None
         self._currently_playing_wem_id = None
@@ -152,6 +168,8 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
         self._media_player.durationChanged.connect(self._handle_duration_changed)
         self._media_player.positionChanged.connect(self._handle_position_changed)
         self._media_player.stateChanged.connect(self._handle_state_changed)
+
+        self.audio_conversion_complete.connect(self._handle_audio_conversion)
 
         self.splitter.setCollapsible(0, False)
         self.splitter.setCollapsible(1, True)
@@ -247,7 +265,7 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
             self.sc_tree.expand(tree_item)
             self.sc_tree.scrollTo(tree_item)
 
-    def _change_media(self, item, wem_id):
+    def _change_media(self, item, wem_index):
         """ Returns the item if set correctly, else None """
         if item.atl_name is None or not item.wems:
             return None
@@ -267,13 +285,52 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
 
         if self._audio_tmp is not None:
             self._media_player.setMedia(QtMultimedia.QMediaContent())
-            time.sleep(0.5)
-            self._audio_tmp.unlink()
+            self.sc_tree_thread_pool.start(_AudioCleanup(self._audio_tmp))
             self._audio_tmp = None
-        self._audio_tmp = self.scdv.sc.wwise.convert_wem(item.wems[wem_id], return_file=True)
-        self._currently_playing = item
-        self._currently_playing_wem_id = wem_id
-        self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
+
+        try:
+            conv = AudioConverter(item.wems[wem_index])
+            conv.signals.finished.connect(self._handle_audio_conversion)
+            self.sc_tree_thread_pool.start(conv)
+            # self._audio_tmp = self.scdv.sc.wwise.convert_wem(item.wems[wem_index], return_file=True)
+            self._currently_playing = item
+            self._currently_playing_wem_id = wem_index
+            # self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
+        except Exception as e:
+            ScrollMessageBox.critical(self, "Audio", f"Cannot play {item.atl_name}: {repr(e)}")
+            self._currently_playing = None
+            self._currently_playing_wem_id = None
+
+    def _handle_play_wem(self, wem_id, item=None):
+        """ Allows for the playing of a wem from an item, or directly from the p4k """
+        self.stop()
+        if item is None:
+            # TODO: _fake_item is a hacky hack hack way of just "getting it in", should be fixed
+            item = SCP4kAudioViewNode(atl_name=str(wem_id), path=Path(str(wem_id)))
+            item._wems = [wem_id]
+            item._wems_loaded = True
+        self._playlist = []
+        self.play(item, item.wems.index(wem_id))
+
+    @Slot(str, Path)
+    def _handle_audio_conversion(self, conv_result):
+        wem_id = conv_result.get('id')
+        ogg_path = conv_result.get('ogg')
+        error_msg = conv_result.get('msg')
+        if error_msg:
+            ScrollMessageBox.critical(self, "Audio", error_msg)
+            self._currently_playing = None
+            self._currently_playing_wem_id = None
+        elif (self._currently_playing is not None and self._currently_playing_wem_id is not None and
+              self._currently_playing.wems[self._currently_playing_wem_id] == wem_id):
+            self._audio_tmp = ogg_path
+            self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
+            wem_item = self.wem_list.item(self._currently_playing_wem_id)
+            self.wem_list.scrollToItem(wem_item)
+            self._media_player.play()
+        elif ogg_path:
+            # we must have started playing a new song, unlink this file
+            os.unlink(ogg_path)
 
     def set_volume(self, level):
         self._media_player.setVolume(level)
@@ -302,8 +359,7 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
 
         if item != self._currently_playing or wem_id != self._currently_playing_wem_id:
             self._change_media(item, wem_id)
-        if item == self._currently_playing and wem_id == self._currently_playing_wem_id:
-
+        else:
             wem_item = self.wem_list.item(self._currently_playing_wem_id)
             self.wem_list.scrollToItem(wem_item)
             self._media_player.play()
@@ -368,6 +424,10 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
 
     def handle_p4k_opened(self):
         if self.scdv.sc is not None and self.scdv.sc.is_loaded:
+            wwise = self.scdv.sc.wwise
+            wwise.ww2ogg = WW2OGG
+            wwise.revorb = REVORB
+
             self.show()
             self.sc_tree_model = SCAudioViewModel(self.scdv.sc, parent=self)
             loader = SCAudioViewLoader(self.scdv, self.sc_tree_model)

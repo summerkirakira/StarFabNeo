@@ -11,7 +11,7 @@ from qtpy.QtCore import Signal, Slot
 from scdv.ui import qtc, qtw, qtg
 from scdatatools.cry.cryxml import pprint_xml_tree, etree_from_cryxml_file
 from scdv.ui.widgets.dcbrecord import DCBRecordItemView
-from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget
+from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget, AudioConverter
 from scdv.utils import show_file_in_filemanager
 from scdv.ui.utils import ScrollMessageBox, ContentItem
 
@@ -375,6 +375,10 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
         extract = self.ctx_manager.menus[''].addAction('Extract to...')
         extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
 
+        wem_menu = self.ctx_manager.menus['.wem'] = qtw.QMenu()
+        convert_wem = wem_menu.addAction('Convert wem')
+        convert_wem.triggered.connect(partial(self.ctx_manager.handle_action, 'convert_wem'))
+
         self.proxy_model = P4KSortFilterProxyModel(parent=self)
         self.proxy_model.setRecursiveFilteringEnabled(True)
         self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
@@ -421,6 +425,26 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
 
                 self.scdv.task_finished.emit('extract', True, '')
                 show_file_in_filemanager(Path(edir))
+        elif action == 'convert_wem':
+            edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Save To...')
+            if edir:
+                edir = Path(edir)
+                total = len(selected_items)
+                self.scdv.task_started.emit('convert_wem', f'Converting to {edir}', 0, total)
+                for i, item in enumerate(selected_items):
+                    if item.path.suffix != '.wem':
+                        continue
+                    self.scdv.update_status_progress.emit('convert_wem', 1, 0, total,
+                                                          f'Converting {item.path.name} to {edir}')
+                    try:
+                        result = AudioConverter(item.path.stem).run()
+                        if result['ogg']:
+                            shutil.move(result['ogg'], edir / f'{item.path.name}.ogg')
+                    except Exception as e:
+                        logger.exception(f'Failed to convert wem {item.path}', exc_info=e)
+
+                self.scdv.task_finished.emit('convert_wem', True, '')
+                show_file_in_filemanager(Path(edir))
 
     def _finished_loading(self):
         self.proxy_model.paths = list(self.scdv.sc.p4k.NameToInfo.keys())
@@ -457,6 +481,8 @@ class P4KViewDock(SCDVSearchableTreeDockWidget):
                                    key=lambda item: item.path.as_posix())
 
                     self._handle_item_action({items[0].path.as_posix(): items}, self.sc_tree_model, index)
+                elif item.path.suffix == '.wem':
+                    self.scdv.play_wem(item.path.stem)
                 else:
                     self._handle_item_action(item, self.sc_tree_model, index)
         except Exception as e:

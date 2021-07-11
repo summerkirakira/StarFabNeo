@@ -169,6 +169,10 @@ class MainWindow(QMainWindow):
         self.dock_widgets['audio_view'].show()
         self.dock_widgets['audio_view'].raise_()
 
+    def play_wem(self, wem_id):
+        self.show_audio()
+        self.dock_widgets['audio_view'].play_wem.emit(wem_id)
+
     def show_console(self):
         if 'console' not in self.dock_widgets:
             cw = dock_widgets.PyConsoleDockWidget(self)
@@ -292,7 +296,9 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(f'{scdir} ({self.sc.version_label})')
             self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {scdir}')
             self.task_started.emit('load_p4k', 'Opening Data.p4k', 0, 1)
-            prog = qtw.QProgressDialog("Opening Data.p4k", "", 0, 1)
+
+            # Block the UI until we've read the minimum p4k/datacore
+            prog = qtw.QProgressDialog("Opening Data.p4k", "", 0, 2)
             prog.setWindowModality(qtc.Qt.WindowModal)
             prog.setCancelButton(None)
             prog.forceShow()
@@ -301,6 +307,14 @@ class MainWindow(QMainWindow):
             prog.setValue(1)
             self.task_finished.emit('load_p4k', True, '')
             self.p4k_loaded.emit()
+
+            prog.setLabelText("Reading DataCore")
+            self.task_started.emit('load_datacore', 'Opening Game.dcb', 0, 1)
+            qtg.QGuiApplication.processEvents()
+            datacore = self.sc.datacore
+            prog.setValue(2)
+            self.task_finished.emit('load_datacore', True, '')
+            self.datacore_loaded.emit()
             qtg.QGuiApplication.processEvents()
         except Exception as e:
             dlg = qtw.QErrorMessage(self)

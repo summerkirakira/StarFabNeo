@@ -1,9 +1,12 @@
+import logging
 from functools import partial
 from pathlib import Path
 
-from qtpy import uic
+from PySide2.QtCore import Signal
+from qtpy import uic, QtCore
 from qtpy.QtCore import Signal, Slot
 
+from scdv import get_scdv
 from scdv.ui import qtc, qtw, qtg
 from scdv.resources import RES_PATH
 from scdv.ui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
@@ -11,6 +14,7 @@ from scdv.ui.widgets.image_viewer import SUPPORTED_IMG_FORMATS, QImageViewer, DD
 from scdv.ui.widgets.chunked_file_viewer import SUPPORTED_CHUNK_FILE_FORMATS, ChunkedObjView
 
 icon_provider = qtw.QFileIconProvider()
+logger = logging.getLogger(__name__)
 
 
 class SCDVContextMenuManager(qtc.QObject):
@@ -60,6 +64,7 @@ class SCDVDockWidget(qtw.QDockWidget):
         widget = None
 
         if isinstance(item, dict):
+            # TODO: this needs be handled much better than "is it a dict" -.-'
             widget = DDSImageViewer(list(item.values())[0])
             item = widget.dds_header
         elif item.path.suffix.lower()[1:] in SUPPORTED_EDITOR_FORMATS:
@@ -177,3 +182,27 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         self.closing.emit()
         self.sc_tree_thread_pool.waitForDone()
         super().deleteLater()
+
+
+class AudioConverter(qtc.QRunnable):
+    def __init__(self, wem_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.signals = BackgroundRunnerSignals()
+        self.wem_id = wem_id
+
+    def run(self):
+        try:
+            scdv = get_scdv()
+            oggfile = scdv.sc.wwise.convert_wem(self.wem_id, return_file=True)
+            result = {'id': self.wem_id, 'ogg': oggfile, 'msg': ''}
+        except Exception as e:
+            msg = f'AudioConverter failed to convert wem {self.wem_id}: {repr(e)}'
+            logger.exception(msg, exc_info=e)
+            result = {'id': self.wem_id, 'ogg': None, 'msg': msg}
+        self.signals.finished.emit(result)
+        return result
+
+
+class BackgroundRunnerSignals(qtc.QObject):
+    cancel = Signal()
+    finished = Signal(dict)
