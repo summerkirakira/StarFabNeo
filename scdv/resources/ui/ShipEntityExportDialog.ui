@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>518</width>
-    <height>412</height>
+    <width>652</width>
+    <height>428</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -36,7 +36,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <item>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="ship_entity_frame">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -65,7 +65,13 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame">
+    <widget class="QFrame" name="options_frame">
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -73,10 +79,16 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QDialogButtonBox" name="buttonBox">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -104,6 +116,126 @@
         <property name="text">
          <string>Deselect All</string>
         </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="toolTip">
+         <string>SCDV will automatically convert CryXml binary content to standard XML or JSON formatted files.</string>
+        </property>
+        <property name="title">
+         <string>CryXml Conversion Format</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QRadioButton" name="convertFormatXML">
+           <property name="text">
+            <string>XML</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="convertFormatJSON">
+           <property name="text">
+            <string>JSON</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Options</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QCheckBox" name="opt_autoUnsplitTextures">
+           <property name="toolTip">
+            <string>Automatically un-split &quot;dds.n&quot; files into a single &quot;dds&quot; file</string>
+           </property>
+           <property name="text">
+            <string>Automatically unsplit textures</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_autoConvertTextures">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Automatically convert DDS textures to TIF formats. This requires automatically unsplitting textures, and the original DDS file will also be extracted.</string>
+           </property>
+           <property name="text">
+            <string>Automatically convert textures</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_createSubFolder">
+           <property name="toolTip">
+            <string>This will create a new folder with the ships name in the selected export directory and extract all of the ships data there. Otherwise, all ships will be extracted into the same, selected export directory.</string>
+           </property>
+           <property name="text">
+            <string>Create sub-folder for ship</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_autoConvertSounds">
+           <property name="toolTip">
+            <string>Automatically convert referenced ship sound files to ogg files. The converted files will be named by their trigger name.</string>
+           </property>
+           <property name="text">
+            <string>Automatically convert sounds</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_autoConvertModels">
+           <property name="toolTip">
+            <string>Automatically convert CryEngine (.cga/.cgf/.skin/.chr) models to standard formats.</string>
+           </property>
+           <property name="text">
+            <string>Automatically convert models</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_genModelLog">
+           <property name="toolTip">
+            <string>Create an addition log file containing all of the extracted model files (cga/cgf/chr/skin)</string>
+           </property>
+           <property name="text">
+            <string>Generate Extracted Models Log</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>

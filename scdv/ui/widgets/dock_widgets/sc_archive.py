@@ -496,7 +496,7 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
         self.scdv.p4k_loaded.connect(self.handle_p4k_opened)
         self.sc_tree_thread_pool = qtc.QThreadPool()
         self.proxy_model.setFilterKeyColumn(3)
-        if self.scdv.sc.is_loaded:
+        if self.scdv.sc is not None and self.scdv.sc.is_loaded:
             self.handle_p4k_opened()
 
         self.ctx_manager.default_menu.addSeparator()

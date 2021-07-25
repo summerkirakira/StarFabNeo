@@ -15,11 +15,13 @@ from scdatatools.sc import StarCitizen
 import scdv.ui.widgets.dock_widgets.file_view
 import scdv.ui.widgets.dock_widgets.sc_archive
 
+
 from .ui import qtg, qtw, qtc
 from .resources import RES_PATH
 from .ui.widgets import dock_widgets
 from .ui.widgets.editor import Editor
 from .ui.dialogs.ship_entity_exporter import ShipEntityExporterDialog
+from .blender import BlenderManager
 
 
 class MainWindow(QMainWindow):
@@ -88,6 +90,12 @@ class MainWindow(QMainWindow):
         self.sc_tree_model = None
         self.sc = None
 
+        self.blender_manager = BlenderManager(self)
+        self.actionOpenBlender.triggered.connect(self.open_blender)
+        self.actionStartBlenderLink.triggered.connect(self.blender_manager.start_blenderlink)
+        self.actionStopBlenderLink.triggered.connect(self.blender_manager.stop_blenderlink)
+        self.actionBlenderLinkStatus.triggered.connect(self.blender_manager.show_blenderlink_status)
+
         self.dock_widgets = {}
         self.setup_dock_widgets()
         self._progress_tasks = {}
@@ -121,6 +129,9 @@ class MainWindow(QMainWindow):
         fv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
         self.dock_widgets['file_view'] = fv
         self.addDockWidget(qtc.Qt.LeftDockWidgetArea, fv)
+
+    def open_blender(self, *args, **kwargs):
+        self.blender_manager.launch_blender(*args, **kwargs)
 
     def show_export_ship_entity_dialog(self):
         dlg = ShipEntityExporterDialog(self)

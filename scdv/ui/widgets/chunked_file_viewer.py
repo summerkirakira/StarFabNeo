@@ -37,7 +37,13 @@ def widget_for_chunk(info, obj, chunk, inline=False):
         e.setMinimumHeight(400)
         layout.addWidget(e)
     else:
-        layout.addWidget(qtw.QLabel(repr(chunk)[1:-1]))
+        try:
+            l = qtw.QLabel(str(chunk))
+        except Exception as e:
+            l = qtw.QLabel(f'Exception reading {repr(chunk)}: {repr(e)}')
+        l.setFrameStyle(qtw.QFrame.StyledPanel | qtw.QFrame.Sunken)
+        l.setTextInteractionFlags(qtc.Qt.TextSelectableByMouse)
+        layout.addWidget(l)
 
     widget.setLayout(layout)
     return widget

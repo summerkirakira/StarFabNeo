@@ -103,7 +103,7 @@ class DCBObjWidget(qtw.QWidget):
         layout = qtw.QVBoxLayout()
         list_props = []
         props = []
-        for name, value in self.obj.properties.items():
+        for name, value in sorted(self.obj.properties.items()):
             if isinstance(value, list):
                 list_props.append(name)
             else:
@@ -118,7 +118,7 @@ class DCBObjWidget(qtw.QWidget):
 
         for name in sorted(list_props):
             section = CollapseableWidget(name)
-            for i, item in enumerate(self.obj.properties[name]):
+            for i, item in enumerate(sorted(self.obj.properties[name], key=lambda o: getattr(o, 'name', ''))):
                 section.content.layout().addRow(f"{i}", widget_for_dcb_obj(item))
             layout.addWidget(section)
 

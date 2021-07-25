@@ -80,7 +80,20 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
+    <widget class="QMenu" name="menuBlender">
+     <property name="title">
+      <string>Blender</string>
+     </property>
+     <addaction name="actionOpenBlender"/>
+     <addaction name="separator"/>
+     <addaction name="actionStartBlenderLink"/>
+     <addaction name="actionStopBlenderLink"/>
+     <addaction name="actionBlenderLinkStatus"/>
+     <addaction name="separator"/>
+     <addaction name="actionInstall_Blender_Add_on"/>
+    </widget>
     <addaction name="actionExportShipEntity"/>
+    <addaction name="menuBlender"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -198,6 +211,34 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+1</string>
+   </property>
+  </action>
+  <action name="actionOpenBlender">
+   <property name="text">
+    <string>Open Blender</string>
+   </property>
+   <property name="toolTip">
+    <string>Open Blender with a link to SCDV</string>
+   </property>
+  </action>
+  <action name="actionStartBlenderLink">
+   <property name="text">
+    <string>Start Blender Link</string>
+   </property>
+  </action>
+  <action name="actionStopBlenderLink">
+   <property name="text">
+    <string>Stop Blender Link</string>
+   </property>
+  </action>
+  <action name="actionBlenderLinkStatus">
+   <property name="text">
+    <string>Blender Link Status</string>
+   </property>
+  </action>
+  <action name="actionInstall_Blender_Add_on">
+   <property name="text">
+    <string>Install Blender Add-on</string>
    </property>
   </action>
  </widget>

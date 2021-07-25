@@ -7,6 +7,7 @@ import tempfile
 import subprocess
 from pathlib import Path
 
+from scdatatools.utils import NamedBytesIO
 from scdv.ui import qtw
 from scdv import CONTRIB_DIR
 
@@ -18,16 +19,6 @@ def show_file_in_filemanager(path):
         subprocess.Popen(["open", "-R", str(path)])
     else:
         subprocess.Popen(["xdg-open", str(path)])
-
-
-class NamedBytesIO(io.BytesIO):
-    def __init__(self, content: bytes, name: str) -> None:
-        super().__init__(content)
-        self._name = name
-
-    @property
-    def name(self):
-        return self._name
 
 
 class ImageConverter:

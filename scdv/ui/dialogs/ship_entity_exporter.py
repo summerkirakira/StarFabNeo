@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from functools import partial
 from datetime import datetime
@@ -5,20 +6,28 @@ from datetime import datetime
 from qtpy import uic
 from qtpy.QtCore import Slot
 
+from scdv import CONTRIB_DIR
 from scdv.ui import qtg, qtw, qtc
 from scdv.resources import RES_PATH
 from scdv.utils import show_file_in_filemanager
+from scdv.ui.widgets.dock_widgets.audio import WW2OGG, REVORB
 
-from scdatatools.sc.utils import extract_ship
+from scdatatools.sc.utils import extract_ship, CGF_CONVERTER_MODEL_EXTS
 
 SHIP_ENTITES_PATH = 'libs/foundry/records/entities/spaceships'
+CGF_CONVERTER = shutil.which('cgf-converter.exe')
+if CGF_CONVERTER is None and (CONTRIB_DIR / 'cgf-converter.exe').is_file():
+    CGF_CONVERTER = Path(CONTRIB_DIR / 'cgf-converter.exe')
 
 
 class ShipEntityExportLog(qtw.QDialog):
-    def __init__(self, scdv, outdir, ships):
+    def __init__(self, scdv, outdir, ships, create_ship_dir=True, output_model_log=False, export_options=None):
         super().__init__(parent=scdv)
         self.setMinimumSize(1024, 800)
         self.scdv = scdv
+        self.export_options = export_options or {}
+        self.create_ship_dir = create_ship_dir
+        self.output_model_log = output_model_log
 
         self.output_tabs = qtw.QTabWidget()
         self.output_tabs.setTabsClosable(False)
@@ -44,7 +53,7 @@ class ShipEntityExportLog(qtw.QDialog):
         else:
             event.ignore()
 
-    def _output_monitor(self, msg, ship, console, default_fmt, log_file, overview_console):
+    def _output_monitor(self, msg, ship, console, default_fmt, log_file, model_log_file, overview_console):
         fmt = qtg.QTextCharFormat()
         overview_out = False
         if 'WARN' in msg:
@@ -63,6 +72,9 @@ class ShipEntityExportLog(qtw.QDialog):
             overview_console.setCurrentCharFormat(fmt)
             overview_console.append(f'{ship}: {msg}')
         log_file.write(f'{msg}\n')
+        if (model_log_file and msg.startswith('zstd |') and
+                any(msg.lower().endswith(_) for _ in CGF_CONVERTER_MODEL_EXTS)):
+            model_log_file.write(msg.split(' | ')[-1])
         qtg.QGuiApplication.processEvents()
 
     def extract_ships(self) -> None:
@@ -92,13 +104,20 @@ class ShipEntityExportLog(qtw.QDialog):
                 self.output_tabs.setCurrentWidget(tab)
 
                 self.setWindowTitle(f'Extracting Ship {i+1}/{len(self.ships)}: {ship.name} ({ship.id})')
-                logfile = self.outdir / ship.name / 'extraction.log'
+                ship_output_dir = self.outdir / ship.name if self.create_ship_dir else self.outdir
+                logfile = ship_output_dir / f'{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}_{ship.name}.extraction.log'
+                if self.output_model_log:
+                    model_log = ship_output_dir / f'{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}_{ship.name}' \
+                                                  f'.extracted_models.log'
+                else:
+                    model_log = ''
                 logfile.parent.mkdir(parents=True, exist_ok=True)
                 with logfile.open('w') as log:
                     extract_ship(self.scdv.sc, ship.id, self.outdir,
                                  monitor=partial(self._output_monitor, console=console, ship=ship.name,
-                                                 default_fmt=default_fmt, log_file=log,
-                                                 overview_console=overview_console)
+                                                 default_fmt=default_fmt, log_file=log, model_log_file=model_log,
+                                                 overview_console=overview_console),
+                                 **self.export_options
                                  )
             except Exception as e:
                 print(f'ERROR EXTRACTING SHIP {ship}: {e}')
@@ -163,13 +182,29 @@ class ShipEntityExporterDialog(qtw.QDialog):
             item = self.listWidget.item(index)
             if item.checkState() == qtc.Qt.Checked:
                 selected_ships.append(self.ships[item.text()])
-        self.hide()
 
+        if not selected_ships:
+            return qtw.QMessageBox.warning(self, title='Ship Extractor', text='Select at least one ship to export')
+
+        self.hide()
         edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Save To...')
         if edir:
-            dlg = ShipEntityExportLog(self.scdv, edir, selected_ships)
+            options = {
+                'auto_unsplit_textures': self.opt_autoUnsplitTextures.isChecked(),
+                'auto_convert_textures': self.opt_autoConvertTextures.isChecked(),
+                'auto_convert_sounds': self.opt_autoConvertSounds.isChecked(),
+                'auto_convert_models': self.opt_autoConvertModels.isChecked(),
+                'output_model_log': self.opt_genModelLog.isChecked(),
+                'ww2ogg': WW2OGG, 'revorb': REVORB, 'cgf_converter': CGF_CONVERTER
+            }
+            dlg = ShipEntityExportLog(self.scdv, edir, selected_ships,
+                                      self.opt_createSubFolder.isChecked(),
+                                      options)
             dlg.show()
             dlg.extract_ships()
+        else:
+            return qtw.QMessageBox.warning(self, title='Ship Extractor',
+                                           text='You must select an export directory to extract')
 
         self.close()
         self.destroy()
