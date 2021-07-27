@@ -93,6 +93,7 @@ class ShipEntityExportLog(qtw.QDialog):
 
         start = datetime.now()
         for i, ship in enumerate(self.ships):
+            model_log = ''
             try:
                 tab = qtw.QWidget()
                 layout = qtw.QVBoxLayout()
@@ -105,15 +106,15 @@ class ShipEntityExportLog(qtw.QDialog):
 
                 self.setWindowTitle(f'Extracting Ship {i+1}/{len(self.ships)}: {ship.name} ({ship.id})')
                 ship_output_dir = self.outdir / ship.name if self.create_ship_dir else self.outdir
-                logfile = ship_output_dir / f'{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}_{ship.name}.extraction.log'
-                if self.output_model_log:
-                    model_log = ship_output_dir / f'{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}_{ship.name}' \
-                                                  f'.extracted_models.log'
-                else:
-                    model_log = ''
+                logfile = ship_output_dir / f'{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}_{ship.name}.extraction.log'
                 logfile.parent.mkdir(parents=True, exist_ok=True)
+
+                if self.output_model_log:
+                    model_log = (ship_output_dir / f'{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}_{ship.name}'
+                                                   f'.extracted_models.log').open('w')
+
                 with logfile.open('w') as log:
-                    extract_ship(self.scdv.sc, ship.id, self.outdir,
+                    extract_ship(self.scdv.sc, ship.id, outdir=ship_output_dir,
                                  monitor=partial(self._output_monitor, console=console, ship=ship.name,
                                                  default_fmt=default_fmt, log_file=log, model_log_file=model_log,
                                                  overview_console=overview_console),
@@ -121,6 +122,9 @@ class ShipEntityExportLog(qtw.QDialog):
                                  )
             except Exception as e:
                 print(f'ERROR EXTRACTING SHIP {ship}: {e}')
+            finally:
+                if model_log:
+                    model_log.close()
 
         overview_console.setCurrentCharFormat(default_fmt)
         overview_console.append('-'*80)
@@ -194,12 +198,12 @@ class ShipEntityExporterDialog(qtw.QDialog):
                 'auto_convert_textures': self.opt_autoConvertTextures.isChecked(),
                 'auto_convert_sounds': self.opt_autoConvertSounds.isChecked(),
                 'auto_convert_models': self.opt_autoConvertModels.isChecked(),
-                'output_model_log': self.opt_genModelLog.isChecked(),
                 'ww2ogg': WW2OGG, 'revorb': REVORB, 'cgf_converter': CGF_CONVERTER
             }
-            dlg = ShipEntityExportLog(self.scdv, edir, selected_ships,
-                                      self.opt_createSubFolder.isChecked(),
-                                      options)
+            dlg = ShipEntityExportLog(scdv=self.scdv, outdir=edir, ships=selected_ships,
+                                      create_ship_dir=self.opt_createSubFolder.isChecked(),
+                                      output_model_log=self.opt_genModelLog.isChecked(),
+                                      export_options=options)
             dlg.show()
             dlg.extract_ships()
         else:

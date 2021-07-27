@@ -129,19 +129,25 @@ class BlenderManager(QObject):
         super().__init__(parent=scdv)
         self.scdv = scdv
 
+        # TODO: update this so you can pass in a blender.exe, then check whether or not it is supported
+
         available_versions = available_blender_installations()
         if not blender and available_versions:
             blender = sorted(available_versions.keys(), reverse=True)[0]
 
         if blender not in available_versions:
-            raise ValueError(f'Cannot use Blender version {blender} '
-                             f'available: {repr(available_blender_installations())}')
-
-        self.blender_version = blender
-        self.blender = available_versions[blender]['path']
+            self.blender_version = ''
+            self.blender = Path()
+        else:
+            self.blender_version = blender
+            self.blender = available_versions[blender]['path']
 
         if not self.blender.is_file():
+            logger.warning('Could not find blender, disabling blender menu')
             self.blender = None
+        else:
+            logger.info(f'Using Blender {self.blender_version}')
+            logger.debug(f'{self.blender}')
 
         self.blenderlink_connections = {}
         self.blenderlink = BlenderLink()
@@ -212,19 +218,26 @@ class BlenderManager(QObject):
         self.blenderlink.start.emit()
 
     def _update_scdv(self):
-        if self._blenderlink_port > 0:
-            self.scdv.actionStartBlenderLink.setVisible(False)
-            self.scdv.actionStopBlenderLink.setVisible(True)
-            self._statusbar_label.setText('🟢')
-            self._statusbar_label.setToolTip(f'Blender Link is running on port {self._blenderlink_port}')
-            self._statusbar_label.setEnabled(True)
-            self.scdv.statusBar.addPermanentWidget(self._statusbar_label)
+        if self.blender is not None:
+            for action in self.scdv.menuBlender.actions():
+                action.setEnabled(True)
+            if self._blenderlink_port > 0:
+                self.scdv.actionStartBlenderLink.setVisible(False)
+                self.scdv.actionStopBlenderLink.setVisible(True)
+                self._statusbar_label.setText('🟢')
+                self._statusbar_label.setToolTip(f'Blender Link is running on port {self._blenderlink_port}')
+                self._statusbar_label.setEnabled(True)
+                self.scdv.statusBar.addPermanentWidget(self._statusbar_label)
+            else:
+                self.scdv.actionStartBlenderLink.setVisible(True)
+                self.scdv.actionStopBlenderLink.setVisible(False)
+                self._statusbar_label.setEnabled(False)
+                self._statusbar_label.setToolTip(f'Blender Link is not running')
+                self._statusbar_label.setText('🔘')
         else:
-            self.scdv.actionStartBlenderLink.setVisible(True)
+            for action in self.scdv.menuBlender.actions():
+                action.setEnabled(False)
             self.scdv.actionStopBlenderLink.setVisible(False)
-            self._statusbar_label.setEnabled(False)
-            self._statusbar_label.setToolTip(f'Blender Link is not running')
-            self._statusbar_label.setText('🔘')
 
     def _handle_statusbar_label_clicked(self):
         if self._blenderlink_port > 0:
@@ -297,8 +310,9 @@ class BlenderManager(QObject):
             cmd = f'start cmd /c {cmd}'
 
         logger.info(f'Launching blender [b-{procid}] - {repr(cmd)}')
-        proc = subprocess.Popen(cmd, env=env, cwd=self.blender.parent, shell=True)
-        print(proc, proc.poll())
-
-        _, secret = parse_auth_token(token)
-        self.blenderlink_connections[procid] = secret
+        try:
+            if subprocess.Popen(cmd, env=env, cwd=self.blender.parent, shell=True) is None:
+                _, secret = parse_auth_token(token)
+                self.blenderlink_connections[procid] = secret
+        except subprocess.CalledProcessError:
+            pass

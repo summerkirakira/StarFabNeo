@@ -219,7 +219,7 @@ class SCFileViewNode(qtg.QStandardItem, ContentItem):
         return ''
 
     def extract_to(self, extract_path):
-        self.parent_archive.extract(str(self.path.as_posix()), extract_path, convert_cryxml=True)
+        self.parent_archive.extract(str(self.path.as_posix()), extract_path)
 
     def save_to(self, extract_path):
         self.parent_archive.save_to(str(self.path.as_posix()), extract_path, convert_cryxml=True)

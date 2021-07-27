@@ -31,7 +31,7 @@ def install(version) -> Path:
     """
     Installs the SCDV add-on into the Blender version `version`.
     """
-    return install_blender_addon(version, 'scdv', ADDON_TEMPLATE)
+    return install_blender_addon(version, 'scdv_addon', ADDON_TEMPLATE)
 
 
 def register():
