@@ -193,7 +193,15 @@ class ShipEntityExporterDialog(qtw.QDialog):
         self.hide()
         edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Save To...')
         if edir:
+            cryxml_fmt = 'xml' if self.opt_convertFormatXML.isChecked() else 'json'
+            if self.opt_imgFmtTIF.isChecked():
+                img_fmt = 'tif'
+            elif self.opt_imgFmtTGA.isChecked():
+                img_fmt = 'tga'
+            else:
+                img_fmt = 'png'
             options = {
+                'convert_cryxml_fmt': cryxml_fmt, 'convert_dds_fmt': img_fmt,
                 'auto_unsplit_textures': self.opt_autoUnsplitTextures.isChecked(),
                 'auto_convert_textures': self.opt_autoConvertTextures.isChecked(),
                 'auto_convert_sounds': self.opt_autoConvertSounds.isChecked(),

@@ -5,9 +5,14 @@ from pathlib import Path
 
 import toml
 
+WIX_VERSION_TEMPLATE = """<Include>
+  <?define ProductVersion={version}?>
+</Include>"""
+
 
 def run():
     pyproject_file = (Path(__file__).parent.parent / 'pyproject.toml').absolute()
+    msi_version_file = (Path(__file__).parent.parent / 'windows' / 'msi' / 'SCDV' / 'ProductVersion.wxi').absolute()
 
     # this must go here
     import scdv
@@ -22,6 +27,10 @@ def run():
 
     with pyproject_file.open('w') as p:
         toml.dump(pyproject, p)
+
+    if msi_version_file.is_file():
+        with msi_version_file.open('w') as f:
+            f.write(WIX_VERSION_TEMPLATE.format(version=pyproject['tool']['briefcase']['version']))
 
     if tag and tag == version:
         if 'y' not in input('Update tag? [y/n] ').lower():
