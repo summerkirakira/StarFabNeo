@@ -74,7 +74,7 @@ class ShipEntityExportLog(qtw.QDialog):
         log_file.write(f'{msg}\n')
         if (model_log_file and msg.startswith('zstd |') and
                 any(msg.lower().endswith(_) for _ in CGF_CONVERTER_MODEL_EXTS)):
-            model_log_file.write(msg.split(' | ')[-1])
+            model_log_file.write(f"{msg.split(' | ')[-1]}\n")
         qtg.QGuiApplication.processEvents()
 
     def extract_ships(self) -> None:
@@ -188,7 +188,7 @@ class ShipEntityExporterDialog(qtw.QDialog):
                 selected_ships.append(self.ships[item.text()])
 
         if not selected_ships:
-            return qtw.QMessageBox.warning(self, title='Ship Extractor', text='Select at least one ship to export')
+            return qtw.QMessageBox.warning(None, 'Ship Extractor', 'Select at least one ship to export')
 
         self.hide()
         edir = qtw.QFileDialog.getExistingDirectory(self.scdv, 'Save To...')
@@ -215,8 +215,8 @@ class ShipEntityExporterDialog(qtw.QDialog):
             dlg.show()
             dlg.extract_ships()
         else:
-            return qtw.QMessageBox.warning(self, title='Ship Extractor',
-                                           text='You must select an export directory to extract')
+            return qtw.QMessageBox.warning(None, 'Ship Extractor',
+                                           'You must select an export directory to extract')
 
         self.close()
         self.destroy()
