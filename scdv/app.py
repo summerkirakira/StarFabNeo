@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from functools import partial
+from distutils.util import strtobool
 
 from qtpy import uic
 from qtpy.QtCore import Signal, Slot
@@ -20,8 +21,10 @@ from .ui import qtg, qtw, qtc
 from .resources import RES_PATH
 from .ui.widgets import dock_widgets
 from .ui.widgets.editor import Editor
-from .ui.dialogs.ship_entity_exporter import ShipEntityExporterDialog
+from .ui.dialogs.entity_exporter import EntityExporterDialog
+from .ui.dialogs.settings_dialog import SettingsDialog
 from .blender import BlenderManager
+from .settings import settings
 
 
 class MainWindow(QMainWindow):
@@ -43,7 +46,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('SCDV')
         self.setWindowIcon(qtg.QIcon(str(RES_PATH / 'scdv.png')))
 
-        self.settings = qtc.QSettings('SCModding', 'SCDV')
+        self.settings = settings
         self._refresh_recent()
 
         self.task_started.connect(self._handle_task_started)
@@ -52,13 +55,12 @@ class MainWindow(QMainWindow):
         self.open_scdir.connect(self._handle_open_scdir)
 
         self.resize(1900, 900)
-        self.actionLightTheme.triggered.connect(self.set_light_theme)
-        self.actionDarkTheme.triggered.connect(self.set_dark_theme)
 
         self.actionSettings.triggered.connect(self.show_settings_dialog)
 
         self.actionOpen.triggered.connect(self.handle_file_open)
         self.actionClose.triggered.connect(self.handle_file_close)
+        self.actionClose.setEnabled(False)
         self.actionQuit.triggered.connect(self.close)
 
         self.actionAudio.triggered.connect(self.show_audio)
@@ -67,11 +69,11 @@ class MainWindow(QMainWindow):
         self.actionLocal_Files.triggered.connect(self.show_local_files)
         self.actionP4K.triggered.connect(self.show_p4k_view)
 
-        self.actionExportShipEntity.triggered.connect(self.show_export_ship_entity_dialog)
+        self.actionExportEntity.triggered.connect(self.show_export_ship_entity_dialog)
         self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
         self.actionClear_Recent.triggered.connect(self.clear_recent)
 
-        self.datacore_loaded.connect(lambda: self.actionExportShipEntity.setEnabled(True))
+        self.datacore_loaded.connect(lambda: self.actionExportEntity.setEnabled(True))
 
         self.status_bar_progress = qtw.QProgressBar(self)
         self.statusBar.addPermanentWidget(self.status_bar_progress)
@@ -100,6 +102,33 @@ class MainWindow(QMainWindow):
         self.setup_dock_widgets()
         self._progress_tasks = {}
 
+    def show(self):
+        super().show()
+
+        self.restoreGeometry(settings.value("windowGeometry"))
+        self.restoreState(settings.value("windowState"))
+
+        if self.settings.value('theme', 'dark').lower() == 'light':
+            self.set_light_theme()
+        else:
+            self.set_dark_theme()
+
+        if os.environ.get('SCDV_SC_PATH'):
+            self.open_scdir.emit(os.environ['SCDV_SC_PATH'])
+        elif len(sys.argv) > 1:
+            arg_dir = Path(sys.argv[-1])
+            if arg_dir.is_dir():
+                self.open_scdir.emit(str(arg_dir))
+        elif strtobool(self.settings.value('autoOpenRecent', 'false')):
+            recent = self.settings.value('recent', [])
+            if recent:
+                self.open_scdir.emit(recent[0])
+
+    def closeEvent(self, event) -> None:
+        self.settings.setValue("windowGeometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        super().closeEvent(event)
+
     def _refresh_recent(self, recent=None):
         if recent is None:
             recent = self.settings.value('recent', [])
@@ -112,7 +141,7 @@ class MainWindow(QMainWindow):
         prev_actions = prev_actions[-2:]
 
         labels = []
-        for r in recent:
+        for r in recent[:10]:
             label = Path(r).name if Path(r).name not in labels else str(r)
             a = qtw.QAction(label)
             a.triggered.connect(partial(self._handle_recent_selected, r))
@@ -134,11 +163,12 @@ class MainWindow(QMainWindow):
         self.blender_manager.launch_blender(*args, **kwargs)
 
     def show_export_ship_entity_dialog(self):
-        dlg = ShipEntityExporterDialog(self)
+        dlg = EntityExporterDialog(self)
         dlg.exec_()
 
     def show_settings_dialog(self):
-        pass
+        dlg = SettingsDialog(self)
+        dlg.exec_()
 
     def show_p4k_view(self):
         if 'p4k_view' not in self.dock_widgets:
@@ -302,7 +332,7 @@ class MainWindow(QMainWindow):
 
         try:
             self.sc = StarCitizen(scdir)
-            self._refresh_recent(set([scdir] + self.settings.value('recent', [])))
+            self._refresh_recent([scdir] + self.settings.value('recent', []))
             self.opened.emit(str(scdir))
             self.setWindowTitle(f'{scdir} ({self.sc.version_label})')
             self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {scdir}')
@@ -326,6 +356,7 @@ class MainWindow(QMainWindow):
             prog.setValue(2)
             self.task_finished.emit('load_datacore', True, '')
             self.datacore_loaded.emit()
+            self.actionClose.setEnabled(True)
             qtg.QGuiApplication.processEvents()
         except Exception as e:
             dlg = qtw.QErrorMessage(self)
@@ -336,13 +367,11 @@ class MainWindow(QMainWindow):
         self._refresh_recent([])
 
     def handle_file_open(self):
-        dlg = qtw.QFileDialog(self)
-        dlg.setFileMode(qtw.QFileDialog.DirectoryOnly)
-        dlg.setDirectory(qtc.QDir.homePath())
-        dlg.setWindowTitle("Select Star Citizen Installation folder (e.g. LIVE)")
+        def_dir = qtc.QDir.homePath()
+        p4k_file, _ = qtw.QFileDialog.getOpenFileName(self, "Select Star Citizen Data.p4k", def_dir, "P4K (*.p4k)")
 
-        if dlg.exec_():
-            scdir = Path(dlg.selectedFiles()[0]).absolute()
+        if p4k_file:
+            scdir = Path(p4k_file).parent.absolute()
         else:
             return
 
@@ -359,6 +388,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle('SCDV')
             self.status_bar_progress.hide()
             self.sc = None
+            self.actionClose.setEnabled(False)
             qtg.QGuiApplication.processEvents()
 
     def set_light_theme(self):

@@ -56,15 +56,7 @@ def main():
 
     try:
         mw = MainWindow()
-        mw.set_dark_theme()
         mw.show()
-
-        if os.environ.get('SCDV_SC_PATH'):
-            mw.open_scdir.emit(os.environ['SCDV_SC_PATH'])
-        elif len(sys.argv) > 1:
-            arg_dir = Path(sys.argv[-1])
-            if arg_dir.is_dir():
-                mw.open_scdir.emit(str(arg_dir))
 
         sys.exit(app.exec_())
     except SystemExit:

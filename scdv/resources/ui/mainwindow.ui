@@ -55,6 +55,7 @@
     </widget>
     <addaction name="actionOpen"/>
     <addaction name="menuRecent"/>
+    <addaction name="actionSettings"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
@@ -92,27 +93,12 @@
      <addaction name="separator"/>
      <addaction name="actionInstall_Blender_Add_on"/>
     </widget>
-    <addaction name="actionExportShipEntity"/>
+    <addaction name="actionExportEntity"/>
     <addaction name="menuBlender"/>
-   </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>&amp;Settings</string>
-    </property>
-    <widget class="QMenu" name="menuTheme">
-     <property name="title">
-      <string>Theme</string>
-     </property>
-     <addaction name="actionDarkTheme"/>
-     <addaction name="actionLightTheme"/>
-    </widget>
-    <addaction name="actionSettings"/>
-    <addaction name="menuTheme"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -177,17 +163,17 @@
     <string>Ctrl+2</string>
    </property>
   </action>
-  <action name="actionExportShipEntity">
+  <action name="actionExportEntity">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Export Ship Entity</string>
+    <string>Export Entity</string>
    </property>
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>Preferences</string>
+    <string>Settings</string>
    </property>
   </action>
   <action name="actionClear_Recent">

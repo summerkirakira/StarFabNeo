@@ -4,14 +4,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "scdv"
-version = "0.3.4"
+version = "0.3.8"
 description = "StarCitizen Data Viewer"
 authors = [ "Ventorvar <ventorvar@gmail.com>",]
 
 [tool.briefcase]
 project_name = "SCDV"
 bundle = "scdatatools.scdv"
-version = "0.3.4"
+version = "0.3.8"
 url = "https://gitlab.com/scmodding/tools/scdv"
 license = "MIT license"
 author = "Ventorvar"

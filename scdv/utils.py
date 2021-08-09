@@ -9,7 +9,7 @@ from pathlib import Path
 
 from scdatatools.utils import NamedBytesIO
 from scdv.ui import qtw
-from scdv import CONTRIB_DIR
+from scdv.settings import get_texconv, get_compressonatorcli
 
 
 def show_file_in_filemanager(path):
@@ -23,11 +23,8 @@ def show_file_in_filemanager(path):
 
 class ImageConverter:
     def __init__(self):
-        self.compressonatorcli = shutil.which('compressonatorcli')
-        self.texconv = shutil.which('texconv')
-        if self.texconv is None and (CONTRIB_DIR / 'texconv.exe').is_file():
-            self.texconv = str(CONTRIB_DIR / 'texconv.exe')
-
+        self.compressonatorcli = get_compressonatorcli()
+        self.texconv = get_texconv()
         self.converter = self.texconv if self.texconv else self.compressonatorcli
 
     def _check_bin(self):

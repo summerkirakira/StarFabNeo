@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Ship Entity Exporter</string>
+   <string>Entity Exporter</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
@@ -52,12 +52,25 @@
        </widget>
       </item>
       <item>
-       <widget class="QListWidget" name="listWidget">
+       <widget class="QTreeWidget" name="entityTree">
         <property name="styleSheet">
-         <string notr="true"/>
+         <string notr="true">QTreeView {
+}
+
+QTreeView::item:closed {
+	qproperty-icon: url(&quot;SP_DirClosedIcon&quot;);
+}
+
+QTreeView::item:open {
+	qproperty-icon: url(&quot;SP_DirOpenIcon&quot;);
+}
+
+QTreeWidget::indicator:unchecked { 
+	border: 1px solid gray;
+} </string>
         </property>
-        <property name="sortingEnabled">
-         <bool>false</bool>
+        <property name="headerHidden">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -135,20 +148,17 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <widget class="QRadioButton" name="opt_convertFormatXML">
-           <property name="text">
-            <string>XML</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="opt_convertFormatJSON">
-           <property name="text">
-            <string>JSON</string>
-           </property>
+          <widget class="QComboBox" name="opt_cryxmlFmt">
+           <item>
+            <property name="text">
+             <string>xml</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>json</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
@@ -161,27 +171,22 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QRadioButton" name="opt_imgFmtPNG">
-           <property name="text">
-            <string>PNG</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="opt_imgFmtTIF">
-           <property name="text">
-            <string>TIF</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="opt_imgFmtTGA">
-           <property name="text">
-            <string>TGA</string>
-           </property>
+          <widget class="QComboBox" name="opt_imgFmt">
+           <item>
+            <property name="text">
+             <string>png</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tif</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tga</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
@@ -251,10 +256,10 @@
          <item>
           <widget class="QCheckBox" name="opt_createSubFolder">
            <property name="toolTip">
-            <string>This will create a new folder with the ships name in the selected export directory and extract all of the ships data there. Otherwise, all ships will be extracted into the same, selected export directory.</string>
+            <string>This will create a new folder with the entity's name in the selected export directory and extract all of the entity's data there. Otherwise, all entities will be extracted into the same selected export directory.</string>
            </property>
            <property name="text">
-            <string>Create sub-folder for ship</string>
+            <string>Create sub-folder for entity</string>
            </property>
            <property name="checked">
             <bool>false</bool>
