@@ -5,7 +5,7 @@ from qtpy import uic
 from scdatatools.forge import dftypes
 
 from scdv import get_scdv
-from scdv.ui import qtw
+from scdv.ui import qtw, qtc, qtg
 from scdv.resources import RES_PATH
 from scdv.ui.widgets.common import CollapseableWidget
 from scdv.ui.widgets.editor import Editor
@@ -22,9 +22,10 @@ def _handle_open_record(guid):
             scdv.add_tab_widget(objid, widget, item.name, tooltip=objid)
 
 
-def widget_for_dcb_obj(obj, inline=False):
+def widget_for_dcb_obj(name, obj):
     widget = qtw.QWidget()
     layout = qtw.QHBoxLayout()
+    layout.setContentsMargins(0, 0, 0, 0)
     scdv = get_scdv()
     if isinstance(
             obj,
@@ -36,7 +37,7 @@ def widget_for_dcb_obj(obj, inline=False):
                     dftypes.StrongPointer,
             ),
     ):
-        c = DCBLazyCollapsableObjWidget(obj.name, obj)
+        c = DCBLazyCollapsableObjWidget(name, obj)
         layout.addWidget(c)
     elif isinstance(obj, dftypes.Reference):
         v = obj.value.value
@@ -101,6 +102,7 @@ class DCBObjWidget(qtw.QWidget):
         self.obj = obj
 
         layout = qtw.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         list_props = []
         props = []
         for name, value in sorted(self.obj.properties.items()):
@@ -111,15 +113,18 @@ class DCBObjWidget(qtw.QWidget):
 
         props_widget = qtw.QWidget(parent=self)
         props_layout = qtw.QFormLayout()
+        props_layout.setContentsMargins(0, 0, 0, 0)
+        props_layout.setLabelAlignment(qtc.Qt.AlignLeft | qtc.Qt.AlignTop)
+
         for name in sorted(props):
-            props_layout.addRow(name, widget_for_dcb_obj(self.obj.properties[name], True))
+            props_layout.addRow(name, widget_for_dcb_obj(name, self.obj.properties[name]))
         props_widget.setLayout(props_layout)
         layout.addWidget(props_widget)
 
         for name in sorted(list_props):
             section = CollapseableWidget(name)
             for i, item in enumerate(sorted(self.obj.properties[name], key=lambda o: getattr(o, 'name', ''))):
-                section.content.layout().addRow(f"{i}", widget_for_dcb_obj(item))
+                section.content.layout().addRow(f"{i}", widget_for_dcb_obj(item.name, item))
             layout.addWidget(section)
 
         self.setLayout(layout)

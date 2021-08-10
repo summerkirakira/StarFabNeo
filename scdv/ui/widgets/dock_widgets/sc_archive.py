@@ -9,11 +9,11 @@ from pathlib import Path
 from qtpy.QtCore import Signal, Slot
 
 from scdv.ui import qtc, qtw, qtg
-from scdatatools.cry.cryxml import pprint_xml_tree, etree_from_cryxml_file
-from scdv.ui.widgets.dcbrecord import DCBRecordItemView
-from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget, AudioConverter
-from scdv.utils import show_file_in_filemanager
 from scdv.ui.utils import ScrollMessageBox, ContentItem
+from scdv.ui.widgets.dcbrecord import DCBRecordItemView
+from scdv.utils import show_file_in_filemanager, reload_scdv_modules
+from scdatatools.cry.cryxml import pprint_xml_tree, etree_from_cryxml_file
+from scdv.ui.widgets.dock_widgets.common import icon_provider, SCDVSearchableTreeDockWidget, AudioConverter
 
 
 logger = logging.getLogger(__name__)
@@ -530,6 +530,9 @@ class DCBViewDock(SCDVSearchableTreeDockWidget):
             self.sc_tree_thread_pool.start(loader)
 
     def _handle_item_action(self, item, model, index):
+        if os.environ.get('SCDV_RELOAD_MODULES'):
+            reload_scdv_modules('scdv.ui.widgets.dcbrecord')
+            reload_scdv_modules('scdv.ui.widgets.common')
         if isinstance(item, DCBViewNode) and item.record is not None:
             widget = DCBRecordItemView(item, self.scdv)
             self.scdv.add_tab_widget(item.path, widget, item.name, tooltip=item.path.as_posix())

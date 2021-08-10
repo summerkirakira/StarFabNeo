@@ -1,9 +1,9 @@
+import os
 import logging
 from functools import partial
 from pathlib import Path
 
-from PySide2.QtCore import Signal
-from qtpy import uic, QtCore
+from qtpy import uic
 from qtpy.QtCore import Signal, Slot
 
 from scdv import get_scdv
@@ -12,6 +12,7 @@ from scdv.resources import RES_PATH
 from scdv.ui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
 from scdv.ui.widgets.image_viewer import SUPPORTED_IMG_FORMATS, QImageViewer, DDSImageViewer
 from scdv.ui.widgets.chunked_file_viewer import SUPPORTED_CHUNK_FILE_FORMATS, ChunkedObjView
+
 
 icon_provider = qtw.QFileIconProvider()
 logger = logging.getLogger(__name__)

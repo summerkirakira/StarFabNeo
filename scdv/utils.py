@@ -4,12 +4,21 @@ import sys
 import typing
 import shutil
 import tempfile
+import importlib
 import subprocess
 from pathlib import Path
 
 from scdatatools.utils import NamedBytesIO
 from scdv.ui import qtw
 from scdv.settings import get_texconv, get_compressonatorcli
+
+
+def reload_scdv_modules(module=''):
+    # build up the list of modules first, otherwise sys.modules will change while you iterate through it
+    loaded_modules = [m for n, m in sys.modules.items()
+                      if (n.startswith(module) if module else n.startswith('scdv.ui'))]
+    for module in loaded_modules:
+        importlib.reload(module)
 
 
 def show_file_in_filemanager(path):
