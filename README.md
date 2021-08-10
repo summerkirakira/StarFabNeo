@@ -11,42 +11,21 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 # Features
 
 - Browse and export files from `Data.p4k`
-- Automatically converts `CryXmlB` files
+- Automatically converts `CryXmlb` files
 - File viewer for human readable files
-- Image viewer with support for Star Citizen `.dds` textures
+- Image utilities for Star Citizen `.dds` textures
 - Integrated Python console for scripted access to the `p4k` and `datacore`
 - Game audio explorer with auto-conversion
+- Blender Integration and Add-ons
 
-# Installation
-
-## Optional Dependencies
-
-### View and Convert textures (dds)
-
-To view or convert textures (.dds*) files, SCDV relies on [texconv](https://github.com/microsoft/DirectXTex/releases) or [compressonator](https://gpuopen.com/compressonator/). Ensure that `texconv` or `compressonatorcli` is installed and in your system `PATH`.
-
-### Convert Audio Files (wem)
-
-To convert wem files, you must have [ww2ogg](https://github.com/hcs64/ww2ogg) and [revorb](https://cloudflare-ipfs.com/ipfs/QmVgjfU7qgPEtANatrfh7VQJby9t1ojrTbN7X8Ei4djF4e/revorb.exe) in your path. **Both are included in the MSI installer for Windows.**
-
-> **Note for Windows: you must have the Vorbis codecs installed to listen to audio in SCDV. You can download them on [Xiph.org](https://xiph.org/dshow/downloads/)**
-
-
-## Releases
+# Releases
 
 Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre-built packages.
 
 
-## From source
+# Documentation
 
-SCDV uses [poetry](https://python-poetry.org/) and Python >= 3.8
-
-```
-git clone --recursive git@gitlab.com:scmodding/tools/scdv.git
-cd scdv
-poetry install
-poetry run python -m scdv
-```
+See the [SCDV Wiki](https://gitlab.com/scmodding/tools/scdv/-/wikis/home) for more information on how SCDV works. If you're interested in helping out, check out the [Developer Guide](https://gitlab.com/scmodding/tools/scdv/-/wikis/Developer-Guide)!
 
 ###
 
