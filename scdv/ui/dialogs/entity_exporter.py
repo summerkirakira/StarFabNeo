@@ -11,8 +11,7 @@ from scdatatools.sc.utils import extract_entity, CGF_CONVERTER_MODEL_EXTS
 
 from scdv.ui import qtg, qtw, qtc
 from scdv.resources import RES_PATH
-from scdv.settings import get_cgf_converter
-from scdv.ui.widgets.dock_widgets.audio import WW2OGG, REVORB
+from scdv.settings import get_cgf_converter, get_revorb, get_ww2ogg
 from scdv.utils import show_file_in_filemanager, image_converter
 
 DATACORE_RELATIVE_BASE = Path('libs/foundry/records/')
@@ -162,6 +161,7 @@ class EntityExporterDialog(qtw.QDialog):
         collapse_all.triggered.connect(self._collapse_all)
 
         open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_DirIcon)
+        file_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_FileIcon)
         self.tree_folders = {}
 
         self.entities = {}
@@ -195,6 +195,7 @@ class EntityExporterDialog(qtw.QDialog):
                 if parent is not None:
                     entity_item = qtw.QTreeWidgetItem(parent)
                     entity_item.setText(0, entity.name)
+                    entity_item.setIcon(0, file_icon)
                     entity_item.setFlags(entity_item.flags() | qtc.Qt.ItemIsUserCheckable)
                     entity_item.setCheckState(0, qtc.Qt.Checked if entity.name in entities_to_extract
                                               else qtc.Qt.Unchecked)
@@ -310,7 +311,7 @@ class EntityExporterDialog(qtw.QDialog):
                 'auto_convert_sounds': self.opt_autoConvertSounds.isChecked(),
                 'auto_convert_models': self.opt_autoConvertModels.isChecked(),
                 'cgf_converter': get_cgf_converter(), 'tex_converter': image_converter.converter,
-                'ww2ogg': WW2OGG, 'revorb': REVORB,
+                'ww2ogg': get_ww2ogg(), 'revorb': get_revorb(),
             }
             dlg = EntityExportLog(scdv=self.scdv, outdir=edir, entities=selected_entities,
                                   create_entity_dir=self.opt_createSubFolder.isChecked(),

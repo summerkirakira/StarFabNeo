@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from pathlib import Path
 from functools import partial
 from distutils.util import strtobool
@@ -14,17 +15,66 @@ import qtmodern.windows
 from scdatatools.sc import StarCitizen
 
 import scdv.ui.widgets.dock_widgets.file_view
-import scdv.ui.widgets.dock_widgets.sc_archive
+import scdv.ui.widgets.dock_widgets.datacore_widget
 
 
 from .ui import qtg, qtw, qtc
-from .resources import RES_PATH
-from .ui.widgets import dock_widgets
-from .ui.widgets.editor import Editor
-from .ui.dialogs.entity_exporter import EntityExporterDialog
-from .ui.dialogs.settings_dialog import SettingsDialog
-from .blender import BlenderManager
 from .settings import settings
+from .resources import RES_PATH
+from .blender import BlenderManager
+from .ui.widgets import dock_widgets
+from .utils import reload_scdv_modules
+from .ui.dialogs.settings_dialog import SettingsDialog
+from .ui.dialogs.entity_exporter import EntityExporterDialog
+
+
+class _SCLoader(qtc.QRunnable):
+    def __init__(self, scdv, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.scdv = scdv
+
+    def run(self):
+        self.scdv.statusBar.showMessage(f'Opening StarCitizen {self.scdv.sc.version_label}')
+        self.scdv.task_started.emit('load_scdir', 'Initializing Data.p4k', 0, 5)
+        # prog = qtw.QProgressDialog("Opening Data.p4k", "", 0, 2)
+        # prog.setWindowModality(qtc.Qt.WindowModal)
+        # prog.setCancelButton(None)
+        # prog.forceShow()
+        # prog.setValue(1)
+        # prog.setLabelText("Reading DataCore")
+        # prog.setValue(2)
+
+        t = time.time()
+        def p4k_load_monitor(msg, progress, total):
+            nonlocal t
+            if (time.time() - t) > 1:
+                self.scdv.update_status_progress.emit('load_p4k', progress/1024//1024, None, total/1024//1024, None)
+                t = time.time()
+        self.scdv.task_started.emit('load_p4k', '', 0, 1)
+        self.scdv.sc._p4k_load_monitor = p4k_load_monitor
+        assert(self.scdv.sc.p4k is not None)
+        self.scdv.task_finished.emit('load_p4k', True, '')
+        self.scdv.p4k_loaded.emit()
+
+        self.scdv.update_status_progress.emit('load_scdir', 1, 0, 0, 'Initializing DataCore')
+        assert(self.scdv.sc.datacore is not None)
+        self.scdv.datacore_loaded.emit()
+
+        self.scdv.update_status_progress.emit('load_scdir', 2, 0, 0, 'Initializing Localization')
+        assert(self.scdv.sc.localization is not None)
+        self.scdv.localization_loaded.emit()
+
+        self.scdv.update_status_progress.emit('load_scdir', 4, 0, 0, 'Initializing Tag Database')
+        assert(self.scdv.sc.tag_database is not None)
+        self.scdv.tagdatabase_loaded.emit()
+
+        self.scdv.update_status_progress.emit('load_scdir', 3, 0, 0, 'Initializing Game Audio')
+        assert(self.scdv.sc.wwise is not None)
+        self.scdv.audio_loaded.emit()
+
+        self.scdv.actionClose.setEnabled(True)
+        self.scdv.task_finished.emit('load_scdir', True, '')
+        self.scdv.statusBar.showMessage(f'Finished Loading StarCitizen {self.scdv.sc.version_label}')
 
 
 class MainWindow(QMainWindow):
@@ -37,7 +87,10 @@ class MainWindow(QMainWindow):
     opened = Signal(str)
     p4k_opened = Signal()
     p4k_loaded = Signal()
+    audio_loaded = Signal()
     datacore_loaded = Signal()
+    tagdatabase_loaded = Signal()
+    localization_loaded = Signal()
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -68,6 +121,7 @@ class MainWindow(QMainWindow):
         self.actionDatacore.triggered.connect(self.show_dcb_view)
         self.actionLocal_Files.triggered.connect(self.show_local_files)
         self.actionP4K.triggered.connect(self.show_p4k_view)
+        self.actionTag_Database.triggered.connect(self.show_tag_database)
 
         self.actionExportEntity.triggered.connect(self.show_export_ship_entity_dialog)
         self.actionAbout.triggered.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
@@ -172,7 +226,7 @@ class MainWindow(QMainWindow):
 
     def show_p4k_view(self):
         if 'p4k_view' not in self.dock_widgets:
-            pv = scdv.ui.widgets.dock_widgets.sc_archive.P4KViewDock(self)
+            pv = scdv.ui.widgets.dock_widgets.p4k_widget.P4KViewDock(self)
             pv.setObjectName('p4k_view')
             pv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
             self.dock_widgets['p4k_view'] = pv
@@ -184,8 +238,16 @@ class MainWindow(QMainWindow):
         self.dock_widgets['p4k_view'].raise_()
 
     def show_dcb_view(self):
+        if os.environ.get('SCDV_RELOAD_MODULES') and 'dcb_view' in self.dock_widgets:
+            print('Reloading datacore widget')
+            reload_scdv_modules('scdv.ui.widgets.dock_widgets.datacore_widget')
+            # reload_scdv_modules('scdv.ui.widgets.dock_widgets.common')
+            # reload_scdv_modules('scdv.ui.widgets.common')
+            self.dock_widgets['dcb_view'].setParent(None)
+            self.dock_widgets['dcb_view'].deleteLater()
+            del self.dock_widgets['dcb_view']
         if 'dcb_view' not in self.dock_widgets:
-            dv = scdv.ui.widgets.dock_widgets.sc_archive.DCBViewDock(self)
+            dv = scdv.ui.widgets.dock_widgets.datacore_widget.DCBViewDock(self)
             dv.setObjectName('dcb_view')
             dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
             self.dock_widgets['dcb_view'] = dv
@@ -200,7 +262,7 @@ class MainWindow(QMainWindow):
 
     def show_audio(self):
         if 'audio_view' not in self.dock_widgets:
-            d = scdv.ui.widgets.dock_widgets.audio.AudioViewDock(self)
+            d = scdv.ui.widgets.dock_widgets.audio_widget.AudioViewDock(self)
             d.setObjectName('audio_view')
             d.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
             self.dock_widgets['audio_view'] = d
@@ -209,6 +271,17 @@ class MainWindow(QMainWindow):
 
         self.dock_widgets['audio_view'].show()
         self.dock_widgets['audio_view'].raise_()
+
+    def show_tag_database(self):
+        if 'tagdatabase_view' not in self.dock_widgets:
+            dv = scdv.ui.widgets.dock_widgets.tagdatabase_widget.TagDatabaseViewDock(self)
+            dv.setObjectName('tagdatabase_view')
+            dv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            self.dock_widgets['tagdatabase_view'] = dv
+            self.addDockWidget(qtc.Qt.RightDockWidgetArea, dv)
+            self.resizeDocks([dv], [500], qtc.Qt.Horizontal)
+        self.dock_widgets['tagdatabase_view'].show()
+        self.dock_widgets['tagdatabase_view'].raise_()
 
     def play_wem(self, wem_id):
         self.show_audio()
@@ -255,7 +328,7 @@ class MainWindow(QMainWindow):
     @Slot(str, int, int, int, str)
     def _handle_update_statusbar_progress(self, task, value, min=0, max=0, msg=''):
         if task not in self._progress_tasks:
-            self._handle_task_started(task, msg, min or 0, max or 0)
+            self._handle_task_started(task, msg, min, max)
         self._progress_tasks[task]['value'] = value
         if min:
             self._progress_tasks[task]['min'] = min
@@ -335,29 +408,8 @@ class MainWindow(QMainWindow):
             self._refresh_recent([scdir] + self.settings.value('recent', []))
             self.opened.emit(str(scdir))
             self.setWindowTitle(f'{scdir} ({self.sc.version_label})')
-            self.statusBar.showMessage(f'Opened StarCitizen {self.sc.version_label}: {scdir}')
-            self.task_started.emit('load_p4k', 'Opening Data.p4k', 0, 1)
-
-            # Block the UI until we've read the minimum p4k/datacore
-            prog = qtw.QProgressDialog("Opening Data.p4k", "", 0, 2)
-            prog.setWindowModality(qtc.Qt.WindowModal)
-            prog.setCancelButton(None)
-            prog.forceShow()
-            qtg.QGuiApplication.processEvents()
-            p4k = self.sc.p4k
-            prog.setValue(1)
-            self.task_finished.emit('load_p4k', True, '')
-            self.p4k_loaded.emit()
-
-            prog.setLabelText("Reading DataCore")
-            self.task_started.emit('load_datacore', 'Opening Game.dcb', 0, 1)
-            qtg.QGuiApplication.processEvents()
-            datacore = self.sc.datacore
-            prog.setValue(2)
-            self.task_finished.emit('load_datacore', True, '')
-            self.datacore_loaded.emit()
-            self.actionClose.setEnabled(True)
-            qtg.QGuiApplication.processEvents()
+            loader = _SCLoader(self)
+            qtc.QThreadPool.globalInstance().start(loader)
         except Exception as e:
             dlg = qtw.QErrorMessage(self)
             dlg.setWindowTitle('Could not open Star Citizen directory')

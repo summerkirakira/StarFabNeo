@@ -76,6 +76,7 @@
     <addaction name="actionDatacore"/>
     <addaction name="actionLocal_Files"/>
     <addaction name="actionP4K"/>
+    <addaction name="actionTag_Database"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -136,7 +137,7 @@
     <string>P4K</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+5</string>
    </property>
   </action>
   <action name="actionDatacore">
@@ -225,6 +226,14 @@
   <action name="actionInstall_Blender_Add_on">
    <property name="text">
     <string>Install Blender Add-on</string>
+   </property>
+  </action>
+  <action name="actionTag_Database">
+   <property name="text">
+    <string>Tag Database</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+6</string>
    </property>
   </action>
  </widget>

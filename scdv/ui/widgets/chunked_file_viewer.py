@@ -14,11 +14,10 @@ from scdv.ui import qtc, qtw, qtg
 from scdv.resources import RES_PATH
 from scdv.ui.widgets.editor import Editor
 from scdv.ui.widgets.common import CollapseableWidget
-from scdv.ui.utils import ContentItem
-
+from scdv.ui.common import ContentItem
 
 SUPPORTED_CHUNK_FILE_FORMATS = [
-   'cga', 'cgam', 'cgf', 'cgfm', 'chr', 'soc', 'dba', 'skin', 'skinm'
+   '.cga', '.cgam', '.cgf', '.cgfm', '.chr', '.soc', '.dba', '.skin', '.skinm'
 ]
 
 

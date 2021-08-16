@@ -49,10 +49,12 @@ def main():
         appid = u'scdatatools.scdv'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appid)
 
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
     app = QApplication(sys.argv)
     app.setOrganizationName('scdatatools')
     app.setApplicationDisplayName(f'SCDV {__version__}')
-    app.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     try:
         mw = MainWindow()

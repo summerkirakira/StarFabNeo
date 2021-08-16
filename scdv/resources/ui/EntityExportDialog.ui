@@ -54,24 +54,18 @@
       <item>
        <widget class="QTreeWidget" name="entityTree">
         <property name="styleSheet">
-         <string notr="true">QTreeView {
-}
-
-QTreeView::item:closed {
-	qproperty-icon: url(&quot;SP_DirClosedIcon&quot;);
-}
-
-QTreeView::item:open {
-	qproperty-icon: url(&quot;SP_DirOpenIcon&quot;);
-}
-
-QTreeWidget::indicator:unchecked { 
+         <string notr="true">QTreeWidget::indicator:unchecked { 
 	border: 1px solid gray;
 } </string>
         </property>
         <property name="headerHidden">
          <bool>true</bool>
         </property>
+        <column>
+         <property name="text">
+          <string notr="true">1</string>
+         </property>
+        </column>
        </widget>
       </item>
      </layout>
@@ -79,6 +73,12 @@ QTreeWidget::indicator:unchecked {
    </item>
    <item>
     <widget class="QFrame" name="options_frame">
+     <property name="minimumSize">
+      <size>
+       <width>225</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="maximumSize">
       <size>
        <width>200</width>

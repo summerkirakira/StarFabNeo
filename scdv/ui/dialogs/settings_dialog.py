@@ -32,10 +32,10 @@ class SettingsDialog(qtw.QDialog):
         self.cryxmlbFormat.setCurrentText(self.scdv.settings.value('cryxmlbConversionFormat', 'xml'))
         self.cryxmlbFormat.currentTextChanged.connect(self._save_settings)
 
-        self.cgfconverterPath.setText(self.scdv.settings.value('cgfconverter', ''))
+        self.cgfconverterPath.setText(self.scdv.settings.value('external_tools/cgf-converter', ''))
         self.cgfconverterPath.textChanged.connect(self._save_settings)
 
-        self.texconvPath.setText(self.scdv.settings.value('texconv', ''))
+        self.texconvPath.setText(self.scdv.settings.value('external_tools/texconv', ''))
         self.texconvPath.textChanged.connect(self._save_settings)
 
         self.helpButton.clicked.connect(lambda: qtg.QDesktopServices.openUrl('https://gitlab.com/scmodding/tools/scdv'))
@@ -49,8 +49,8 @@ class SettingsDialog(qtw.QDialog):
         if theme_setter := getattr(self.scdv, f'set_{self.theme.currentText().lower()}_theme'):
             theme_setter()
         self.scdv.settings.setValue('cyxmlbConversionFormat', self.cryxmlbFormat.currentText())
-        self.scdv.settings.setValue('cgfconverter', self.cgfconverterPath.text())
-        self.scdv.settings.setValue('texconv', self.texconvPath.text())
+        self.scdv.settings.setValue('external_tools/cgf-converter', self.cgfconverterPath.text())
+        self.scdv.settings.setValue('external_tools/texconv', self.texconvPath.text())
 
     def _handle_path_chooser(self, option):
         cur_value = Path(option.text())

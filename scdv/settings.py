@@ -1,4 +1,5 @@
 import shutil
+import sys
 from pathlib import Path
 
 from . import CONTRIB_DIR
@@ -8,40 +9,35 @@ from .ui import qtg, qtw, qtc
 settings = qtc.QSettings('SCModding', 'SCDV')
 
 
-def get_cgf_converter():
-    conv = settings.value('cgfconverter', '')
-    if conv:
-        return conv
-    conv = shutil.which('cgf-converter')
-    if conv is not None:
-        return conv
-    if (CONTRIB_DIR / 'cgf-converter.exe').is_file():
-        return Path(CONTRIB_DIR / 'cgf-converter.exe')
+def _get_exec(name, settings_name):
+    exe = settings.value(settings_name, '')
+    if exe:
+        return exe
+    exe = shutil.which(name)
+    if exe is not None:
+        return exe
+    name = name + '.exe' if sys.platform == 'win32' else name
+    if (CONTRIB_DIR / name).is_file():
+        return Path(CONTRIB_DIR / name)
     # TODO: perform some validation of the converter and throw an error dialog if it's not valid
     return ''
+
+
+def get_ww2ogg():
+    return _get_exec('ww2ogg', 'external_tools/ww2ogg')
+
+
+def get_revorb():
+    return _get_exec('revorb', 'external_tools/revorb')
+
+
+def get_cgf_converter():
+    return _get_exec('cgf-converter', 'external_tools/cgf-converter')
 
 
 def get_texconv():
-    conv = settings.value('texconv', '')
-    if conv:
-        return conv
-    conv = shutil.which('texconv')
-    if conv is not None:
-        return conv
-    if (conv := CONTRIB_DIR / 'texconv.exe').is_file():
-        return conv.as_posix()
-    # TODO: perform some validation of the converter and throw an error dialog if it's not valid
-    return ''
+    return _get_exec('texconv', 'external_tools/texconv')
 
 
 def get_compressonatorcli():
-    conv = settings.value('compressonatorcli', '')
-    if conv:
-        return conv
-    conv = shutil.which('compressonatorcli')
-    if conv is not None:
-        return conv
-    if (conv := CONTRIB_DIR / 'compressonatorcli.exe').is_file():
-        return conv.as_posix()
-    # TODO: perform some validation of the converter and throw an error dialog if it's not valid
-    return ''
+    return _get_exec('compressonatorcli', 'external_tools/compressonatorcli')

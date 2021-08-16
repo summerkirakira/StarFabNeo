@@ -1,6 +1,6 @@
-import io
 import time
-from scdv.ui import qtc, qtg, qtw
+
+from scdv.ui import qtc, qtw
 
 
 def seconds_to_str(secs):
@@ -23,11 +23,15 @@ class ScrollMessageBox(qtw.QMessageBox):
         self.exec_()
 
 
-class ContentItem:
-    def __init__(self, name, path, contents=''):
-        self._contents = io.BytesIO(contents.encode('utf-8'))
-        self.name = name
-        self.path = path
+_icon_cache = {}
+icon_provider = qtw.QFileIconProvider()
 
-    def contents(self):
-        return self._contents
+
+def icon_for_path(path: str):
+    if not isinstance(path, str):
+        path = str(path)
+    if '.' in path:
+        return _icon_cache.setdefault(
+            path.rsplit('.', maxsplit=1)[-1], icon_provider.icon(qtc.QFileInfo(path))
+        )
+    return None

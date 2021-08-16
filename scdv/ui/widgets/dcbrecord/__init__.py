@@ -7,6 +7,7 @@ from scdatatools.forge import dftypes
 from scdv import get_scdv
 from scdv.ui import qtw, qtc, qtg
 from scdv.resources import RES_PATH
+from scdv.ui.common import ContentItem
 from scdv.ui.widgets.common import CollapseableWidget
 from scdv.ui.widgets.editor import Editor
 
@@ -49,7 +50,7 @@ def widget_for_dcb_obj(name, obj):
         if scdv is not None and obj.value.value in obj.dcb.records_by_guid:
             ref = obj.dcb.records_by_guid[obj.value.value]
             if ref.type == 'Tag':
-                l.setText(f'{ref.properties["tagName"]} ({obj.value.value})')
+                l.setText(str(scdv.sc.tag_database.tags_by_guid[obj.value.value]))
                 l.setCursorPosition(0)
             else:
                 l.setText(f'{ref.name} ({obj.value.value})')
@@ -138,21 +139,21 @@ class DCBRecordItemView(qtw.QWidget):
 
         self.scdv = scdv
         self.record_item = record_item
-        self.datacore = record_item.parent_archive
+        self.datacore = record_item.archive
 
-        l = qtw.QLineEdit(record_item.name)
+        l = qtw.QLineEdit(record_item.record.name)
         l.setReadOnly(True)
         self.record_info.addRow('Name', l)
 
-        l = qtw.QLineEdit(record_item.type)
+        l = qtw.QLineEdit(record_item.record.type)
         l.setReadOnly(True)
         self.record_info.addRow('Type', l)
 
-        l = qtw.QLineEdit(record_item.guid)
+        l = qtw.QLineEdit(record_item.record.id.value)
         l.setReadOnly(True)
         self.record_info.addRow('GUID', l)
 
-        l = qtw.QLineEdit(record_item.path.as_posix())
+        l = qtw.QLineEdit(record_item.record.filename)
         l.setReadOnly(True)
         self.record_info.addRow('Path', l)
 
@@ -169,14 +170,14 @@ class DCBRecordItemView(qtw.QWidget):
         self.record_content.insertWidget(self.record_content.count() - 1, self.record_widget)
         self.record_widget.show()
 
-    def _on_view_xml(self):
-        self.record_item.contents_mode = 'xml'
-        widget = Editor(self.record_item)
+    def _on_view(self, mode):
+        content_item = ContentItem(self.record_item.name, self.record_item.path, self.record_item.contents(mode=mode))
+        widget = Editor(content_item)
         if widget is not None:
-            self.scdv.add_tab_widget(f'{self.record_item.path}:xml_editor', widget, self.record_item.path.name)
+            self.scdv.add_tab_widget(f'{self.record_item.path}:{mode}_editor', widget, self.record_item.path.name)
+
+    def _on_view_xml(self):
+        self._on_view('xml')
 
     def _on_view_json(self):
-        self.record_item.contents_mode = 'json'
-        widget = Editor(self.record_item)
-        if widget is not None:
-            self.scdv.add_tab_widget(f'{self.record_item.path}:json_editor', widget, self.record_item.path.name)
+        self._on_view('json')

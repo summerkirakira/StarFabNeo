@@ -3,18 +3,21 @@ import time
 import shutil
 import logging
 from pathlib import Path
-from functools import partial
+from functools import partial, cached_property
 
 from qtpy.QtCore import Signal, Slot
 from qtpy import QtMultimedia
 
 from scdv.ui import qtc, qtw, qtg
 from scdv import CONTRIB_DIR, get_scdv
-from scdv.ui.widgets.dock_widgets.common import SCDVSearchableTreeDockWidget, AudioConverter, BackgroundRunnerSignals
+from scdv.ui.widgets.dock_widgets.common import SCDVSearchableTreeDockWidget
 from scdv.utils import show_file_in_filemanager
-from scdv.ui.utils import ScrollMessageBox, ContentItem, seconds_to_str
+from scdv.ui.utils import ScrollMessageBox, seconds_to_str, icon_provider
 from scdv.resources import RES_PATH
-from scdv.ui.widgets.dock_widgets.sc_archive import SCFileViewModel
+from scdv.ui.common import AudioConverter
+from scdv.ui.common import PathArchiveTreeModel, PathArchiveTreeModelLoader, PathArchiveTreeItem, \
+    PathArchiveTreeSortFilterProxyModel, ContentItem
+from scdv.settings import get_ww2ogg, get_revorb
 
 logger = logging.getLogger(__file__)
 
@@ -23,17 +26,6 @@ SCAUDIOVIEWW_COLUMNS = ['Name']
 GAME_AUDIO_P4K_RELPATH = Path('Data/Libs/')
 GAME_AUDIO_P4K_SEARCH = str(GAME_AUDIO_P4K_RELPATH / 'GameAudio' / '*.xml')
 GAME_AUDIO_DCB_SEARCH = 'libs/foundry/records/musiclogic/*'
-
-WW2OGG = shutil.which('ww2ogg.exe')
-REVORB = shutil.which('revorb.exe')
-if WW2OGG is None and (CONTRIB_DIR / 'ww2ogg.exe').is_file():
-    WW2OGG = Path(CONTRIB_DIR / 'ww2ogg.exe')
-else:
-    WW2OGG = Path(WW2OGG)
-if REVORB is None and (CONTRIB_DIR / 'revorb.exe').is_file():
-    REVORB = Path(CONTRIB_DIR / 'revorb.exe')
-else:
-    REVORB = Path(REVORB)
 
 
 class _AudioCleanup(qtc.QRunnable):
@@ -46,75 +38,77 @@ class _AudioCleanup(qtc.QRunnable):
         Path(self.ogg_path).unlink(missing_ok=True)
 
 
-class SCAudioViewLoader(qtc.QRunnable):
-    def __init__(self, scdv, model, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.scdv = scdv
-        self.model = model
-        self.signals = BackgroundRunnerSignals()
-        self._node_cls = SCP4kAudioViewNode
-        self._should_cancel = False
-        self.signals.cancel.connect(self._handle_cancel)
+class SCAudioTreeSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
+    def filterAcceptsRow(self, source_row, source_parent: qtc.QModelIndex) -> bool:
+        if not self._filter and not self.additional_filters:
+            return True
 
-    def _handle_cancel(self):
-        self._should_cancel = True
+        if parent := source_parent.internalPointer():
+            try:
+                item = parent.children[source_row]
+            except IndexError:
+                return False
+            if not self._filter and not self.checkAdditionFilters(item):
+                return False
+            elif self.checkAdditionFilters(item):
+                if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
+                    return self._filter.lower() in item.name.lower() or self._filter.lower() in item.wems
+                else:
+                    return self._filter in item._path or self._filter in item.wems
+        return False
 
-    def run(self):
+
+
+class SCAudioTreeModel(PathArchiveTreeModel):
+    pass
+
+
+class SCAudioTreeLoader(PathArchiveTreeModelLoader):
+    def items_to_load(self):
         ga_files = self.scdv.sc.p4k.search(GAME_AUDIO_P4K_SEARCH)
-        self.scdv.task_started.emit('load_gameaudio', 'Loading Game Audio', 0, len(ga_files))
+        self.scdv.task_started.emit('init_gameaudio', 'Initializing Game Audio', 0, len(ga_files))
 
         t = time.time()
-        wwise = self.scdv.sc.wwise
-        self.scdv.update_status_progress.emit('load_gameaudio', 0, 0, len(wwise.preloads), '')
+        wwise = self.model.archive.wwise
+        wwise.ww2ogg = Path(get_ww2ogg())
+        wwise.revorb = Path(get_revorb())
+
         for i, p4kfile in enumerate(ga_files):
             if self._should_cancel:
                 return  # immediately break
 
             if (time.time() - t) > 0.5:
-                self.scdv.update_status_progress.emit('load_gameaudio', i, 0, 0, '')
+                self.scdv.update_status_progress.emit('init_gameaudio', i, 0, 0, '')
                 t = time.time()
             wwise.load_game_audio_file(self.scdv.sc.p4k.open(p4kfile))
 
-        self.scdv.update_status_progress.emit('load_gameaudio', 0, 0, len(wwise.preloads), 'Parsing Game Audio')
-        for i, p in enumerate(wwise.preloads):
-            if self._should_cancel:
-                return  # immediately break
+        self.scdv.task_finished.emit('init_gameaudio', True, '')
+        return wwise.preloads
 
-            if (time.time() - t) > 0.5:
-                self.scdv.update_status_progress.emit('load_gameaudio', i, 0, 0, '')
-                t = time.time()
-
-            base_path = Path('GameAudio') / p
-            preload = wwise.preloads[p]
-            atl_names = list(preload['triggers'].keys()) + list(preload['external_sources'].keys())
-            if atl_names:
-                self.model.appendRowsToPath(base_path, [
-                    self._node_cls(base_path / atl_name, atl_name=atl_name)
-                    for atl_name in atl_names
-                ])
-
-        self.scdv.task_finished.emit('load_gameaudio', True, '')
-
-        # TODO: create a nice way to browse/play wem files directly
-        # tmp = {}
-        # self.scdv.task_started.emit('load_wems', 'Reading Wems', 0, len(self.scdv.sc.wwise.wems))
-        # for wem in sorted(self.scdv.sc.wwise.wems):
-        #     item =
-        #     if wem.startswith('ext'):
-        #         wem_path = Path(wem[:3]) / wem[3:5] / wem[5:7] / wem[7:]
-        #     else:
-        #         wem_path = Path(wem[:2]) / wem[2:4] / wem[4:]
-        # self.scdv.task_finished.emit('load_wems', True, '')
-        self.signals.finished.emit({})
+    def load_item(self, item):
+        base_path = 'GameAudio' + '/' + item
+        preload = self.model.archive.wwise.preloads[item]
+        atl_names = list(preload['triggers'].keys()) + list(preload['external_sources'].keys())
+        for atl_name in atl_names:
+            self._item_cls(base_path + '/' + atl_name, model=self.model, atl_name=atl_name,
+                           parent=self.model.parentForPath(base_path))
 
 
-class SCP4kAudioViewNode(qtg.QStandardItem, ContentItem):
-    def __init__(self, path: Path, atl_name=None, *args, **kwargs):
-        super().__init__(path.stem, *args, **kwargs)
-        ContentItem.__init__(self, path.stem, path)
+class SCAudioTreeItem(PathArchiveTreeItem, ContentItem):
+    _cached_properties_ = PathArchiveTreeItem._cached_properties_ + ['wems']
+
+    def __init__(self, path, model, atl_name=None, parent=None):
+        super().__init__(path, model, parent)
         self.atl_name = atl_name
+        self._background = qtg.QBrush()
         self._wems = []
         self._wems_loaded = False
+
+    @cached_property
+    def icon(self):
+        if self.children:
+            return icon_provider.icon(icon_provider.Folder)
+        return icon_provider.icon(icon_provider.File)
 
     @property
     def wems(self):
@@ -125,20 +119,23 @@ class SCP4kAudioViewNode(qtg.QStandardItem, ContentItem):
 
     def highlight(self, should_highlight=True):
         if should_highlight:
-            self.setBackground(qtc.Qt.darkGray)
+            self._background = qtc.Qt.darkGray
         else:
-            self.setBackground(qtg.QBrush())
+            self._background = qtg.QBrush()
 
-
-class SCAudioViewModel(SCFileViewModel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setColumnCount(len(SCAUDIOVIEWW_COLUMNS))
-        self.setHorizontalHeaderLabels(SCAUDIOVIEWW_COLUMNS)
-        self._node_cls = SCP4kAudioViewNode
-
-    def flags(self, index):
-        return super().flags(index) & ~qtc.Qt.ItemIsEditable
+    def data(self, column, role):
+        if role == qtc.Qt.DisplayRole:
+            if column == 0:
+                return self.name
+            elif column == 1:
+                return self.type
+            elif column == 2:
+                return self.guid
+            else:
+                return ''
+        elif role == qtc.Qt.BackgroundRole:
+            return self._background
+        return super().data(column, role)
 
 
 class AudioViewDock(SCDVSearchableTreeDockWidget):
@@ -148,10 +145,10 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
     play_wem = Signal(str)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(proxy_model=SCAudioTreeSortFilterProxyModel, *args, **kwargs)
         self.setWindowTitle(self.tr('Audio'))
-        self.scdv.p4k_loaded.connect(self.handle_p4k_opened)
-        self.handle_p4k_opened()  # check if the p4k is opened
+        self.scdv.audio_loaded.connect(self.handle_audio_loaded)
+        self.handle_audio_loaded()  # check if the p4k is opened
 
         self.play_wem.connect(self._handle_play_wem)
 
@@ -285,13 +282,13 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
 
         if self._audio_tmp is not None:
             self._media_player.setMedia(QtMultimedia.QMediaContent())
-            self.sc_tree_thread_pool.start(_AudioCleanup(self._audio_tmp))
+            qtc.QThreadPool.globalInstance().start(_AudioCleanup(self._audio_tmp))
             self._audio_tmp = None
 
         try:
             conv = AudioConverter(item.wems[wem_index])
             conv.signals.finished.connect(self._handle_audio_conversion)
-            self.sc_tree_thread_pool.start(conv)
+            qtc.QThreadPool.globalInstance().start(conv)
             # self._audio_tmp = self.scdv.sc.wwise.convert_wem(item.wems[wem_index], return_file=True)
             self._currently_playing = item
             self._currently_playing_wem_id = wem_index
@@ -306,11 +303,12 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
         self.stop()
         if item is None:
             # TODO: _fake_item is a hacky hack hack way of just "getting it in", should be fixed
-            item = SCP4kAudioViewNode(atl_name=str(wem_id), path=Path(str(wem_id)))
+            item = SCAudioTreeItem(path=str(wem_id), model=self.sc_tree_model, atl_name=str(wem_id))
             item._wems = [wem_id]
             item._wems_loaded = True
         self._playlist = []
         self.play(item, item.wems.index(wem_id))
+
 
     @Slot(str, Path)
     def _handle_audio_conversion(self, conv_result):
@@ -422,18 +420,16 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
         header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
         self.raise_()
 
-    def handle_p4k_opened(self):
-        if self.scdv.sc is not None and self.scdv.sc.is_loaded:
-            wwise = self.scdv.sc.wwise
-            wwise.ww2ogg = WW2OGG
-            wwise.revorb = REVORB
-
+    def handle_audio_loaded(self):
+        if self.scdv.sc is not None and self.scdv.sc.is_loaded('wwise'):
             self.show()
-            self.sc_tree_model = SCAudioViewModel(self.scdv.sc, parent=self)
-            loader = SCAudioViewLoader(self.scdv, self.sc_tree_model)
+            self.sc_tree_model = SCAudioTreeModel(archive=self.scdv.sc, columns=SCAUDIOVIEWW_COLUMNS,
+                                                  item_cls=SCAudioTreeItem, parent=self)
+            loader = SCAudioTreeLoader(self.scdv, self.sc_tree_model, item_cls=SCAudioTreeItem,
+                                       task_name='load_audio_view', task_status_msg='Processing Game Audio')
             self.closing.connect(lambda: loader.signals.cancel.emit())
             loader.signals.finished.connect(self._finished_loading)
-            self.sc_tree_thread_pool.start(loader)
+            qtc.QThreadPool.globalInstance().start(loader)
 
     def _handle_item_action(self, item, model, index):
         self.stop()

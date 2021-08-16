@@ -1,25 +1,24 @@
-import os
 import logging
+import typing
+import operator
 from functools import partial
 from pathlib import Path
 
 from qtpy import uic
-from qtpy.QtCore import Signal, Slot
+from scdv.ui import qtc
 
-from scdv import get_scdv
 from scdv.ui import qtc, qtw, qtg
 from scdv.resources import RES_PATH
+from scdv.ui.common import PathArchiveTreeSortFilterProxyModel
 from scdv.ui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
 from scdv.ui.widgets.image_viewer import SUPPORTED_IMG_FORMATS, QImageViewer, DDSImageViewer
 from scdv.ui.widgets.chunked_file_viewer import SUPPORTED_CHUNK_FILE_FORMATS, ChunkedObjView
 
-
-icon_provider = qtw.QFileIconProvider()
 logger = logging.getLogger(__name__)
 
 
 class SCDVContextMenuManager(qtc.QObject):
-    action_triggered = Signal(str)
+    action_triggered = qtc.Signal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,7 +32,7 @@ class SCDVContextMenuManager(qtc.QObject):
         collapse_all = self.menus[''].addAction('Collapse All')
         collapse_all.triggered.connect(partial(self.handle_action, 'collapse_all'))
 
-    @Slot(str)
+    @qtc.Slot(str)
     def handle_action(self, action):
         self.action_triggered.emit(action)
 
@@ -46,7 +45,7 @@ class SCDVContextMenuManager(qtc.QObject):
 class SCDVDockWidget(qtw.QDockWidget):
     __ui_file__ = None
 
-    closing = Signal()
+    closing = qtc.Signal()
 
     def __init__(self, scdv, *args, **kwargs):
         super().__init__(parent=scdv, *args, **kwargs)
@@ -57,7 +56,7 @@ class SCDVDockWidget(qtw.QDockWidget):
         self.ctx_manager.action_triggered.connect(self._on_ctx_triggered)
         self._ctx_item = None
 
-    @Slot(str)
+    @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
         pass
 
@@ -68,34 +67,51 @@ class SCDVDockWidget(qtw.QDockWidget):
             # TODO: this needs be handled much better than "is it a dict" -.-'
             widget = DDSImageViewer(list(item.values())[0])
             item = widget.dds_header
-        elif item.path.suffix.lower()[1:] in SUPPORTED_EDITOR_FORMATS:
+        elif item.suffix.lower() in SUPPORTED_EDITOR_FORMATS:
             widget = Editor(item)
-        elif item.path.suffix.lower()[1:] in SUPPORTED_CHUNK_FILE_FORMATS:
+        elif item.suffix.lower() in SUPPORTED_CHUNK_FILE_FORMATS:
             widget = ChunkedObjView(item)
-        elif item.path.suffix.lower() in SUPPORTED_IMG_FORMATS:
+        elif item.suffix.lower() in SUPPORTED_IMG_FORMATS:
             widget = QImageViewer.fromFile(item.contents())
 
         if widget is not None:
             self.scdv.add_tab_widget(item.path, widget, item.path.name)
 
 
+class SCDVSearchableTreeFilterWidget(qtw.QWidget):
+    filter_changed = qtc.Signal()
+    remove_filter = qtc.Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+    def compile_filter(self) -> (typing.Callable, typing.Callable):
+        return operator.and_, lambda i: True
+
+    def close_filter(self):
+        self.remove_filter.emit()
+
+
 class SCDVSearchableTreeDockWidget(SCDVDockWidget):
     __ui_file__ = str(RES_PATH / 'ui' / 'FileViewDock.ui')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, scdv, proxy_model=None, *args, **kwargs):
+        super().__init__(scdv, *args, **kwargs)
 
         self.sc_breadcrumbs.setVisible(False)
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
 
-        self.sc_tree_thread_pool = qtc.QThreadPool(self)
         self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
         self.sc_tree.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
         self.sc_tree.setSortingEnabled(True)
 
-        self.sc_tree_search.editingFinished.connect(self.on_search_changed)
-        self.sc_search.clicked.connect(self.on_search_changed)
+        self.sc_add_filter.clicked.connect(self._handle_add_filter)
+        self.sc_add_filter.setIcon(qtw.QApplication.style().standardIcon(qtw.QStyle.SP_FileDialogDetailedView))
+        self.sc_add_filter.hide()
+
+        self.sc_tree_search.editingFinished.connect(self._handle_search_changed)
+        self.sc_search.clicked.connect(self._handle_search_changed)
         self.sc_tree.doubleClicked.connect(self._on_doubleclick)
 
         shortcut = qtw.QShortcut(self.sc_tree)
@@ -104,13 +120,35 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         shortcut.activated.connect(self._on_enter_pressed)
 
         self.sc_tree_model = None
-        self.proxy_model = qtc.QSortFilterProxyModel(parent=self)
-        self.proxy_model.setDynamicSortFilter(False)
-        self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setFilterKeyColumn(0)
+        if proxy_model is not None:
+            self.proxy_model = proxy_model(parent=self)
+        else:
+            self.proxy_model = PathArchiveTreeSortFilterProxyModel(parent=self)
         self.sc_tree.setModel(self.proxy_model)
+
+    def _filters_changed(self):
+        fl = self.filter_widgets.layout()
+        self.proxy_model.setAdditionFilters([
+            cf for i in range(fl.count()) if (cf := fl.itemAt(i).widget().compile_filter()) is not None
+        ])
+
+    def _create_filter(self):
+        raise NotImplementedError()
+
+    def _handle_remove_filter(self):
+        sender = self.sender()
+        layout = self.filter_widgets.layout()
+        if (index := layout.indexOf(sender)) >= 0:
+            widget = layout.takeAt(index).widget()
+            widget.setParent(None)
+            del widget
+        self._filters_changed()
+
+    def _handle_add_filter(self):
+        filter_widget = self._create_filter()
+        filter_widget.filter_changed.connect(self._filters_changed)
+        filter_widget.remove_filter.connect(self._handle_remove_filter)
+        self.filter_widgets.layout().addWidget(filter_widget)
 
     def _handle_breadcrumbs(self, link):
         pass
@@ -121,11 +159,12 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
             self._on_doubleclick(index)
 
     def _on_doubleclick(self, index):
-        item = self.sc_tree_model.itemFromIndex(self.proxy_model.mapToSource(index))
+        index = self.proxy_model.mapToSource(index)
+        item = index.internalPointer()
         if item is not None:
-            self._handle_item_action(item, self.sc_tree_model, self.proxy_model.mapToSource(index))
+            self._handle_item_action(item, self.sc_tree_model, index)
 
-    @Slot(qtc.QPoint)
+    @qtc.Slot(qtc.QPoint)
     def _show_ctx_menu(self, pos):
         self._ctx_item = self.sc_tree.indexAt(pos)
         try:
@@ -148,7 +187,7 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
                                 for _ in range(0, self.proxy_model.rowCount(i))]
                     _add_indexes(children)
                 else:
-                    selected_items.append(self.sc_tree_model.itemFromIndex(self.proxy_model.mapToSource(i)))
+                    selected_items.append(self.proxy_model.mapToSource(i).internalPointer())
 
         selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
         if not selection and self._ctx_item is not None:
@@ -157,7 +196,7 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
         _add_indexes(selection)
         return selected_items
 
-    @Slot(str)
+    @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
         if action == 'collapse_all':
             self.sc_tree.collapseAll()
@@ -173,37 +212,15 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
             return []
         return self.get_selected_items()
 
+    def _handle_item_action(self, item, model, index):
+        pass
 
-    @Slot(str)
-    def on_search_changed(self):
-        text = self.sc_tree_search.text()
-        self.proxy_model.setFilterRegExp(text)
+    @qtc.Slot(str)
+    def _handle_search_changed(self):
+        self.proxy_model.setFilterText(self.sc_tree_search.text())
 
     def deleteLater(self):
         self.closing.emit()
-        self.sc_tree_thread_pool.waitForDone()
         super().deleteLater()
 
 
-class AudioConverter(qtc.QRunnable):
-    def __init__(self, wem_id, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.signals = BackgroundRunnerSignals()
-        self.wem_id = wem_id
-
-    def run(self):
-        try:
-            scdv = get_scdv()
-            oggfile = scdv.sc.wwise.convert_wem(self.wem_id, return_file=True)
-            result = {'id': self.wem_id, 'ogg': oggfile, 'msg': ''}
-        except Exception as e:
-            msg = f'AudioConverter failed to convert wem {self.wem_id}: {repr(e)}'
-            logger.exception(msg, exc_info=e)
-            result = {'id': self.wem_id, 'ogg': None, 'msg': msg}
-        self.signals.finished.emit(result)
-        return result
-
-
-class BackgroundRunnerSignals(qtc.QObject):
-    cancel = Signal()
-    finished = Signal(dict)
