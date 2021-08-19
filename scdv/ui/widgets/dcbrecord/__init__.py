@@ -125,7 +125,7 @@ class DCBObjWidget(qtw.QWidget):
         for name in sorted(list_props):
             section = CollapseableWidget(name)
             for i, item in enumerate(sorted(self.obj.properties[name], key=lambda o: getattr(o, 'name', ''))):
-                section.content.layout().addRow(f"{i}", widget_for_dcb_obj(item.name, item))
+                section.content.layout().addRow(f"{i}", widget_for_dcb_obj(getattr(item, 'name', str(i)), item))
             layout.addWidget(section)
 
         self.setLayout(layout)
