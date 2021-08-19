@@ -212,9 +212,6 @@ class SCDVSearchableTreeDockWidget(SCDVDockWidget):
             return []
         return self.get_selected_items()
 
-    def _handle_item_action(self, item, model, index):
-        pass
-
     @qtc.Slot(str)
     def _handle_search_changed(self):
         self.proxy_model.setFilterText(self.sc_tree_search.text())
