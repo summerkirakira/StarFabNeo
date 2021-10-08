@@ -223,7 +223,7 @@ class P4KTreeItem(PathArchiveTreeItem, ContentItem):
         self.model.archive.save_to(str(self.path.as_posix()), extract_path, convert_cryxml=True)
 
     def data(self, column, role):
-        if role == qtc.Qt.DisplayRole:  # Possibly not needed, as UserRole should be the only thing used for P4K trees
+        if role == qtc.Qt.DisplayRole:
             if column == 0:
                 return self.name
             elif column == 1:
