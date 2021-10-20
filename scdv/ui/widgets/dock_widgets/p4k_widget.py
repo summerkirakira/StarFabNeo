@@ -15,7 +15,6 @@ from scdv.ui.utils import ScrollMessageBox
 from scdv.ui.widgets.dock_widgets.common import SCDVSearchableTreeDockWidget
 from scdv.utils import show_file_in_filemanager
 
-
 logger = logging.getLogger(__name__)
 P4KWIDGET_COLUMNS = ['Name', 'Size', 'Kind', 'Date Modified']
 
@@ -235,6 +234,14 @@ class P4KTreeItem(PathArchiveTreeItem, ContentItem):
                 return self.date_modified
             else:
                 return ''
+        if role == qtc.Qt.UserRole:
+            if column == 1:
+                return self.raw_size
+            if column == 2:
+                return self.suffix
+            if column == 3:
+                return self.raw_time
+
         return super().data(column, role)
 
     def __repr__(self):
