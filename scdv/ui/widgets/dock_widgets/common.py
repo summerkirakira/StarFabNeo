@@ -67,11 +67,11 @@ class SCDVDockWidget(qtw.QDockWidget):
             # TODO: this needs be handled much better than "is it a dict" -.-'
             widget = DDSImageViewer(list(item.values())[0])
             item = widget.dds_header
-        elif item.suffix.lower() in SUPPORTED_EDITOR_FORMATS:
+        elif item.path.suffix.lower() in SUPPORTED_EDITOR_FORMATS:
             widget = Editor(item)
-        elif item.suffix.lower() in SUPPORTED_CHUNK_FILE_FORMATS:
+        elif item.path.suffix.lower() in SUPPORTED_CHUNK_FILE_FORMATS:
             widget = ChunkedObjView(item)
-        elif item.suffix.lower() in SUPPORTED_IMG_FORMATS:
+        elif item.path.suffix.lower() in SUPPORTED_IMG_FORMATS:
             widget = QImageViewer.fromFile(item.contents())
 
         if widget is not None:

@@ -462,7 +462,7 @@ class AudioViewDock(SCDVSearchableTreeDockWidget):
                 for i, item in enumerate(selected_items):
                     self.scdv.update_status_progress.emit('extract_audio', 1, 0, total,
                                                           f'Extracting {item.name} to {edir}')
-                    base_out = Path(edir) / item.parent().name
+                    base_out = Path(edir) / item.parent.name
                     for wem in item.wems:
                         try:
                             outfile = base_out / f'{item.atl_name}_{wem}.ogg'
