@@ -1,12 +1,12 @@
-# StarCitizen Data Viewer - SCDV
+# StarFab - A Star Citizen Data Toolsuite 
 
 A GUI built on top of [scdatatools](https://gitlab.com/scmodding/frameworks/scdatatools).
 
-### NOTE: scdv is considered pre-alpha. It's more of a proof of concept than a fully functional tool
+### NOTE: StarFab is considered pre-alpha. It's more of a proof of concept than a fully functional tool
 
-If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/tools/scdv/-/issues/new)!
+If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/ui/starfab/-/issues/new)!
 
-![SCDV Screenshot](docs/assets/SCDV_screenshot.png "SCDV Screenshot")
+![StarFab Screenshot](docs/assets/StarFab_screenshot.png "StarFab Screenshot")
 
 # Features
 
@@ -20,12 +20,19 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 
 # Releases
 
-Check the [releases](https://gitlab.com/scmodding/tools/scdv/-/releases) for pre-built packages.
+Check the [releases](https://gitlab.com/scmodding/ui/starfab/-/releases) for pre-built packages.
 
 
 # Documentation
 
-See the [SCDV Wiki](https://gitlab.com/scmodding/tools/scdv/-/wikis/home) for more information on how SCDV works. If you're interested in helping out, check out the [Developer Guide](https://gitlab.com/scmodding/tools/scdv/-/wikis/Developer-Guide)!
+See the [StarFab Wiki](https://gitlab.com/scmodding/ui/starfab/-/wikis/home) for more information on how StarFab 
+works. If you're interested in helping out, check out the 
+[Developer Guide](https://gitlab.com/scmodding/ui/starfab/-/wikis/Developer-Guide)!
+
+## Attrib
+
+ - qtmodern, https://github.com/facade-technologies-inc/qtmodern
+ - QupyRibbon, https://github.com/pracedru/QupyRibbon
 
 ###
 

@@ -3,54 +3,56 @@ requires = [ "poetry-core>=1.0.0",]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "scdv"
-version = "0.3.10"
-description = "StarCitizen Data Viewer"
-authors = [ "Ventorvar <ventorvar@gmail.com>",]
+name = "starfab"
+version = "0.4.0"
+description = "StarCitizen Data Tools"
+authors = [ "Ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
 
 [tool.briefcase]
-project_name = "SCDV"
-bundle = "scdatatools.scdv"
-version = "0.3.10"
-url = "https://gitlab.com/scmodding/tools/scdv"
-license = "MIT license"
+project_name = "StarFab"
+bundle = "scdatatools.starfab"
+version = "0.4.0"
+url = "https://gitlab.com/scmodding/ui/starfab"
+license = ""
 author = "Ventorvar"
 author_email = "ventorvar@gmail.com"
 
 [tool.poetry.dependencies]
 python = "^3.9.2"
 QtPy = "^1.9.0"
+QtAwesome = "^1.1.0"
 PySide2 = "^5.15.2"
 Pillow = "^8.0.1"
 qtconsole = "^5.0.1"
 scdatatools = "^0.1.9"
 humanize = "^3.9.0"
 rpyc = "^5.0.1"
+pyvistaqt = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 toml = "^0.10.2"
 briefcase = "^0.3.3"
 
-[tool.briefcase.app.scdv]
-formal_name = "SCDV"
-description = "Star Citizen Data Viewer"
-icon = "scdv/resources/scdv"
-installer_icon = "scdv/resources/scdv"
-sources = [ "scdv",]
+[tool.briefcase.app.starfab]
+formal_name = "StarFab"
+description = "Star Citizen Data Tools"
+icon = "starfab/resources/starfab"
+installer_icon = "starfab/resources/starfab"
+sources = [ "starfab",]
 requires = [ "-r", "dist/requirements.txt",]
 
-[tool.briefcase.app.scdv.macOS]
+[tool.briefcase.app.starfab.macOS]
 requires = []
 
-[tool.briefcase.app.scdv.linux]
+[tool.briefcase.app.starfab.linux]
 requires = []
 system_requires = []
 
-[tool.briefcase.app.scdv.windows]
+[tool.briefcase.app.starfab.windows]
 requires = []
 
-[tool.briefcase.app.scdv.iOS]
+[tool.briefcase.app.starfab.iOS]
 requires = []
 
-[tool.briefcase.app.scdv.android]
+[tool.briefcase.app.starfab.android]
 requires = []

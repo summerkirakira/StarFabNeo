@@ -2,17 +2,17 @@
 
 # Version History
 
-See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releases/)
+See current relases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
 
 
-# [0.3.1](https://gitlab.com/scmodding/tools/scdv/-/releases/0.3.1)
+# [0.3.1](https://gitlab.com/scmodding/tools/starfab/-/releases/0.3.1)
 
  ### Fixes
 
  - Windows MSI installer version now properly uses included `ww2ogg` and `revorb` for audio conversion
 
 
-# [0.3.0](https://gitlab.com/scmodding/tools/scdv/-/releases/0.3.0)
+# [0.3.0](https://gitlab.com/scmodding/tools/starfab/-/releases/0.3.0)
 
  ### New Features
 
@@ -20,7 +20,7 @@ See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releas
  - Improved Audio Widget with better support for searching.
 
 
-# [0.2.9](https://gitlab.com/scmodding/tools/scdv/-/releases/0.2.9)
+# [0.2.9](https://gitlab.com/scmodding/tools/starfab/-/releases/0.2.9)
 
  ### New Features
 
@@ -31,7 +31,7 @@ See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releas
  - Updated to scdatatools 0.1.8. `socpak` files (and other sub-archives) are merged into a unified view of `Data.p4k`. Now you can browse into and extract data from object containers.
  - Chunked file view has been added. Initial support for displaying chunk data is limited, but most importantly human-readable data is displayed inline
 
-# [0.2.5](https://gitlab.com/scmodding/tools/scdv/-/releases/0.2.5)
+# [0.2.5](https://gitlab.com/scmodding/tools/starfab/-/releases/0.2.5)
 
  ### New Features
 
@@ -44,14 +44,14 @@ See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releas
   - Fixed python console causing a crash on Windows
 
 
-# [0.2.3](https://gitlab.com/scmodding/tools/scdv/-/releases/0.2.3)
+# [0.2.3](https://gitlab.com/scmodding/tools/starfab/-/releases/0.2.3)
 
  ### New Features
 
  - Upgraded scdatatools, includes support for Datacore v5
 
 
- # [0.2.2](https://gitlab.com/scmodding/tools/scdv/-/releases/0.2.2)
+ # [0.2.2](https://gitlab.com/scmodding/tools/starfab/-/releases/0.2.2)
 
  ### New Features
 
@@ -59,7 +59,7 @@ See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releas
  - Improved DDS texture handling
 
 
-# [0.2.1](https://gitlab.com/scmodding/tools/scdv/-/releases/0.2.1)
+# [0.2.1](https://gitlab.com/scmodding/tools/starfab/-/releases/0.2.1)
 
  ### New Features
 
@@ -68,7 +68,7 @@ See current relases on [GitLab](https://gitlab.com/scmodding/tools/scdv/-/releas
  - More UI enhancements
 
 
-# [0.1.0](https://gitlab.com/scmodding/tools/scdv/-/releases/0.1.0)
+# [0.1.0](https://gitlab.com/scmodding/tools/starfab/-/releases/0.1.0)
 
  ### New Features
 

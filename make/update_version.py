@@ -12,11 +12,11 @@ WIX_VERSION_TEMPLATE = """<Include>
 
 def run():
     pyproject_file = (Path(__file__).parent.parent / 'pyproject.toml').absolute()
-    msi_version_file = (Path(__file__).parent.parent / 'windows' / 'msi' / 'SCDV' / 'ProductVersion.wxi').absolute()
+    msi_version_file = (Path(__file__).parent.parent / 'windows' / 'msi' / 'StarFab' / 'ProductVersion.wxi').absolute()
 
     # this must go here
-    import scdv
-    version = scdv.__version__
+    import starfab
+    version = starfab.__version__
     tag = check_output('git tag --points-at HEAD', shell=True, encoding='utf-8').strip()
 
     with pyproject_file.open('r') as p:

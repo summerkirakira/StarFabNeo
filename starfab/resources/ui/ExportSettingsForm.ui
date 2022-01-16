@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>283</width>
+    <height>340</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QWidget" name="options_widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="toolTip">
+         <string>SCDV will automatically convert CryXml binary content to standard XML or JSON formatted files.</string>
+        </property>
+        <property name="title">
+         <string>CryXml Conversion Format</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_13">
+         <item>
+          <widget class="QComboBox" name="opt_cryxmlFmt">
+           <item>
+            <property name="text">
+             <string>xml</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>json</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>CryXmlB</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_6">
+        <property name="title">
+         <string>Image Conversion Format</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_14">
+         <item>
+          <widget class="QComboBox" name="opt_imgFmt">
+           <item>
+            <property name="text">
+             <string>png</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tif</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>tga</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Options</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_15">
+         <item>
+          <widget class="QCheckBox" name="opt_autoUnsplitTextures">
+           <property name="toolTip">
+            <string>Automatically un-split &quot;dds.n&quot; files into a single &quot;dds&quot; file</string>
+           </property>
+           <property name="text">
+            <string>Automatically unsplit textures</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_autoConvertTextures">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Automatically convert DDS textures to TIF formats. This requires automatically unsplitting textures, and the original DDS file will also be extracted.</string>
+           </property>
+           <property name="text">
+            <string>Automatically convert textures</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_autoConvertSounds">
+           <property name="toolTip">
+            <string>Automatically convert referenced ship sound files to ogg files. The converted files will be named by their trigger name.</string>
+           </property>
+           <property name="text">
+            <string>Automatically convert sounds</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_convertModelsDAE">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Automatically convert CryEngine (.cga/.cgf/.skin/.chr) models to standard formats.</string>
+           </property>
+           <property name="text">
+            <string>Convert Models to Collada</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_createSubFolder">
+           <property name="toolTip">
+            <string>This will create a new folder with the entity's name in the selected export directory and extract all of the entity's data there. Otherwise, all entities will be extracted into the same selected export directory.</string>
+           </property>
+           <property name="text">
+            <string>Create sub-folder for entity</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_genModelLog">
+           <property name="toolTip">
+            <string>Create an addition log file containing all of the extracted model files (cga/cgf/chr/skin)</string>
+           </property>
+           <property name="text">
+            <string>Generate Extracted Models Log</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_overwriteExisting">
+           <property name="text">
+            <string>Overwrite existing files</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_Verbose">
+           <property name="text">
+            <string>Verbose Logging</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
