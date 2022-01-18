@@ -4,7 +4,7 @@ A GUI built on top of [scdatatools](https://gitlab.com/scmodding/frameworks/scda
 
 ### NOTE: StarFab is considered pre-alpha. It's more of a proof of concept than a fully functional tool
 
-If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/ui/starfab/-/issues/new)!
+If you have any problems or suggestions, create an [issue](https://gitlab.com/scmodding/tools/starfab/-/issues/new)!
 
 ![StarFab Screenshot](docs/assets/StarFab_screenshot.png "StarFab Screenshot")
 
@@ -20,14 +20,14 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 
 # Releases
 
-Check the [releases](https://gitlab.com/scmodding/ui/starfab/-/releases) for pre-built packages.
+Check the [releases](https://gitlab.com/scmodding/tools/starfab/-/releases) for pre-built packages.
 
 
 # Documentation
 
-See the [StarFab Wiki](https://gitlab.com/scmodding/ui/starfab/-/wikis/home) for more information on how StarFab 
+See the [StarFab Wiki](https://gitlab.com/scmodding/tools/starfab/-/wikis/home) for more information on how StarFab 
 works. If you're interested in helping out, check out the 
-[Developer Guide](https://gitlab.com/scmodding/ui/starfab/-/wikis/Developer-Guide)!
+[Developer Guide](https://gitlab.com/scmodding/tools/starfab/-/wikis/Developer-Guide)!
 
 ## Attrib
 
