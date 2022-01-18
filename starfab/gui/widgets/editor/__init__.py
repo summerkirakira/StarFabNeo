@@ -6,8 +6,26 @@ from . import embedrc
 from starfab.gui import qtc, qtw, qtg
 
 
-SUPPORTED_EDITOR_FORMATS = ['.json', '.cfg', '.ini', '.txt', '.xml', '.log', '.id', '.cdf', '.chrparams',
-                            '.dpl', '.eco', '.obj', '.sample', '.opr', '.mtl', '.rmp', '.entxml', '.adb']
+SUPPORTED_EDITOR_FORMATS = [
+    ".json",
+    ".cfg",
+    ".ini",
+    ".txt",
+    ".xml",
+    ".log",
+    ".id",
+    ".cdf",
+    ".chrparams",
+    ".dpl",
+    ".eco",
+    ".obj",
+    ".sample",
+    ".opr",
+    ".mtl",
+    ".rmp",
+    ".entxml",
+    ".adb",
+]
 html = """
 <!DOCTYPE html><html lang="en"><head><title>starfab editor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
@@ -124,7 +142,9 @@ class Editor(QWebEngineView):
         self.editor_item = editor_item
 
         self.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        self.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+        self.settings().setAttribute(
+            QWebEngineSettings.LocalContentCanAccessRemoteUrls, True
+        )
         self.settings().setAttribute(QWebEngineSettings.ErrorPageEnabled, True)
         self.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         # self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
@@ -143,9 +163,9 @@ class Editor(QWebEngineView):
 
         page = self.page()
         page.setWebChannel(self.channel)
-        js = init_js.replace('FILENAME', self.editor_item.name)
-        js = js.replace('THEME', self.theme)
-        h = html.replace('JSJSJS', js)
+        js = init_js.replace("FILENAME", self.editor_item.name)
+        js = js.replace("THEME", self.theme)
+        h = html.replace("JSJSJS", js)
         page.setHtml(h, qtc.QUrl("qrc:/index.html"))
 
         timer = qtc.QTimer()
@@ -155,13 +175,13 @@ class Editor(QWebEngineView):
         timer.start()
 
     def contextMenuEvent(self, event):
-        filter_actions = ['Back', 'Forward', 'Reload', 'Save page', 'View page source']
+        filter_actions = ["Back", "Forward", "Reload", "Save page", "View page source"]
         menu = self.page().createStandardContextMenu()
         for action in menu.actions():
             if action.text() in filter_actions:
                 menu.removeAction(action)
         for action in menu.actions():
-            if action.text() == '':
+            if action.text() == "":
                 menu.removeAction(action)
             else:
                 break
@@ -178,7 +198,9 @@ class Editor(QWebEngineView):
     def _on_download_requested(self, download):
         old_path = download.path()
         suffix = qtc.QFileInfo(old_path).suffix()
-        path, _ = qtw.QFileDialog.getSaveFileName(self, "Save File", old_path, "*."+suffix)
+        path, _ = qtw.QFileDialog.getSaveFileName(
+            self, "Save File", old_path, "*." + suffix
+        )
         if path:
             download.setPath(path)
             download.accept()
@@ -188,6 +210,8 @@ class Editor(QWebEngineView):
     @Slot()
     def _on_ace_ready(self):
         try:
-            self.ace.set_value.emit(self.editor_item.contents().read().decode('utf-8').replace('\x00', ''))
+            self.ace.set_value.emit(
+                self.editor_item.contents().read().decode("utf-8").replace("\x00", "")
+            )
         except Exception as e:
-            self.ace.set_value.emit(f'Failed to open {self.editor_item.name}: {e}')
+            self.ace.set_value.emit(f"Failed to open {self.editor_item.name}: {e}")

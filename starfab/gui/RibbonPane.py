@@ -1,6 +1,13 @@
 from qtpy import QtGui
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QGridLayout, QButtonGroup
+from qtpy.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QLabel,
+    QGridLayout,
+    QButtonGroup,
+)
 from . import gui_scale
 from starfab.resources.StyleSheets import get_stylesheet
 
@@ -8,7 +15,7 @@ from starfab.resources.StyleSheets import get_stylesheet
 class RibbonPane(QWidget):
     def __init__(self, parent, name):
         QWidget.__init__(self, parent)
-        #self.setStyleSheet(get_stylesheet("ribbonPane"))
+        # self.setStyleSheet(get_stylesheet("ribbonPane"))
         horizontal_layout = QHBoxLayout()
         horizontal_layout.setSpacing(2)
         horizontal_layout.setContentsMargins(1, 2, 1, 0)

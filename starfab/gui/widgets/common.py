@@ -8,19 +8,23 @@ class CollapsableWidget(qtw.QFrame):
         super().__init__(*args, **kwargs)
         self.label = label
         self.expanded = expand
-        self.setObjectName('CollapseableWidget')
+        self.setObjectName("CollapseableWidget")
 
         self.main_layout = qtw.QVBoxLayout()
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
         QFrame#CollapseableWidget {
             border: 1px solid #555;
         }
-        """)
+        """
+        )
         self.main_layout.setMargin(0)
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.expand_button = qtw.QPushButton(label)
-        self.expand_button.setStyleSheet('text-align: left; padding-left: 5px; border-radius: 0px; ')
+        self.expand_button.setStyleSheet(
+            "text-align: left; padding-left: 5px; border-radius: 0px; "
+        )
 
         self.content = qtw.QWidget()
         self.content.setLayout(layout())
@@ -40,7 +44,7 @@ class CollapsableWidget(qtw.QFrame):
     def subObjects(self):
         subs = []
         for child in self.content.children():
-            for cw in child.findChildren(qtw.QWidget, 'CollapseableWidget'):
+            for cw in child.findChildren(qtw.QWidget, "CollapseableWidget"):
                 subs.append(cw)
         return subs
 
@@ -58,7 +62,7 @@ class CollapsableWidget(qtw.QFrame):
 
     def collapse(self):
         self.content.hide()
-        self.expand_button.setText(f'⯈ {self.label}')
+        self.expand_button.setText(f"⯈ {self.label}")
         self.expanded = False
 
     def collapse_all(self):
@@ -68,7 +72,7 @@ class CollapsableWidget(qtw.QFrame):
 
     def expand(self):
         self.content.show()
-        self.expand_button.setText(f'▼  {self.label}')
+        self.expand_button.setText(f"▼  {self.label}")
         self.expanded = True
 
     def expand_all(self):
@@ -85,14 +89,14 @@ class CollapsableWidget(qtw.QFrame):
     def _build_ctx_menu(self):
         menu = qtw.QMenu()
         if self.expanded:
-            collapse = menu.addAction('Collapse')
+            collapse = menu.addAction("Collapse")
             collapse.triggered.connect(self.collapse)
-            collapse_all = menu.addAction('Collapse All')
+            collapse_all = menu.addAction("Collapse All")
             collapse_all.triggered.connect(self.collapse_all)
         else:
-            expand = menu.addAction('Expand')
+            expand = menu.addAction("Expand")
             expand.triggered.connect(self.expand)
-        expand_all = menu.addAction('Expand All')
+        expand_all = menu.addAction("Expand All")
         expand_all.triggered.connect(self.expand_all)
         return menu
 
@@ -118,15 +122,13 @@ class FlowLayout(qtw.QLayout):
         if self._hspacing >= 0:
             return self._hspacing
         else:
-            return self.smartSpacing(
-                qtw.QStyle.PM_LayoutHorizontalSpacing)
+            return self.smartSpacing(qtw.QStyle.PM_LayoutHorizontalSpacing)
 
     def verticalSpacing(self):
         if self._vspacing >= 0:
             return self._vspacing
         else:
-            return self.smartSpacing(
-                qtw.QStyle.PM_LayoutVerticalSpacing)
+            return self.smartSpacing(qtw.QStyle.PM_LayoutVerticalSpacing)
 
     def count(self):
         return len(self._items)
@@ -175,12 +177,16 @@ class FlowLayout(qtw.QLayout):
             if hspace == -1:
                 hspace = widget.style().layoutSpacing(
                     qtw.QSizePolicy.PushButton,
-                    qtw.QSizePolicy.PushButton, qtc.Qt.Horizontal)
+                    qtw.QSizePolicy.PushButton,
+                    qtc.Qt.Horizontal,
+                )
             vspace = self.verticalSpacing()
             if vspace == -1:
                 vspace = widget.style().layoutSpacing(
                     qtw.QSizePolicy.PushButton,
-                    qtw.QSizePolicy.PushButton, qtc.Qt.Vertical)
+                    qtw.QSizePolicy.PushButton,
+                    qtc.Qt.Vertical,
+                )
             nextX = x + item.sizeHint().width() + hspace
             if nextX - hspace > effective.right() and lineheight > 0:
                 x = effective.x()
@@ -188,8 +194,7 @@ class FlowLayout(qtw.QLayout):
                 nextX = x + item.sizeHint().width() + hspace
                 lineheight = 0
             if not testonly:
-                item.setGeometry(
-                    qtc.QRect(qtc.QPoint(x, y), item.sizeHint()))
+                item.setGeometry(qtc.QRect(qtc.QPoint(x, y), item.sizeHint()))
             x = nextX
             lineheight = max(lineheight, item.sizeHint().height())
         return y + lineheight - rect.y() + bottom
@@ -211,11 +216,12 @@ class TagBar(qtw.QFrame):
 
     def __init__(self, valid_tags=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle('Tag Bar')
-        self.setObjectName('TagBar')
+        self.setWindowTitle("Tag Bar")
+        self.setObjectName("TagBar")
         self.tags = []
         self.valid_tags = valid_tags or []
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
         QFrame#TagBar {
           background: palette(base);
           border: 1px solid palette(alternate-base);
@@ -251,7 +257,8 @@ class TagBar(qtw.QFrame):
         QLineEdit {
             border: 0;
         }
-        """)
+        """
+        )
         self.setFrameShape(qtw.QFrame.Box)
         self.setFrameShadow(qtw.QFrame.Plain)
         self.setAutoFillBackground(True)
@@ -274,24 +281,32 @@ class TagBar(qtw.QFrame):
         self.refresh()
 
     def eventFilter(self, obj, event):
-        if obj == self.line_edit and event.type() == qtc.QEvent.KeyPress and event.key() == qtc.Qt.Key_Tab:
+        if (
+            obj == self.line_edit
+            and event.type() == qtc.QEvent.KeyPress
+            and event.key() == qtc.Qt.Key_Tab
+        ):
             self.create_tags()
             return True
         return super().eventFilter(obj, event)
 
     def create_tags(self):
-        for tag in self.line_edit.text().split(','):
+        for tag in self.line_edit.text().split(","):
             tag = tag.strip()
-            if tag and tag not in self.tags and (not self.valid_tags or tag in self.valid_tags):
+            if (
+                tag
+                and tag not in self.tags
+                and (not self.valid_tags or tag in self.valid_tags)
+            ):
                 self.tag_added.emit(tag)
                 self.tags.append(tag)
         self.tags = sorted(set(self.tags))
-        self.line_edit.setText('')
+        self.line_edit.setText("")
         self.refresh()
 
     def clear(self):
         self.tags = []
-        self.line_edit.setText('')
+        self.line_edit.setText("")
         self.refresh()
 
     def refresh(self):
@@ -308,7 +323,7 @@ class TagBar(qtw.QFrame):
 
     def add_tag_to_bar(self, text):
         tag = qtw.QFrame(self)
-        tag.setObjectName('Tag')
+        tag.setObjectName("Tag")
         tag.setContentsMargins(0, 0, 0, 0)
         tag.setFixedHeight(18)
         hbox = qtw.QHBoxLayout()
@@ -318,7 +333,7 @@ class TagBar(qtw.QFrame):
         label = qtw.QLabel(text)
         label.setFixedHeight(12)
         hbox.addWidget(label)
-        x_button = qtw.QPushButton('x')
+        x_button = qtw.QPushButton("x")
         x_button.setFixedSize(10, 10)
         x_button.setSizePolicy(qtw.QSizePolicy.Maximum, qtw.QSizePolicy.Maximum)
         x_button.clicked.connect(partial(self.delete_tag, text))
@@ -331,4 +346,3 @@ class TagBar(qtw.QFrame):
         self.tags.remove(tag_name)
         self.tag_removed.emit(tag_name)
         self.refresh()
-

@@ -20,24 +20,30 @@ class PyConsoleDockWidget(qtw.QDockWidget):
     def __init__(self, starfab, *args, **kwargs):
         super().__init__(parent=starfab, *args, **kwargs)
         self.starfab = starfab
-        self.setAllowedAreas(qtc.Qt.BottomDockWidgetArea | qtc.Qt.RightDockWidgetArea | qtc.Qt.LeftDockWidgetArea)
+        self.setAllowedAreas(
+            qtc.Qt.BottomDockWidgetArea
+            | qtc.Qt.RightDockWidgetArea
+            | qtc.Qt.LeftDockWidgetArea
+        )
 
         self.kernel_manager = QtInProcessKernelManager()
         self.kernel_manager.start_kernel(show_banner=False)
-        self.kernel_manager.kernel.gui = 'qt'
+        self.kernel_manager.kernel.gui = "qt"
         self.kernel_client = self.kernel_manager.client()
         self.kernel_client.start_channels()
-        self.kernel_manager.kernel.shell.push({
-            'starfab': starfab,
-            'scdatatools': scdatatools,
-        })
+        self.kernel_manager.kernel.shell.push(
+            {
+                "starfab": starfab,
+                "scdatatools": scdatatools,
+            }
+        )
 
         self.ipython_widget = RichJupyterWidget()
         self.ipython_widget.kernel_manager = self.kernel_manager
         self.ipython_widget.kernel_client = self.kernel_client
-        self.ipython_widget.set_default_style('linux')
+        self.ipython_widget.set_default_style("linux")
         self.ipython_widget.banner = BANNER
-        self.ipython_widget.kernel_banner = ''
+        self.ipython_widget.kernel_banner = ""
 
         self.setWidget(self.ipython_widget)
 

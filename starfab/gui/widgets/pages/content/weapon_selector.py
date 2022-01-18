@@ -8,5 +8,7 @@ class WeaponSelector(EntitySelector):
     def _handle_datacore_loaded(self):
         super()._handle_datacore_loaded()
         self.sc_tree.setRootIndex(
-            self.proxy_model.mapFromSource(self.sc_tree_model.indexForPath('entities/scitem/weapons'))
+            self.proxy_model.mapFromSource(
+                self.sc_tree_model.indexForPath("entities/scitem/weapons")
+            )
         )

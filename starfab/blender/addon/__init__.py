@@ -31,10 +31,10 @@ def install(version) -> Path:
     """
     Installs the StarFab add-on into the Blender version `version`.
     """
-    addon_py = install_blender_addon(version, 'starfab_addon', ADDON_TEMPLATE)
+    addon_py = install_blender_addon(version, "starfab_addon", ADDON_TEMPLATE)
 
     # TODO: remove this in the future
-    scdv_py = addon_py.parent / 'scdv_addon.py'
+    scdv_py = addon_py.parent / "scdv_addon.py"
     scdv_py.unlink(missing_ok=True)
 
     return addon_py
@@ -42,10 +42,12 @@ def install(version) -> Path:
 
 def register():
     from starfab.blender import link
+
     importlib.reload(link)
     link.register()
 
 
 def unregister():
     from starfab.blender import link
+
     link.unregister()

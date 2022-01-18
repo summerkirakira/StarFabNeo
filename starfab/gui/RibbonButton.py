@@ -23,14 +23,14 @@ class RibbonButton(QToolButton):
             self.setMinimumWidth(50 * sc)
             self.setMinimumHeight(75 * sc)
             self.setMaximumHeight(80 * sc)
-            #self.setStyleSheet(get_stylesheet("ribbonButton"))
+            # self.setStyleSheet(get_stylesheet("ribbonButton"))
             self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
             self.setIconSize(QSize(32 * sc, 32 * sc))
         else:
             self.setMaximumWidth(180 * sc)
             self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
             self.setIconSize(QSize(16 * sc, 16 * sc))
-            #self.setStyleSheet(get_stylesheet("ribbonSmallButton"))
+            # self.setStyleSheet(get_stylesheet("ribbonSmallButton"))
 
         ##TODO: break out another size template to allow for medium sized buttons with 24x24 icon
 

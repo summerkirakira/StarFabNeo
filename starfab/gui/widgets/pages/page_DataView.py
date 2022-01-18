@@ -14,21 +14,32 @@ class DataView(qtw.QWidget):
     def __init__(self, starfab):
         super().__init__(parent=None)
         self.starfab = starfab
-        uic.loadUi(str(RES_PATH / 'ui' / 'DataView.ui'), self)  # Load the ui into self
+        uic.loadUi(str(RES_PATH / "ui" / "DataView.ui"), self)  # Load the ui into self
 
         self._open_tabs = {}
 
         self.sc_tabs.tabCloseRequested.connect(starfab._handle_close_tab)
         self.sc_tabs.tabBar().setContextMenuPolicy(qtc.Qt.CustomContextMenu)
-        self.sc_tabs.tabBar().customContextMenuRequested.connect(starfab._handle_tab_ctx_menu)
+        self.sc_tabs.tabBar().customContextMenuRequested.connect(
+            starfab._handle_tab_ctx_menu
+        )
         self._sc_tab_ctx = None
         self.sc_tabs_ctx_menu = qtw.QMenu()
-        self.sc_tabs_ctx_menu.addAction('Close').triggered.connect(starfab._handle_tab_ctx_close)
-        self.sc_tabs_ctx_menu.addAction('Close Other Tabs').triggered.connect(starfab._handle_tab_ctx_close_other)
-        self.sc_tabs_ctx_menu.addAction('Close All Tabs').triggered.connect(starfab._handle_tab_ctx_close_all)
-        self.sc_tabs_ctx_menu.addAction('Close Tabs to the Left').triggered.connect(starfab._handle_tab_ctx_close_left)
-        self.sc_tabs_ctx_menu.addAction('Close Tabs to the Right').triggered.connect(
-            starfab._handle_tab_ctx_close_right)
+        self.sc_tabs_ctx_menu.addAction("Close").triggered.connect(
+            starfab._handle_tab_ctx_close
+        )
+        self.sc_tabs_ctx_menu.addAction("Close Other Tabs").triggered.connect(
+            starfab._handle_tab_ctx_close_other
+        )
+        self.sc_tabs_ctx_menu.addAction("Close All Tabs").triggered.connect(
+            starfab._handle_tab_ctx_close_all
+        )
+        self.sc_tabs_ctx_menu.addAction("Close Tabs to the Left").triggered.connect(
+            starfab._handle_tab_ctx_close_left
+        )
+        self.sc_tabs_ctx_menu.addAction("Close Tabs to the Right").triggered.connect(
+            starfab._handle_tab_ctx_close_right
+        )
 
         self.page_Data_Datacore.layout().addWidget(DCBTreeWidget(parent=self))
         self.page_Tag_Database.layout().addWidget(TagDatabaseView(parent=self))
@@ -37,18 +48,20 @@ class DataView(qtw.QWidget):
         self._on_wide_tab = False
         self._prev_sizes = (1, 1)
         localization_tab = LocalizationView(self.starfab)
-        localization_tab.setObjectName('localization')
-        self.tabWidget.addTab(localization_tab, 'Localization')
+        localization_tab.setObjectName("localization")
+        self.tabWidget.addTab(localization_tab, "Localization")
 
         actionmap_tab = ActionMapView(self.starfab)
-        actionmap_tab.setObjectName('actionmap')
-        self.tabWidget.addTab(actionmap_tab, 'Action Map')
+        actionmap_tab.setObjectName("actionmap")
+        self.tabWidget.addTab(actionmap_tab, "Action Map")
         self.tabWidget.currentChanged.connect(self._handle_tab_changed)
-        self.splitter.setSizes((500, 1))  # TODO: remember this position and set on reload
+        self.splitter.setSizes(
+            (500, 1)
+        )  # TODO: remember this position and set on reload
 
     def _handle_tab_changed(self, index):
         tab = self.tabWidget.widget(index)
-        if tab.objectName() in ['localization', 'actionmap']:
+        if tab.objectName() in ["localization", "actionmap"]:
             if not self._on_wide_tab:
                 self._on_wide_tab = True
                 self._prev_sizes = self.splitter.sizes()

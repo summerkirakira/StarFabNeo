@@ -138,68 +138,7 @@
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <widget class="QComboBox" name="theme">
-                 <item>
-                  <property name="text">
-                   <string>LIGHT_VS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>QUIET_LIGHT</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>SOLARIZED_LIGHT</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>ABYSS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>DARK_VS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>KIMBIE_DARK</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>MONOKAI</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>MONOKAI_DIMMED</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>RED</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>SOLARIZED_DARK</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>TOMORROW_NIGHT_BLUE</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>DARK_HIGH_CONTRAST</string>
-                  </property>
-                 </item>
-                </widget>
+                <widget class="QComboBox" name="theme"/>
                </item>
               </layout>
              </widget>

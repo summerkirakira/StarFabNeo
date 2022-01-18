@@ -1,9 +1,13 @@
 from functools import cached_property
 from starfab.gui import qtc, qtw, qtg
 
-from starfab.models.common import PathArchiveTreeSortFilterProxyModel, PathArchiveTreeModel, PathArchiveTreeModelLoader
+from starfab.models.common import (
+    PathArchiveTreeSortFilterProxyModel,
+    PathArchiveTreeModel,
+    PathArchiveTreeModelLoader,
+)
 
-TAG_DATABASE_COLUMNS = ['Name']
+TAG_DATABASE_COLUMNS = ["Name"]
 
 
 class TagDatabaseLoader(PathArchiveTreeModelLoader):
@@ -23,7 +27,10 @@ class TagDatabaseSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
                 try:
                     item = parent.child(source_row)
                     if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
-                        return self._filter.lower() in item.name.lower() or self._filter.lower() in item.guid
+                        return (
+                            self._filter.lower() in item.name.lower()
+                            or self._filter.lower() in item.guid
+                        )
                     else:
                         return self._filter in item.name or self._filter in item.guid
                 except IndexError:
@@ -82,7 +89,7 @@ class TagDatabaseTreeItem:
         return None
 
     def __repr__(self):
-        return f'<TagTreeItem {repr(self.tag)[1:]}'
+        return f"<TagTreeItem {repr(self.tag)[1:]}"
 
 
 class TagDatabaseModel(PathArchiveTreeModel):
@@ -96,10 +103,17 @@ class TagDatabaseModel(PathArchiveTreeModel):
         self._loader = None
         self.is_loaded = False
 
-        super().__init__(None, columns=TAG_DATABASE_COLUMNS, item_cls=TagDatabaseTreeItem, parent=sc_manager)
+        super().__init__(
+            None,
+            columns=TAG_DATABASE_COLUMNS,
+            item_cls=TagDatabaseTreeItem,
+            parent=sc_manager,
+        )
 
         self._sc_manager.datacore_model.loaded.connect(self._on_datacore_loaded)
-        self._sc_manager.datacore_model.unloading.connect(self._on_datacore_unloading, qtc.Qt.BlockingQueuedConnection)
+        self._sc_manager.datacore_model.unloading.connect(
+            self._on_datacore_unloading, qtc.Qt.BlockingQueuedConnection
+        )
 
     @qtc.Slot()
     def _on_datacore_loaded(self):
@@ -142,7 +156,11 @@ class TagDatabaseModel(PathArchiveTreeModel):
         if self.is_loaded:
             self.unload()
         self.archive = sc
-        self._loader = TagDatabaseLoader(self, item_cls=TagDatabaseTreeItem, task_name='load_tag_db_model',
-                                         task_status_msg='Processing Tag Database')
+        self._loader = TagDatabaseLoader(
+            self,
+            item_cls=TagDatabaseTreeItem,
+            task_name="load_tag_db_model",
+            task_status_msg="Processing Tag Database",
+        )
         self._loader.signals.finished.connect(self._loaded)
         qtc.QThreadPool.globalInstance().start(self._loader)

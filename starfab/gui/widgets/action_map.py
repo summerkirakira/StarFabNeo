@@ -17,7 +17,7 @@ class ActionItem(qtg.QStandardItem):
 
 
 class ActionMapView(StarFabStaticWidget):
-    __ui_file__ = str(RES_PATH / 'ui' / 'ActionMapView.ui')
+    __ui_file__ = str(RES_PATH / "ui" / "ActionMapView.ui")
 
     def __init__(self, starfab, proxy_model=None, *args, **kwargs):
         super().__init__(starfab, *args, **kwargs)
@@ -53,7 +53,7 @@ class ActionMapView(StarFabStaticWidget):
             columns = sorted(index.column() for index in selections)
             rowcount = rows[-1] - rows[0] + 1
             colcount = columns[-1] - columns[0] + 1
-            table = [[''] * colcount for _ in range(rowcount)]
+            table = [[""] * colcount for _ in range(rowcount)]
             for index in selections:
                 row = index.row() - rows[0]
                 column = index.column() - columns[0]
@@ -69,27 +69,33 @@ class ActionMapView(StarFabStaticWidget):
         return super().eventFilter(source, event)
 
     def _fill_tree(self):
-        self.tree_model.setHorizontalHeaderLabels(ACTION_MAP_FIELD_NAMES + ['filter'])
+        self.tree_model.setHorizontalHeaderLabels(ACTION_MAP_FIELD_NAMES + ["filter"])
         am = self.starfab.sc.default_profile.actionmap()
         root = self.tree_model.invisibleRootItem()
         for ui_category, action_category in am.items():
             ui_category_item = ActionItem(ui_category)
-            root.appendRow([ui_category_item] + [ActionItem('')]*7)
+            root.appendRow([ui_category_item] + [ActionItem("")] * 7)
             for category, actions in action_category.items():
                 category_item = ActionItem(category)
-                ui_category_item.appendRow([category_item] + [ActionItem('')]*7)
+                ui_category_item.appendRow([category_item] + [ActionItem("")] * 7)
                 for label, action in actions.items():
-                    row = [ActionItem(''), ActionItem(label)]
+                    row = [ActionItem(""), ActionItem(label)]
                     row[1].setToolTip(label)
                     for _ in ACTION_MAP_FIELD_NAMES[2:]:
-                        txt = str(action.get(_, ''))
+                        txt = str(action.get(_, ""))
                         row.append(ActionItem(txt))
                         row[-1].setToolTip(txt)
-                    row.append(ActionItem(''.join([category, label] + [str(_) for _ in action.values()])))
+                    row.append(
+                        ActionItem(
+                            "".join(
+                                [category, label] + [str(_) for _ in action.values()]
+                            )
+                        )
+                    )
                     category_item.appendRow(row)
 
     def handle_sc_opened(self):
-        if self.starfab.sc is not None and self.starfab.sc.is_loaded('p4k'):
+        if self.starfab.sc is not None and self.starfab.sc.is_loaded("p4k"):
             self.tree_model = qtg.QStandardItemModel(self)
             self._fill_tree()
             self.proxy_model.setSourceModel(self.tree_model)

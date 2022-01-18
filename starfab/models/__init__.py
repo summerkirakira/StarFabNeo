@@ -1,2 +1,1 @@
-
 from .sc import StarCitizenManager

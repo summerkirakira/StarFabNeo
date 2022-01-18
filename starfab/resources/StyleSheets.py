@@ -9,14 +9,21 @@ def get_stylesheet(name):
         stylesheet_instance = Stylesheets()
     return stylesheet_instance.get_stylesheet(name)
 
+
 class Stylesheets(object):
     def __init__(self):
         self._stylesheets = {}
-        self.make_stylesheet("main", str(RES_PATH / 'stylesheets' / 'main.css'))
-        self.make_stylesheet("ribbon", str(RES_PATH / 'stylesheets' / 'ribbon.css'))
-        self.make_stylesheet("ribbonPane", str(RES_PATH / 'stylesheets' / 'ribbonPane.css'))
-        self.make_stylesheet("ribbonButton", str(RES_PATH / 'stylesheets' / 'ribbonButton.css'))
-        self.make_stylesheet("ribbonSmallButton", str(RES_PATH / 'stylesheets' / 'ribbonSmallButton.css'))
+        self.make_stylesheet("main", str(RES_PATH / "stylesheets" / "main.css"))
+        self.make_stylesheet("ribbon", str(RES_PATH / "stylesheets" / "ribbon.css"))
+        self.make_stylesheet(
+            "ribbonPane", str(RES_PATH / "stylesheets" / "ribbonPane.css")
+        )
+        self.make_stylesheet(
+            "ribbonButton", str(RES_PATH / "stylesheets" / "ribbonButton.css")
+        )
+        self.make_stylesheet(
+            "ribbonSmallButton", str(RES_PATH / "stylesheets" / "ribbonSmallButton.css")
+        )
 
     def make_stylesheet(self, name, path):
         with open(path) as data_file:

@@ -1,4 +1,3 @@
-
 from .pyconsole import PyConsoleDockWidget
 from .file_view import FileViewDock
 from .datacore_widget import DCBTreeWidget

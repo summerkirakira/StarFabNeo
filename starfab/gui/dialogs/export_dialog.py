@@ -26,7 +26,7 @@ class P4KExportDialog(qtw.QDialog):
     def __init__(self, p4k_items: typing.List[P4KItem], save_to=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowFlags(self.windowFlags() & ~qtc.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle(self.tr('Export'))
+        self.setWindowTitle(self.tr("Export"))
         self.setFixedWidth(400)
 
         layout = qtw.QVBoxLayout()
@@ -34,8 +34,12 @@ class P4KExportDialog(qtw.QDialog):
         layout.addWidget(self.export_options)
 
         btns = qtw.QDialogButtonBox()
-        btns.addButton(qtw.QPushButton(self.tr('Cancel')), qtw.QDialogButtonBox.RejectRole)
-        btns.addButton(qtw.QPushButton(self.tr('Export')), qtw.QDialogButtonBox.AcceptRole)
+        btns.addButton(
+            qtw.QPushButton(self.tr("Cancel")), qtw.QDialogButtonBox.RejectRole
+        )
+        btns.addButton(
+            qtw.QPushButton(self.tr("Export")), qtw.QDialogButtonBox.AcceptRole
+        )
         btns.accepted.connect(self.export)
         btns.rejected.connect(self.close)
         layout.addWidget(btns)
@@ -46,15 +50,21 @@ class P4KExportDialog(qtw.QDialog):
 
     @qtc.Slot()
     def export(self):
-        prev_dir = settings.value('exportDirectory')
+        prev_dir = settings.value("exportDirectory")
 
-        title = 'Save to...' if self.save_to else 'Extract to...'
+        title = "Save to..." if self.save_to else "Extract to..."
         edir = qtw.QFileDialog.getExistingDirectory(self, title, dir=prev_dir)
         if edir:
             options = self.export_options.get_options()
-            export_runner = ExportRunner(p4k_files=[_.info for _ in self.p4k_items], outdir=edir, save_to=self.save_to,
-                                         export_options=options)
+            export_runner = ExportRunner(
+                p4k_files=[_.info for _ in self.p4k_items],
+                outdir=edir,
+                save_to=self.save_to,
+                export_options=options,
+            )
             qtc.QThreadPool.globalInstance().start(export_runner)
             self.close()
         else:
-            return qtw.QMessageBox.warning(self, title, 'You must select an export directory to extract')
+            return qtw.QMessageBox.warning(
+                self, title, "You must select an export directory to extract"
+            )

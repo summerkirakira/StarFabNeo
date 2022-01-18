@@ -18,11 +18,11 @@ from scdatatools.engine.textures.dds import unsplit_dds
 
 Image.init()
 SUPPORTED_IMG_FORMATS = list(Image.EXTENSION.keys())
-DDS_CONV_FORMAT = 'png'
+DDS_CONV_FORMAT = "png"
 
 
 class QImageViewer(qtw.QGraphicsView):
-    """ PyQt image viewer widget for a QPixmap in a QGraphicsView scene with mouse zooming and panning.
+    """PyQt image viewer widget for a QPixmap in a QGraphicsView scene with mouse zooming and panning.
     Displays a QImage or QPixmap (QImage is internally converted to a QPixmap).
     To display any other image format, you must first convert it to a QImage or QPixmap.
     Some useful image format conversion utilities:
@@ -58,7 +58,7 @@ class QImageViewer(qtw.QGraphicsView):
         self.customContextMenuRequested.connect(self._handle_ctx_menu)
 
         self.ctx_menu = qtw.QMenu()
-        self.act_save_as = self.ctx_menu.addAction('Save As...')
+        self.act_save_as = self.ctx_menu.addAction("Save As...")
         self.act_save_as.triggered.connect(self._handle_save_as)
 
         # Store a local handle to the scene's current image pixmap.
@@ -85,16 +85,19 @@ class QImageViewer(qtw.QGraphicsView):
         if not self.hasImage():
             return
         img_formats = qtg.QImageReader.supportedImageFormats()
-        text_filter = "Images ({})".format(" ".join([f"*.{_.data().decode('utf-8')}" for _ in img_formats]))
-        save_path, _ = qtw.QFileDialog.getSaveFileName(self, 'Save Image As...', filter=text_filter)
+        text_filter = "Images ({})".format(
+            " ".join([f"*.{_.data().decode('utf-8')}" for _ in img_formats])
+        )
+        save_path, _ = qtw.QFileDialog.getSaveFileName(
+            self, "Save Image As...", filter=text_filter
+        )
         if save_path:
             # TODO: handle setting quality
             # TODO: handle confirm overwrite
             self.image.pixmap().save(save_path)
 
     def hasImage(self):
-        """ Returns whether or not the scene contains an image pixmap.
-        """
+        """Returns whether or not the scene contains an image pixmap."""
         return not self._empty
 
     def fitInView(self, scale=True):
@@ -106,13 +109,15 @@ class QImageViewer(qtw.QGraphicsView):
                 self.scale(1 / unity.width(), 1 / unity.height())
                 viewrect = self.viewport().rect()
                 scenerect = self.transform().mapRect(rect)
-                factor = min(viewrect.width() / scenerect.width(),
-                             viewrect.height() / scenerect.height())
+                factor = min(
+                    viewrect.width() / scenerect.width(),
+                    viewrect.height() / scenerect.height(),
+                )
                 self.scale(factor, factor)
                 self._zoom = 0
 
     def setImage(self, image):
-        """ Set the scene's current image pixmap to the input QImage or QPixmap.
+        """Set the scene's current image pixmap to the input QImage or QPixmap.
         Raises a RuntimeError if the input image has type other than QImage or QPixmap.
         :type image: QImage | QPixmap
         """
@@ -122,7 +127,9 @@ class QImageViewer(qtw.QGraphicsView):
         elif isinstance(image, qtg.QImage):
             pixmap = qtg.QPixmap.fromImage(image)
         else:
-            raise ValueError("QImageViewer.setImage: Argument must be a QImage or QPixmap.")
+            raise ValueError(
+                "QImageViewer.setImage: Argument must be a QImage or QPixmap."
+            )
         if pixmap and not pixmap.isNull():
             self._empty = False
             self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
@@ -189,9 +196,11 @@ class DDSImageViewer(qtw.QWidget):
         super().__init__(*args, **kwargs)
 
         try:
-            self.dds_header = next(iter(v for k, v in dds_files.items() if k.lower().endswith('.dds')))
+            self.dds_header = next(
+                iter(v for k, v in dds_files.items() if k.lower().endswith(".dds"))
+            )
         except StopIteration:
-            raise ValueError(f'Could not determine the DDS header file')
+            raise ValueError(f"Could not determine the DDS header file")
 
         # self.dds_files.remove(self.dds_header)
         # # unsplit files should be largest to smallest
@@ -215,7 +224,7 @@ class DDSImageViewer(qtw.QWidget):
         try:
             dds_file = unsplit_dds({p: i.info for p, i in dds_files.items()})
             data = BytesIO(
-                image_converter.convert_buffer(dds_file, 'dds', DDS_CONV_FORMAT)
+                image_converter.convert_buffer(dds_file, "dds", DDS_CONV_FORMAT)
             )
             if not image.load_from_file(data):
                 raise RuntimeError

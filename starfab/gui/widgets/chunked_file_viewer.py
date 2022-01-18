@@ -15,7 +15,15 @@ from starfab.hooks import COLLAPSABLE_GEOMETRY_PREVIEW_WIDGET
 
 
 SUPPORTED_CHUNK_FILE_FORMATS = [
-   '.cga', '.cgam', '.cgf', '.cgfm', '.chr', '.soc', '.dba', '.skin', '.skinm'
+    ".cga",
+    ".cgam",
+    ".cgf",
+    ".cgfm",
+    ".chr",
+    ".soc",
+    ".dba",
+    ".skin",
+    ".skinm",
 ]
 
 
@@ -24,21 +32,32 @@ def widget_for_chunk(info, obj, chunk, inline=False):
     layout = qtw.QHBoxLayout()
 
     if isinstance(chunk, (chunks.CryXMLBChunk, chunks.JSONChunk)):
-        e = Editor(ContentItem(f'{info.path.name}:{chunk.chunk_header.id}', info.path,
-                               json.dumps(chunk.dict(), indent=2)),
-                   parent=widget)
+        e = Editor(
+            ContentItem(
+                f"{info.path.name}:{chunk.chunk_header.id}",
+                info.path,
+                json.dumps(chunk.dict(), indent=2),
+            ),
+            parent=widget,
+        )
         e.setMinimumHeight(600)
         layout.addWidget(e)
     elif isinstance(chunk, chunks.SourceInfoChunk):
-        e = Editor(ContentItem(f'{info.path.name}:{chunk.chunk_header.id}', info.path, chunk.chunk_data.data),
-                   parent=widget)
+        e = Editor(
+            ContentItem(
+                f"{info.path.name}:{chunk.chunk_header.id}",
+                info.path,
+                chunk.chunk_data.data,
+            ),
+            parent=widget,
+        )
         e.setMinimumHeight(400)
         layout.addWidget(e)
     else:
         try:
             l = qtw.QLabel(str(chunk))
         except Exception as e:
-            l = qtw.QLabel(f'Exception reading {repr(chunk)}: {repr(e)}')
+            l = qtw.QLabel(f"Exception reading {repr(chunk)}: {repr(e)}")
         l.setFrameStyle(qtw.QFrame.StyledPanel | qtw.QFrame.Sunken)
         l.setTextInteractionFlags(qtc.Qt.TextSelectableByMouse)
         layout.addWidget(l)
@@ -56,8 +75,12 @@ class ChunkedObjWidget(qtw.QWidget):
         layout = qtw.QVBoxLayout()
 
         for chunkid, chunk in sorted(self.obj.chunks.items(), key=lambda x: str(x[0])):
-            section = CollapsableWidget(f'{chunkid} - {chunk.chunk_header.type.name}', layout=qtw.QVBoxLayout)
-            section.content.layout().addWidget(widget_for_chunk(self.info, self.obj, chunk))
+            section = CollapsableWidget(
+                f"{chunkid} - {chunk.chunk_header.type.name}", layout=qtw.QVBoxLayout
+            )
+            section.content.layout().addWidget(
+                widget_for_chunk(self.info, self.obj, chunk)
+            )
             layout.addWidget(section)
 
         self.setLayout(layout)
@@ -65,7 +88,7 @@ class ChunkedObjWidget(qtw.QWidget):
 
 class LazyChunkDetailsWidget(CollapsableWidget):
     def __init__(self, info, obj, *args, **kwargs):
-        super().__init__(f'Chunk Details', expand=False, *args, **kwargs)
+        super().__init__(f"Chunk Details", expand=False, *args, **kwargs)
         self._loaded = False
         self.content.setLayout(qtw.QVBoxLayout())
         self.obj = obj
@@ -84,7 +107,7 @@ class ChunkedObjView(qtw.QWidget):
     def __init__(self, info, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        uic.loadUi(str(RES_PATH / 'ui' / 'ChunkedObjView.ui'), self)
+        uic.loadUi(str(RES_PATH / "ui" / "ChunkedObjView.ui"), self)
 
         self.starfab = get_starfab()
         self.info = info
@@ -93,18 +116,17 @@ class ChunkedObjView(qtw.QWidget):
 
         l = qtw.QLineEdit(info.name)
         l.setReadOnly(True)
-        self.obj_info.addRow('Name', l)
+        self.obj_info.addRow("Name", l)
 
         l = qtw.QLineEdit(info.path.as_posix())
         l.setReadOnly(True)
-        self.obj_info.addRow('Path', l)
+        self.obj_info.addRow("Path", l)
 
         l = qtw.QLineEdit(self.obj.header.file_type)
         l.setReadOnly(True)
-        self.obj_info.addRow('Type', l)
+        self.obj_info.addRow("Type", l)
 
         self.scrollArea.setWidgetResizable(True)
-
 
         # TODO: support dynamically adding actions for chunked objects from plugins
         self.obj_actions_frame.setVisible(False)
@@ -118,7 +140,9 @@ class ChunkedObjView(qtw.QWidget):
         if isinstance(self.obj, GeometryChunkFile):
             try:
                 self.extra_widgets.append(
-                    plugin_manager.handle_hook(COLLAPSABLE_GEOMETRY_PREVIEW_WIDGET, self.obj, parent=self)
+                    plugin_manager.handle_hook(
+                        COLLAPSABLE_GEOMETRY_PREVIEW_WIDGET, self.obj, parent=self
+                    )
                 )
             except plugin_manager.HandlerNotAvailable:
                 pass

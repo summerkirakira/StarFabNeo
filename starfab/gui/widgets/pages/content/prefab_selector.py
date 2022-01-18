@@ -16,13 +16,16 @@ class PrefabSelector(P4KContentSelector):
 
     def checked_items(self):
         return [
-            ExtractionItem(name=_.name, object=_.info, bp_generator=blueprint_from_prefab_xml)
-            for _ in self.sc_tree_model.checked_items if _.info is not None
+            ExtractionItem(
+                name=_.name, object=_.info, bp_generator=blueprint_from_prefab_xml
+            )
+            for _ in self.sc_tree_model.checked_items
+            if _.info is not None
         ]
 
     @qtc.Slot()
     def _handle_p4k_loaded(self):
-        self.sc_tree_model.root_item = self.sc_tree_model.itemForPath('Data/Prefabs')
+        self.sc_tree_model.root_item = self.sc_tree_model.itemForPath("Data/Prefabs")
         super()._handle_p4k_loaded()
 
     def _handle_item_action(self, item, model, index):

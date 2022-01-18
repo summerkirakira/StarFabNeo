@@ -34,7 +34,7 @@ unregister_hook = plugin_manager.unregister_hook
 
 
 def register(plugin: StarFabPlugin):
-    """ Decorator to register a `DataToolsPlugin`
+    """Decorator to register a `DataToolsPlugin`
 
     @plugins.register
     class MyPlugin(DataToolsPlugin):

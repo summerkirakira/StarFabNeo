@@ -7,12 +7,12 @@ from starfab.resources.StyleSheets import get_stylesheet
 class RibbonWidget(QToolBar):
     def __init__(self, parent):
         QToolBar.__init__(self, parent)
-        #self.setStyleSheet(get_stylesheet("ribbon"))
+        # self.setStyleSheet(get_stylesheet("ribbon"))
         self.setObjectName("ribbonWidget")
         self.setWindowTitle("Ribbon")
         self._ribbon_widget = QTabWidget(self)
-        self._ribbon_widget.setMaximumHeight(130*gui_scale())
-        self._ribbon_widget.setMinimumHeight(110*gui_scale())
+        self._ribbon_widget.setMaximumHeight(130 * gui_scale())
+        self._ribbon_widget.setMinimumHeight(110 * gui_scale())
         self.setMovable(False)
         self.addWidget(self._ribbon_widget)
 

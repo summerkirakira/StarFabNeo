@@ -7,7 +7,7 @@ from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
 
 
 class LocalizationView(StarFabStaticWidget):
-    __ui_file__ = str(RES_PATH / 'ui' / 'LocalizationView.ui')
+    __ui_file__ = str(RES_PATH / "ui" / "LocalizationView.ui")
 
     def __init__(self, starfab, proxy_model=None, *args, **kwargs):
         super().__init__(starfab, *args, **kwargs)
@@ -17,8 +17,12 @@ class LocalizationView(StarFabStaticWidget):
         self.debounce.setSingleShot(True)
         self.debounce.timeout.connect(self._update_search)
 
-        self.starfab.sc_manager.localization_model.loaded.connect(self.handle_localization_loaded)
-        self.starfab.sc_manager.localization_model.unloading.connect(self.handle_localization_unloaded)
+        self.starfab.sc_manager.localization_model.loaded.connect(
+            self.handle_localization_loaded
+        )
+        self.starfab.sc_manager.localization_model.unloading.connect(
+            self.handle_localization_unloaded
+        )
 
         self.proxy_model = None
         self.table.setWordWrap(True)
@@ -45,7 +49,7 @@ class LocalizationView(StarFabStaticWidget):
             columns = sorted(index.column() for index in selections)
             rowcount = rows[-1] - rows[0] + 1
             colcount = columns[-1] - columns[0] + 1
-            table = [[''] * colcount for _ in range(rowcount)]
+            table = [[""] * colcount for _ in range(rowcount)]
             for index in selections:
                 row = index.row() - rows[0]
                 column = index.column() - columns[0]
@@ -72,5 +76,3 @@ class LocalizationView(StarFabStaticWidget):
         del self.proxy_model
         self._create_proxy_model()
         self.table.setModel(self.proxy_model)
-
-

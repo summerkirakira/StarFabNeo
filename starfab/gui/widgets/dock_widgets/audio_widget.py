@@ -11,8 +11,13 @@ from qtpy import QtMultimedia
 
 from starfab.gui import qtc, qtw, qtg
 from starfab.gui.widgets.dock_widgets.common import StarFabSearchableTreeWidget
-from starfab.models.audio import SCAUDIOVIEWW_COLUMNS, AudioTreeSortFilterProxyModel, AudioTreeModel, \
-    AudioTreeLoader, AudioTreeItem
+from starfab.models.audio import (
+    SCAUDIOVIEWW_COLUMNS,
+    AudioTreeSortFilterProxyModel,
+    AudioTreeModel,
+    AudioTreeLoader,
+    AudioTreeItem,
+)
 from starfab.utils import show_file_in_filemanager
 from starfab.gui.utils import ScrollMessageBox, seconds_to_str
 from starfab.resources import RES_PATH
@@ -34,7 +39,7 @@ class _AudioCleanup(qtc.QRunnable):
 
 
 class AudioTreeWidget(StarFabSearchableTreeWidget):
-    __ui_file__ = str(RES_PATH / 'ui' / 'AudioTreeWidget.ui')
+    __ui_file__ = str(RES_PATH / "ui" / "AudioTreeWidget.ui")
 
     audio_conversion_complete = Signal(str, Path, str)
     play_wem = Signal(str)
@@ -73,20 +78,26 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         self.wem_list.doubleClicked.connect(self._on_wem_doubleclick)
 
         self.playButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaPlay))
-        self.playButton.clicked.connect(lambda b: self.play())  # lambda consumes the checked bool
+        self.playButton.clicked.connect(
+            lambda b: self.play()
+        )  # lambda consumes the checked bool
         self.pauseButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaPause))
         self.pauseButton.clicked.connect(self.pause)
         self.pauseButton.hide()
-        self.prevButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaSkipBackward))
+        self.prevButton.setIcon(
+            self.style().standardIcon(qtw.QStyle.SP_MediaSkipBackward)
+        )
         self.prevButton.clicked.connect(self.play_previous)
         self.stopButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaStop))
         self.stopButton.clicked.connect(self.stop)
-        self.nextButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaSkipForward))
+        self.nextButton.setIcon(
+            self.style().standardIcon(qtw.QStyle.SP_MediaSkipForward)
+        )
         self.nextButton.clicked.connect(self.play_next)
 
         self.sc_breadcrumbs.setVisible(True)
         self.gotoButton.clicked.connect(self._handle_goto)
-        self.gotoButton.setIcon(qta.icon('mdi.arrow-right-thin-circle-outline'))
+        self.gotoButton.setIcon(qta.icon("mdi.arrow-right-thin-circle-outline"))
         self.play_info.setVisible(False)
 
         # self.playbackSlider.sliderPressed.connect(self._handle_playback_pressed)
@@ -96,10 +107,10 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         self.set_volume(75)
 
         self.ctx_manager.default_menu.addSeparator()
-        extract = self.ctx_manager.default_menu.addAction('Extract to...')
-        extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
-        extract = self.ctx_manager.menus[''].addAction('Extract to...')
-        extract.triggered.connect(partial(self.ctx_manager.handle_action, 'extract'))
+        extract = self.ctx_manager.default_menu.addAction("Extract to...")
+        extract.triggered.connect(partial(self.ctx_manager.handle_action, "extract"))
+        extract = self.ctx_manager.menus[""].addAction("Extract to...")
+        extract.triggered.connect(partial(self.ctx_manager.handle_action, "extract"))
 
     def destroy(self, *args, **kwargs) -> None:
         if self._audio_tmp is not None:
@@ -128,14 +139,16 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
 
         playlist_index, wem_index = self._playlist_index
         if len(self._currently_playing.wems) > 1:
-            wem_txt = f' [{self._currently_playing_wem_id + 1}/{len(self._currently_playing.wems)}]'
+            wem_txt = f" [{self._currently_playing_wem_id + 1}/{len(self._currently_playing.wems)}]"
         else:
-            wem_txt = ''
+            wem_txt = ""
         if self._playlist:
-            self.sc_breadcrumbs.setText(f'{playlist_index + 1}/{len(self._playlist)} - '
-                                        f'{self._currently_playing.name}{wem_txt}')
+            self.sc_breadcrumbs.setText(
+                f"{playlist_index + 1}/{len(self._playlist)} - "
+                f"{self._currently_playing.name}{wem_txt}"
+            )
         else:
-            self.sc_breadcrumbs.setText(f'{self._currently_playing.name}{wem_txt}')
+            self.sc_breadcrumbs.setText(f"{self._currently_playing.name}{wem_txt}")
 
         if state == QtMultimedia.QMediaPlayer.State.PlayingState:
             self.playButton.hide()
@@ -148,7 +161,11 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self.playButton.show()
             self.pauseButton.hide()
 
-        if state == QtMultimedia.QMediaPlayer.State.StoppedState and self._playlist and self._auto_play:
+        if (
+            state == QtMultimedia.QMediaPlayer.State.StoppedState
+            and self._playlist
+            and self._auto_play
+        ):
             self.play_next()
 
     def _handle_goto(self):
@@ -158,7 +175,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self.sc_tree.scrollTo(tree_item)
 
     def _change_media(self, item, wem_index):
-        """ Returns the item if set correctly, else None """
+        """Returns the item if set correctly, else None"""
         if item.atl_name is None or not item.wems:
             return None
 
@@ -189,16 +206,20 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self._currently_playing_wem_id = wem_index
             # self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
         except Exception as e:
-            ScrollMessageBox.critical(self, "Audio", f"Cannot play {item.atl_name}: {repr(e)}")
+            ScrollMessageBox.critical(
+                self, "Audio", f"Cannot play {item.atl_name}: {repr(e)}"
+            )
             self._currently_playing = None
             self._currently_playing_wem_id = None
 
     def _handle_play_wem(self, wem_id, item=None):
-        """ Allows for the playing of a wem from an item, or directly from the p4k """
+        """Allows for the playing of a wem from an item, or directly from the p4k"""
         self.stop()
         if item is None:
             # TODO: _fake_item is a hacky hack hack way of just "getting it in", should be fixed
-            item = AudioTreeItem(path=str(wem_id), model=self.sc_tree_model, atl_name=str(wem_id))
+            item = AudioTreeItem(
+                path=str(wem_id), model=self.sc_tree_model, atl_name=str(wem_id)
+            )
             item._wems = [wem_id]
             item._wems_loaded = True
         self._playlist = []
@@ -206,17 +227,22 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
 
     @Slot(str, Path)
     def _handle_audio_conversion(self, conv_result):
-        wem_id = conv_result.get('id')
-        ogg_path = conv_result.get('ogg')
-        error_msg = conv_result.get('msg')
+        wem_id = conv_result.get("id")
+        ogg_path = conv_result.get("ogg")
+        error_msg = conv_result.get("msg")
         if error_msg:
             ScrollMessageBox.critical(self, "Audio", error_msg)
             self._currently_playing = None
             self._currently_playing_wem_id = None
-        elif (self._currently_playing is not None and self._currently_playing_wem_id is not None and
-              self._currently_playing.wems[self._currently_playing_wem_id] == wem_id):
+        elif (
+            self._currently_playing is not None
+            and self._currently_playing_wem_id is not None
+            and self._currently_playing.wems[self._currently_playing_wem_id] == wem_id
+        ):
             self._audio_tmp = ogg_path
-            self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
+            self._media_player.setMedia(
+                qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute()))
+            )
             wem_item = self.wem_list.item(self._currently_playing_wem_id)
             self.wem_list.scrollToItem(wem_item)
             self._media_player.play()
@@ -269,7 +295,9 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
                 if wem_index > 0:
                     wem_index -= 1
                 else:
-                    playlist_index = max(0, self._playlist.index(self._currently_playing) - 1)
+                    playlist_index = max(
+                        0, self._playlist.index(self._currently_playing) - 1
+                    )
                     wem_index = max(0, len(self._playlist[playlist_index].wems) - 1)
             except ValueError:
                 playlist_index = 0
@@ -326,43 +354,62 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self._currently_playing = None
             self._currently_playing_wem_id = None
             self._playlist_index = (0, -1)
-            self._playlist = [item for item in self.get_selected_items() if item.atl_name is not None]
+            self._playlist = [
+                item for item in self.get_selected_items() if item.atl_name is not None
+            ]
             self.play_next()
 
     @Slot(str)
     def _on_ctx_triggered(self, action):
-        selected_items = [_ for _ in self.get_selected_items() if _.atl_name is not None]
+        selected_items = [
+            _ for _ in self.get_selected_items() if _.atl_name is not None
+        ]
 
         # Item Actions
         if not selected_items:
             return
 
-        if action == 'extract':
-            edir = qtw.QFileDialog.getExistingDirectory(self.starfab, 'Extract to...')
+        if action == "extract":
+            edir = qtw.QFileDialog.getExistingDirectory(self.starfab, "Extract to...")
             if edir:
                 total = len(selected_items)
-                self.starfab.task_started.emit('extract_audio', f'Extracting Game Audio to {edir}', 0, total)
+                self.starfab.task_started.emit(
+                    "extract_audio", f"Extracting Game Audio to {edir}", 0, total
+                )
                 for i, item in enumerate(selected_items):
-                    self.starfab.update_status_progress.emit('extract_audio', 1, 0, total,
-                                                          f'Extracting {item.name} to {edir}')
+                    self.starfab.update_status_progress.emit(
+                        "extract_audio",
+                        1,
+                        0,
+                        total,
+                        f"Extracting {item.name} to {edir}",
+                    )
                     base_out = Path(edir) / item.parent.name
                     for wem in item.wems:
                         try:
-                            outfile = base_out / f'{item.atl_name}_{wem}.ogg'
+                            outfile = base_out / f"{item.atl_name}_{wem}.ogg"
                             outfile.parent.mkdir(parents=True, exist_ok=True)
-                            tmp = self.starfab.sc.wwise.convert_wem(wem, return_file=True)
+                            tmp = self.starfab.sc.wwise.convert_wem(
+                                wem, return_file=True
+                            )
                             shutil.move(tmp, outfile)
                         except Exception as e:
-                            logger.exception(f'Exception extracting wem {item.atl_name}.{wem}', exc_info=e)
+                            logger.exception(
+                                f"Exception extracting wem {item.atl_name}.{wem}",
+                                exc_info=e,
+                            )
 
-                self.starfab.task_finished.emit('extract_audio', True, '')
+                self.starfab.task_finished.emit("extract_audio", True, "")
                 show_file_in_filemanager(Path(edir))
 
     def _on_wem_doubleclick(self, index):
         if self._currently_playing:
             self.stop()
             if self._currently_playing in self._playlist:
-                self._playlist_index = (self._playlist.index(self._currently_playing), index.row())
+                self._playlist_index = (
+                    self._playlist.index(self._currently_playing),
+                    index.row(),
+                )
             else:
                 self._playlist = []
             self.play(self._currently_playing, index.row())

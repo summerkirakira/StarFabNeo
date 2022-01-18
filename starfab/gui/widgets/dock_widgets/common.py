@@ -12,8 +12,15 @@ from starfab.gui import qtc, qtw, qtg
 from starfab.resources import RES_PATH
 from starfab.models.common import PathArchiveTreeSortFilterProxyModel
 from starfab.gui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
-from starfab.gui.widgets.image_viewer import SUPPORTED_IMG_FORMATS, QImageViewer, DDSImageViewer
-from starfab.gui.widgets.chunked_file_viewer import SUPPORTED_CHUNK_FILE_FORMATS, ChunkedObjView
+from starfab.gui.widgets.image_viewer import (
+    SUPPORTED_IMG_FORMATS,
+    QImageViewer,
+    DDSImageViewer,
+)
+from starfab.gui.widgets.chunked_file_viewer import (
+    SUPPORTED_CHUNK_FILE_FORMATS,
+    ChunkedObjView,
+)
 from starfab.log import getLogger
 
 
@@ -26,14 +33,14 @@ class StarFabContextMenuManager(qtc.QObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.default_menu = qtw.QMenu()
-        open = self.default_menu.addAction('Open')
-        open.triggered.connect(partial(self.handle_action, 'doubleclick'))
+        open = self.default_menu.addAction("Open")
+        open.triggered.connect(partial(self.handle_action, "doubleclick"))
 
-        self.menus = {'': qtw.QMenu()}
-        expand_all = self.menus[''].addAction('Expand All')
-        expand_all.triggered.connect(partial(self.handle_action, 'expand_all'))
-        collapse_all = self.menus[''].addAction('Collapse All')
-        collapse_all.triggered.connect(partial(self.handle_action, 'collapse_all'))
+        self.menus = {"": qtw.QMenu()}
+        expand_all = self.menus[""].addAction("Expand All")
+        expand_all.triggered.connect(partial(self.handle_action, "expand_all"))
+        collapse_all = self.menus[""].addAction("Collapse All")
+        collapse_all.triggered.connect(partial(self.handle_action, "collapse_all"))
 
     @qtc.Slot(str)
     def handle_action(self, action):
@@ -90,11 +97,12 @@ class StarFabStaticWidget(qtw.QWidget):
         super().__init__(*args, **kwargs)
         if self.__ui_file__ is not None:
             uic.loadUi(self.__ui_file__, self)
-        sizePolicy = qtw.QSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred)
+        sizePolicy = qtw.QSizePolicy(
+            qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(2)
         sizePolicy.setVerticalStretch(2)
-        sizePolicy.setHeightForWidth(
-            self.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         self.setSizePolicy(sizePolicy)
 
         self.starfab = starfab or get_starfab()
@@ -139,7 +147,7 @@ class StarFabSearchableTreeFilterWidget(qtw.QWidget):
 
 
 class StarFabSearchableTreeDockWidget(StarFabDockWidget):
-    __ui_file__ = str(RES_PATH / 'ui' / 'FileViewDock.ui')
+    __ui_file__ = str(RES_PATH / "ui" / "FileViewDock.ui")
 
     def __init__(self, starfab, proxy_model=None, *args, **kwargs):
         super().__init__(starfab, *args, **kwargs)
@@ -153,11 +161,11 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         self.sc_tree.setSortingEnabled(True)
 
         self.sc_add_filter.clicked.connect(self._handle_add_filter)
-        self.sc_add_filter.setIcon(qta.icon('mdi.filter'))
+        self.sc_add_filter.setIcon(qta.icon("mdi.filter"))
         self.sc_add_filter.hide()
 
         self.sc_tree_search.editingFinished.connect(self._handle_search_changed)
-        self.sc_search.setIcon(qta.icon('mdi6.text-search'))
+        self.sc_search.setIcon(qta.icon("mdi6.text-search"))
         self.sc_search.clicked.connect(self._handle_search_changed)
         self.sc_tree.doubleClicked.connect(self._on_doubleclick)
 
@@ -175,9 +183,13 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
 
     def _filters_changed(self):
         fl = self.filter_widgets.layout()
-        self.proxy_model.setAdditionFilters([
-            cf for i in range(fl.count()) if (cf := fl.itemAt(i).widget().compile_filter()) is not None
-        ])
+        self.proxy_model.setAdditionFilters(
+            [
+                cf
+                for i in range(fl.count())
+                if (cf := fl.itemAt(i).widget().compile_filter()) is not None
+            ]
+        )
 
     def _create_filter(self):
         raise NotImplementedError()
@@ -216,9 +228,13 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         self._ctx_item = self.sc_tree.indexAt(pos)
         try:
             if isinstance(self.sc_tree_model, qtw.QFileSystemModel):
-                path = self.sc_tree_model.filePath(self.proxy_model.mapToSource(self._ctx_item))
+                path = self.sc_tree_model.filePath(
+                    self.proxy_model.mapToSource(self._ctx_item)
+                )
             else:
-                path = self.sc_tree_model.itemFromIndex(self.proxy_model.mapToSource(self._ctx_item)).path
+                path = self.sc_tree_model.itemFromIndex(
+                    self.proxy_model.mapToSource(self._ctx_item)
+                ).path
         except Exception as e:
             path = ""
         menu = self.ctx_manager.menu_for_path(path)
@@ -230,11 +246,15 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         def _add_indexes(indexes):
             for i in indexes:
                 if self.proxy_model.hasChildren(i):
-                    children = [self.proxy_model.index(_, 0, i)
-                                for _ in range(0, self.proxy_model.rowCount(i))]
+                    children = [
+                        self.proxy_model.index(_, 0, i)
+                        for _ in range(0, self.proxy_model.rowCount(i))
+                    ]
                     _add_indexes(children)
                 else:
-                    selected_items.append(self.proxy_model.mapToSource(i).internalPointer())
+                    selected_items.append(
+                        self.proxy_model.mapToSource(i).internalPointer()
+                    )
 
         selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
         if not selection and self._ctx_item is not None:
@@ -245,12 +265,16 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
 
     @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
-        if action == 'collapse_all':
+        if action == "collapse_all":
             self.sc_tree.collapseAll()
             return []
-        elif action == 'doubleclick':
-            return self._on_doubleclick(self._ctx_item) if self._ctx_item is not None else None
-        elif action == 'expand_all':
+        elif action == "doubleclick":
+            return (
+                self._on_doubleclick(self._ctx_item)
+                if self._ctx_item is not None
+                else None
+            )
+        elif action == "expand_all":
             selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
             if not selection and self._ctx_item is not None:
                 selection = [self._ctx_item]
@@ -269,7 +293,7 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
 
 
 class StarFabSearchableTreeWidget(StarFabStaticWidget):
-    __ui_file__ = str(RES_PATH / 'ui' / 'FileView.ui')
+    __ui_file__ = str(RES_PATH / "ui" / "FileView.ui")
 
     def __init__(self, proxy_model=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -284,11 +308,11 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         self.sc_tree.setSortingEnabled(True)
 
         self.sc_add_filter.clicked.connect(self._handle_add_filter)
-        self.sc_add_filter.setIcon(qta.icon('mdi.filter'))
+        self.sc_add_filter.setIcon(qta.icon("mdi.filter"))
         self.sc_add_filter.hide()
 
         self.sc_tree_search.editingFinished.connect(self._handle_search_changed)
-        self.sc_search.setIcon(qta.icon('mdi6.text-search'))
+        self.sc_search.setIcon(qta.icon("mdi6.text-search"))
         self.sc_search.clicked.connect(self._handle_search_changed)
         self.sc_tree.doubleClicked.connect(self._on_doubleclick)
 
@@ -306,9 +330,13 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
 
     def _filters_changed(self):
         fl = self.filter_widgets.layout()
-        self.proxy_model.setAdditionFilters([
-            cf for i in range(fl.count()) if (cf := fl.itemAt(i).widget().compile_filter()) is not None
-        ])
+        self.proxy_model.setAdditionFilters(
+            [
+                cf
+                for i in range(fl.count())
+                if (cf := fl.itemAt(i).widget().compile_filter()) is not None
+            ]
+        )
 
     def _create_filter(self):
         raise NotImplementedError()
@@ -347,9 +375,13 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         self._ctx_item = self.sc_tree.indexAt(pos)
         try:
             if isinstance(self.sc_tree_model, qtw.QFileSystemModel):
-                path = self.sc_tree_model.filePath(self.proxy_model.mapToSource(self._ctx_item))
+                path = self.sc_tree_model.filePath(
+                    self.proxy_model.mapToSource(self._ctx_item)
+                )
             else:
-                path = self.sc_tree_model.itemFromIndex(self.proxy_model.mapToSource(self._ctx_item)).path
+                path = self.sc_tree_model.itemFromIndex(
+                    self.proxy_model.mapToSource(self._ctx_item)
+                ).path
         except Exception as e:
             path = ""
         menu = self.ctx_manager.menu_for_path(path)
@@ -361,11 +393,15 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         def _add_indexes(indexes):
             for i in indexes:
                 if self.proxy_model.hasChildren(i):
-                    children = [self.proxy_model.index(_, 0, i)
-                                for _ in range(0, self.proxy_model.rowCount(i))]
+                    children = [
+                        self.proxy_model.index(_, 0, i)
+                        for _ in range(0, self.proxy_model.rowCount(i))
+                    ]
                     _add_indexes(children)
                 else:
-                    selected_items.append(self.proxy_model.mapToSource(i).internalPointer())
+                    selected_items.append(
+                        self.proxy_model.mapToSource(i).internalPointer()
+                    )
 
         selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
         if not selection and self._ctx_item is not None:
@@ -376,12 +412,16 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
 
     @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
-        if action == 'collapse_all':
+        if action == "collapse_all":
             self.sc_tree.collapseAll()
             return []
-        elif action == 'doubleclick':
-            return self._on_doubleclick(self._ctx_item) if self._ctx_item is not None else None
-        elif action == 'expand_all':
+        elif action == "doubleclick":
+            return (
+                self._on_doubleclick(self._ctx_item)
+                if self._ctx_item is not None
+                else None
+            )
+        elif action == "expand_all":
             selection = [_ for _ in self.sc_tree.selectedIndexes() if _.column() == 0]
             if not selection and self._ctx_item is not None:
                 selection = [self._ctx_item]

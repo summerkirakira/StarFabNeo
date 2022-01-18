@@ -29,14 +29,16 @@ class ContentView(qtw.QWidget):
     def __init__(self, starfab):
         super().__init__(parent=None)
         self.starfab = starfab
-        uic.loadUi(str(RES_PATH / 'ui' / 'ContentView.ui'), self)  # Load the ui into self
+        uic.loadUi(
+            str(RES_PATH / "ui" / "ContentView.ui"), self
+        )  # Load the ui into self
         # self.starfab.sc_manager.datacore_model.loaded.connect(self.handle_datacore_opened)
 
         self.starfab.close.connect(self.close)
 
-        self.toolButton_Job_MoveUp.setIcon(qta.icon('mdi.arrow-up-bold-box'))
-        self.toolButton_Job_MoveDown.setIcon(qta.icon('mdi.arrow-down-bold-box'))
-        self.toolButton_Job_Remove.setIcon(qta.icon('mdi.minus-box'))
+        self.toolButton_Job_MoveUp.setIcon(qta.icon("mdi.arrow-up-bold-box"))
+        self.toolButton_Job_MoveDown.setIcon(qta.icon("mdi.arrow-down-bold-box"))
+        self.toolButton_Job_Remove.setIcon(qta.icon("mdi.minus-box"))
 
         self.buttonBox_Content.accepted.connect(self.handle_extract)
         self.buttonBox_Content.button(qtw.QDialogButtonBox.Save).setText("Export")
@@ -44,12 +46,12 @@ class ContentView(qtw.QWidget):
         # self.buttonBox_Content.button(qtw.QDialogButtonBox.Open).setVisible(False)
 
         self.toolBox = qtw.QToolBox(self.tab_Assets)
-        self.toolBox.addItem(VehicleSelector(content_page=self), 'Vehicles')
-        self.toolBox.addItem(WeaponSelector(content_page=self), 'Weapons')
-        self.toolBox.addItem(CharacterSelector(content_page=self), 'Character')
-        self.toolBox.addItem(SOCSelector(content_page=self), 'Object Containers')
-        self.toolBox.addItem(PrefabSelector(content_page=self), 'Prefabs')
-        self.toolBox.addItem(EntitySelector(content_page=self), 'Entities')
+        self.toolBox.addItem(VehicleSelector(content_page=self), "Vehicles")
+        self.toolBox.addItem(WeaponSelector(content_page=self), "Weapons")
+        self.toolBox.addItem(CharacterSelector(content_page=self), "Character")
+        self.toolBox.addItem(SOCSelector(content_page=self), "Object Containers")
+        self.toolBox.addItem(PrefabSelector(content_page=self), "Prefabs")
+        self.toolBox.addItem(EntitySelector(content_page=self), "Entities")
         self.tab_Assets.layout().addWidget(self.toolBox)
 
         self.export_options = ExportOptionsWidget(parent=self)
@@ -59,13 +61,19 @@ class ContentView(qtw.QWidget):
         self.tab_Audio.layout().addWidget(self.audio_tree)
 
         # TODO: temporarily hide things that arent fleshed out yet
-        self.content_left_tab_widget.setTabVisible(self.content_left_tab_widget.indexOf(self.tab_Images), False)
-        self.content_right_tab_widget.setTabVisible(self.content_right_tab_widget.indexOf(self.tab_Jobs), False)
+        self.content_left_tab_widget.setTabVisible(
+            self.content_left_tab_widget.indexOf(self.tab_Images), False
+        )
+        self.content_right_tab_widget.setTabVisible(
+            self.content_right_tab_widget.indexOf(self.tab_Jobs), False
+        )
         self.groupBox_Content_Local_Files.hide()
 
         prev_handlers = plugin_manager.hooks(GEOMETRY_PREVIEW_WIDGET)
         if prev_handlers:
-            self.preview = prev_handlers[0][1]['handler'](allow_popout=False, parent=self)
+            self.preview = prev_handlers[0][1]["handler"](
+                allow_popout=False, parent=self
+            )
             self.preview_widget_layout.addWidget(self.preview)
         else:
             self.preview = None
@@ -89,29 +97,43 @@ class ContentView(qtw.QWidget):
         selected_items = selector.checked_items()
 
         if not selected_items:
-            return qtw.QMessageBox.warning(None, 'Content Extractor', 'Select at least one item to export')
+            return qtw.QMessageBox.warning(
+                None, "Content Extractor", "Select at least one item to export"
+            )
 
-        if self.starfab.settings.value('exportDirectory') is not None or '':
-            edir = Path(self.starfab.settings.value('exportDirectory')).as_posix()
+        if self.starfab.settings.value("exportDirectory") is not None or "":
+            edir = Path(self.starfab.settings.value("exportDirectory")).as_posix()
         else:
-            edir = Path('~').expanduser().as_posix()
-        edir = qtw.QFileDialog.getExistingDirectory(self.starfab, 'Export To...', edir)
+            edir = Path("~").expanduser().as_posix()
+        edir = qtw.QFileDialog.getExistingDirectory(self.starfab, "Export To...", edir)
 
         if Path(edir).is_dir():
             options = {
-                'cgf_converter_bin': get_cgf_converter(), 'ww2ogg': get_ww2ogg(), 'revorb': get_revorb(),
-                'tex_converter': image_converter.converter, 'tex_converter_bin': image_converter.converter_bin,
+                "cgf_converter_bin": get_cgf_converter(),
+                "ww2ogg": get_ww2ogg(),
+                "revorb": get_revorb(),
+                "tex_converter": image_converter.converter,
+                "tex_converter_bin": image_converter.converter_bin,
             }
             options.update(self.export_options.get_options())
-            options['auto_convert_textures'] = 'ddstexture_converter' in options['converters']
-            options['auto_convert_models'] = 'cgf_converter' in options['converters']
+            options["auto_convert_textures"] = (
+                "ddstexture_converter" in options["converters"]
+            )
+            options["auto_convert_models"] = "cgf_converter" in options["converters"]
 
-            dlg = BlueprintExportLog(starfab=self.starfab, outdir=edir, items=selected_items,
-                                     create_entity_dir=options.pop('create_sub_folder'),
-                                     output_model_log=options.pop('gen_model_log'),
-                                     export_options=options)
+            dlg = BlueprintExportLog(
+                starfab=self.starfab,
+                outdir=edir,
+                items=selected_items,
+                create_entity_dir=options.pop("create_sub_folder"),
+                output_model_log=options.pop("gen_model_log"),
+                export_options=options,
+            )
             dlg.show()
             dlg.extract_entities()
         else:
-            return qtw.QMessageBox.warning(None, 'Entity Extractor',
-                                           'You must select an export directory to extract')
+            return qtw.QMessageBox.warning(
+                None,
+                "Entity Extractor",
+                "You must select an export directory to extract",
+            )

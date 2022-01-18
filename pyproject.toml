@@ -5,26 +5,26 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "starfab"
 version = "0.4.0"
-description = "StarCitizen Data Tools"
-authors = [ "Ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
+description = "StarFab - The Star Citizen data tool"
+authors = [ "ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
 
 [tool.briefcase]
 project_name = "StarFab"
-bundle = "scdatatools.starfab"
+bundle = "scmodding.starfab"
 version = "0.4.0"
-url = "https://gitlab.com/scmodding/ui/starfab"
+url = "https://gitlab.com/scmodding/tools/starfab"
 license = ""
-author = "Ventorvar"
+author = "ventorvar"
 author_email = "ventorvar@gmail.com"
 
 [tool.poetry.dependencies]
-python = "^3.9.2"
+python = ">=3.9.2,<3.10"
 QtPy = "^1.9.0"
 QtAwesome = "^1.1.0"
 PySide2 = "^5.15.2"
 Pillow = "^8.0.1"
 qtconsole = "^5.0.1"
-scdatatools = "^0.1.9"
+scdatatools = "~=1.0.0"
 humanize = "^3.9.0"
 rpyc = "^5.0.1"
 pyvistaqt = "^0.5.0"
@@ -35,7 +35,7 @@ briefcase = "^0.3.3"
 
 [tool.briefcase.app.starfab]
 formal_name = "StarFab"
-description = "Star Citizen Data Tools"
+description = "StarFab"
 icon = "starfab/resources/starfab"
 installer_icon = "starfab/resources/starfab"
 sources = [ "starfab",]

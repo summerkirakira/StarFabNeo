@@ -35,9 +35,9 @@ class ContentSelector(StarFabSearchableTreeWidget):
         self.content_page = content_page
         # self.filter_frame.setVisible(False)
 
-        select_all = self.ctx_manager.menus[''].addAction('Select All')
+        select_all = self.ctx_manager.menus[""].addAction("Select All")
         select_all.triggered.connect(self.select_all)
-        deselect_all = self.ctx_manager.menus[''].addAction('Deselect All')
+        deselect_all = self.ctx_manager.menus[""].addAction("Deselect All")
         deselect_all.triggered.connect(self.deselect_all)
 
     def _create_filter(self):
@@ -78,7 +78,9 @@ class P4KContentSelector(ContentSelector):
 class DCBContentSelector(ContentSelector):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.starfab.sc_manager.datacore_model.loaded.connect(self._handle_datacore_loaded)
+        self.starfab.sc_manager.datacore_model.loaded.connect(
+            self._handle_datacore_loaded
+        )
 
     def _create_filter(self):
         return DCBFilterWidget(self)
@@ -95,5 +97,8 @@ class DCBContentSelector(ContentSelector):
         self.sc_tree.hideColumn(1)
 
     def _handle_item_action(self, item, model, index):
-        if self.content_page is not None and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None:
+        if (
+            self.content_page is not None
+            and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None
+        ):
             self.content_page.preview_chunkfile(g)

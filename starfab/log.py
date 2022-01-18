@@ -5,9 +5,9 @@ import logging.config
 
 from qtpy.QtCore import QThread
 
-LOG_OVERRIDE = os.environ.get('STARFAB_LOG_OVERRIDE', None)
-DEFAULT_LOG_LEVEL = 'INFO'
-MAX_LOG_FILE_SIZE = 20*1024*1024  # 20m
+LOG_OVERRIDE = os.environ.get("STARFAB_LOG_OVERRIDE", None)
+DEFAULT_LOG_LEVEL = "INFO"
+MAX_LOG_FILE_SIZE = 20 * 1024 * 1024  # 20m
 MAX_LOG_FILES = 2
 
 
@@ -25,11 +25,13 @@ class HighPassFilter(LowPassFilter):
 
 
 class ThreadLogFormatter(logging.Formatter):
-    thread_fmt = logging.Formatter('%(asctime)s [%(levelname)s] [%(qThreadName)s] %(name)s: %(message)s')
-    default_fmt = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    thread_fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] [%(qThreadName)s] %(name)s: %(message)s"
+    )
+    default_fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
     def format(self, record):
-        if getattr(record, 'qThreadName', ''):
+        if getattr(record, "qThreadName", ""):
             return self.thread_fmt.format(record)
         return self.default_fmt.format(record)
 
@@ -41,11 +43,11 @@ class ThreadLogger:
     def log(self, level, msg, extra=None, *args, **kwargs):
         if extra is None:
             extra = {}
-        extra['qThreadName'] = QThread.currentThread().objectName()
-        if not extra['qThreadName']:
-            extra['qThreadName'] = threading.get_ident()
+        extra["qThreadName"] = QThread.currentThread().objectName()
+        if not extra["qThreadName"]:
+            extra["qThreadName"] = threading.get_ident()
         else:
-            extra['qThreadName'] += f'-{threading.get_ident()}'
+            extra["qThreadName"] += f"-{threading.get_ident()}"
         self.logger.log(level, msg, extra=extra, *args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
@@ -67,7 +69,7 @@ class ThreadLogger:
         self.log(logging.FATAL, msg, *args, **kwargs)
 
     def exception(self, msg, *args, **kwargs):
-        kwargs.setdefault('exc_info', 1)
+        kwargs.setdefault("exc_info", 1)
         self.log(logging.ERROR, msg, *args, **kwargs)
 
 
@@ -75,69 +77,65 @@ def getLogger(name):
     return ThreadLogger(name)
 
 
-logger = getLogger('starfab')
+logger = getLogger("starfab")
 
 
 DEFAULT_LOGGING_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'filters': {
-        'infofilter': {
-            '()': LowPassFilter,
-            'level': logging.INFO
-        },
-        'warnfilter': {
-            '()': HighPassFilter,
-            'level': logging.WARNING
-        }
+    "version": 1,
+    "disable_existing_loggers": True,
+    "filters": {
+        "infofilter": {"()": LowPassFilter, "level": logging.INFO},
+        "warnfilter": {"()": HighPassFilter, "level": logging.WARNING},
     },
-    'formatters': {
-        'standard': {
-            '()': ThreadLogFormatter
+    "formatters": {
+        "standard": {"()": ThreadLogFormatter},
+    },
+    "handlers": {
+        "console": {
+            "level": LOG_OVERRIDE or DEFAULT_LOG_LEVEL,
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "stream": "ext://sys.stdout",
+            "filters": ["infofilter"],
+        },
+        "console_err": {
+            "level": "WARN",
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "stream": "ext://sys.stderr",
+            "filters": ["warnfilter"],
+        },
+        "logfile": {
+            "level": LOG_OVERRIDE or DEFAULT_LOG_LEVEL,
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "starfab.log",
+            "mode": "a",
+            "maxBytes": MAX_LOG_FILE_SIZE,
+            "backupCount": MAX_LOG_FILES,
         },
     },
-    'handlers': {
-        'console': {
-            'level': LOG_OVERRIDE or DEFAULT_LOG_LEVEL,
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-            'stream': 'ext://sys.stdout',
-            'filters': ['infofilter']
+    "loggers": {
+        "": {  # root logger
+            "handlers": ["console", "console_err", "logfile"],
+            "level": "INFO",
+            "propagate": False,
         },
-        'console_err': {
-            'level': 'WARN',
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-            'stream': 'ext://sys.stderr',
-            'filters': ['warnfilter']
+        "starfab": {
+            "handlers": ["console", "console_err", "logfile"],
+            "level": LOG_OVERRIDE
+            or os.environ.get("STARFAB_LOG", "")
+            or DEFAULT_LOG_LEVEL,
+            "propagate": False,
         },
-        'logfile': {
-            'level': LOG_OVERRIDE or DEFAULT_LOG_LEVEL,
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'standard',
-            'filename': 'starfab.log',
-            'mode': 'a',
-            'maxBytes': MAX_LOG_FILE_SIZE,
-            'backupCount': MAX_LOG_FILES,
-        }
+        "scdatatools": {
+            "handlers": ["console", "console_err", "logfile"],
+            "level": LOG_OVERRIDE
+            or os.environ.get("SCDT_LOG", "")
+            or DEFAULT_LOG_LEVEL,
+            "propagate": False,
+        },
     },
-    'loggers': {
-        '': {  # root logger
-            'handlers': ['console', 'console_err', 'logfile'],
-            'level': 'INFO',
-            'propagate': False
-        },
-        'starfab': {
-            'handlers': ['console', 'console_err', 'logfile'],
-            'level': LOG_OVERRIDE or os.environ.get('STARFAB_LOG', '') or DEFAULT_LOG_LEVEL,
-            'propagate': False
-        },
-        'scdatatools': {
-            'handlers': ['console', 'console_err', 'logfile'],
-            'level': LOG_OVERRIDE or os.environ.get('SCDT_LOG', '') or DEFAULT_LOG_LEVEL,
-            'propagate': False
-        },
-    }
 }
 
 
