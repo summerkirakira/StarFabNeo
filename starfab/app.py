@@ -5,7 +5,6 @@ from pathlib import Path
 from os import path
 from .resources import RES_PATH
 from functools import partial
-from distutils.util import strtobool
 
 from qtpy import uic
 from qtpy.QtCore import Signal, Slot, QTimer, Qt
@@ -25,7 +24,7 @@ from .blender import BlenderManager
 from .gui.utils import icon_for_path
 from .gui.widgets import dock_widgets
 from .models import StarCitizenManager
-from .utils import reload_starfab_modules
+from .utils import reload_starfab_modules, parsebool
 from .gui.dialogs.settings_dialog import SettingsDialog
 from .gui.dialogs.run_dialog import RunDialog
 from .gui.dialogs.splash_screen import StarFabSplashScreen
@@ -338,7 +337,7 @@ Contributors:
             arg_dir = Path(sys.argv[-1])
             if arg_dir.is_dir():
                 self.open_scdir.emit(str(arg_dir))
-        elif strtobool(self.settings.value("autoOpenRecent", "false")):
+        elif parsebool(self.settings.value("autoOpenRecent", "false")):
             recent = self.settings.value("recent", [])
             if recent:
                 self.open_scdir.emit(recent[0])

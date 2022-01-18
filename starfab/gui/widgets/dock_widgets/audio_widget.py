@@ -63,7 +63,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
 
         self._media_player.durationChanged.connect(self._handle_duration_changed)
         self._media_player.positionChanged.connect(self._handle_position_changed)
-        self._media_player.stateChanged.connect(self._handle_state_changed)
+        self._media_player.playbackStateChanged.connect(self._handle_state_changed)
 
         self.audio_conversion_complete.connect(self._handle_audio_conversion)
 
@@ -251,7 +251,10 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             os.unlink(ogg_path)
 
     def set_volume(self, level):
-        self._media_player.setVolume(level)
+        if (ao := self._media_player.audioOutput()) is None:
+            ao = QtMultimedia.QAudioOutput()
+            self._media_player.setAudioOutput(ao)
+        ao.setVolume(level)
         self.volumeDial.setValue(level)
 
     def _update_wem_list(self, item):

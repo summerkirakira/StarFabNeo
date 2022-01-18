@@ -1,20 +1,24 @@
-import os
-import io
 import sys
-import typing
-import shutil
-import tempfile
 import importlib
 import subprocess
+from distutils.util import strtobool
+
 from scdatatools.engine.textures.converter import (
     convert_buffer,
     ConverterUtility,
     ConversionError,
 )
 
-from starfab import get_starfab
 from starfab.gui import qtw, qtc
 from starfab.settings import get_texconv, get_compressonatorcli
+
+
+def parsebool(val: any):
+    if isinstance(val, bool):
+        return val
+    elif isinstance(val, str):
+        return strtobool(val)
+    return bool(val)
 
 
 def reload_starfab_modules(module=""):
