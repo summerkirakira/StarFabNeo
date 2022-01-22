@@ -12,7 +12,6 @@ import rpyc
 from rpyc import ThreadedServer
 from rpyc.utils.authenticators import AuthenticationError
 
-from starfab import get_starfab
 from starfab.gui import qtc, qtw, qtg
 from qtpy.QtCore import QObject, Signal, Slot, QThread
 
@@ -29,13 +28,14 @@ logger = getLogger(__name__)
 
 
 class CheckBlenderVersions(qtc.QRunnable):
-    def __init__(self, manager):
+    def __init__(self, manager: "BlenderManager"):
         super().__init__()
         self.manager = manager
+        self.additional_paths = self.manager.additional_blender_paths
 
     def run(self):
         self.manager.update_available.emit(
-            available_blender_installations(compatible_only=True)
+            available_blender_installations(include_paths=self.additional_paths, compatible_only=True)
         )
 
 
@@ -151,6 +151,8 @@ class BlenderManager(QObject):
     link_started = qtc.Signal()
     link_stopped = qtc.Signal()
 
+    set_preferred_blender = qtc.Signal(str)
+    set_additional_paths = qtc.Signal(list)
     update_available = qtc.Signal(dict)
 
     def __init__(self, starfab):
@@ -159,16 +161,14 @@ class BlenderManager(QObject):
         self.starfab.close.connect(self._on_close)
 
         self.update_available.connect(self._handle_update_versions)
-        self.blender = ""
+        self.set_preferred_blender.connect(self._handle_set_preferred_blender)
+        self.set_additional_paths.connect(self._handle_set_additional_paths)
 
-        # TODO: update this so you can pass in a blender.exe, then check whether or not it is supported
-        #
-        # if not self.blender.is_file():
-        #     logger.warning('Could not find blender, disabling blender menu')
-        #     self.blender = None
-        # else:
-        #     logger.info(f'Using Blender {self.blender_version}')
-        #     logger.debug(f'{self.blender}')
+        self.blender = ""
+        self.additional_blender_paths = self.starfab.settings.value("external_tools/blender/additional_paths", [])
+        self.preferred_blender = ""
+        self.available_versions = {}
+        self._handle_set_preferred_blender(self.starfab.settings.value("external_tools/blender/preferred", ''))
 
         self.blenderlink_connections = {}
         self.blenderlink = BlenderLink()
@@ -198,21 +198,35 @@ class BlenderManager(QObject):
             self._handle_install_addon
         )
 
+    @qtc.Slot(str)
+    def _handle_set_preferred_blender(self, blender):
+        self.blender = ''
+        self.preferred_blender = blender.as_posix() if isinstance(blender, Path) else str(blender)
+        self.starfab.settings.setValue("external_tools/blender/preferred", self.preferred_blender)
+        qtc.QThreadPool.globalInstance().start(CheckBlenderVersions(self))
+
+    @qtc.Slot(list)
+    def _handle_set_additional_paths(self, blender_paths):
+        self.additional_blender_paths = [p.as_posix() if isinstance(p, Path) else p for p in blender_paths]
+        self.starfab.settings.setValue("external_tools/blender/additional_paths", self.additional_blender_paths)
         qtc.QThreadPool.globalInstance().start(CheckBlenderVersions(self))
 
     @qtc.Slot(dict)
     def _handle_update_versions(self, available_versions):
-        # available_versions = available_blender_installations(compatible_only=True)
-
-        if not self.blender and available_versions:
-            self.blender = sorted(available_versions.keys(), reverse=True)[0]
+        if not self.preferred_blender:
+            if not self.blender and available_versions:
+                self.blender = sorted(available_versions.values(),
+                                      key=lambda v: v['version'], reverse=True)[0]['path'].as_posix()
+        else:
+            self.blender = self.preferred_blender
 
         if self.blender not in available_versions:
             self.blender_version = ""
             self.blender = Path()
         else:
-            self.blender_version = self.blender
+            self.blender_version = available_versions[self.blender]['version']
             self.blender = available_versions[self.blender]["path"]
+        self.available_versions = available_versions
         logger.info(f"Using Blender {self.blender_version}")
         logger.debug(f"{self.blender}")
         self._update_starfab()
@@ -224,14 +238,14 @@ class BlenderManager(QObject):
             starfab_addon = starfab_blender_addon.install(version=self.blender_version)
             scdt_addon = scdt_blender_addon.install(version=self.blender_version)
             qm.information(
-                get_starfab(),
+                self.starfab,
                 "StarFab Blender Addon",
                 f'StarFab Blender add-on has been installed to "{starfab_addon}". You still must manually '
                 f"enable the add-on in Blender under Preferences > Add-ons.",
             )
         except ValueError:
             qm.warning(
-                get_starfab(),
+                self.starfab,
                 "StarFab Blender Addon",
                 f"Blender addon not supported on this platform",
             )
@@ -242,7 +256,7 @@ class BlenderManager(QObject):
         qm.setWindowFlag(qtc.Qt.WindowStaysOnTopHint)
         qm.raise_()
         ret = qm.question(
-            get_starfab(),
+            self.starfab,
             "",
             f"Accept new BlenderLink connection from process {request_id}?",
             qm.Yes | qm.No,

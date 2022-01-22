@@ -11,7 +11,7 @@ import qtvscodestyle as qtvsc
 
 from . import __version__
 from .settings import settings
-from .app import MainWindow
+from .app import StarFab
 from .log import setup_logging, getLogger
 from .plugins import plugin_manager
 from .resources import themes
@@ -82,7 +82,7 @@ def main():
         settings.setValue("theme", "Monokai Dimmed")
 
     try:
-        mw = MainWindow()
+        mw = StarFab()
         mw.startup()
 
         sys.exit(app.exec_())

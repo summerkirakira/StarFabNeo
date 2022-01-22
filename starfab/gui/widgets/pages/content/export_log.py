@@ -19,13 +19,13 @@ logger = getLogger(__name__)
 
 class BlueprintExportLog(qtw.QDialog):
     def __init__(
-        self,
-        starfab,
-        outdir: typing.Union[str, Path],
-        items: typing.List[ExtractionItem],
-        create_entity_dir: bool = True,
-        output_model_log: bool = False,
-        export_options: dict = None,
+            self,
+            starfab,
+            outdir: typing.Union[str, Path],
+            items: typing.List[ExtractionItem],
+            create_entity_dir: bool = True,
+            output_model_log: bool = False,
+            export_options: dict = None,
     ):
         super().__init__(parent=starfab)
         self.setMinimumSize(1024, 800)
@@ -38,42 +38,52 @@ class BlueprintExportLog(qtw.QDialog):
         self.output_tabs.setTabsClosable(False)
         self.setSizeGripEnabled(True)
 
-        self.closebtn = qtw.QDialogButtonBox()
-        self.closebtn.setOrientation(qtc.Qt.Horizontal)
-        self.closebtn.setStandardButtons(qtw.QDialogButtonBox.Ok)
-        self.closebtn.setEnabled(False)
-        self.closebtn.clicked.connect(self.close)
+        self.btns = qtw.QDialogButtonBox()
+        self.btns.setOrientation(qtc.Qt.Horizontal)
+        self.btns.setStandardButtons(qtw.QDialogButtonBox.Ok | qtw.QDialogButtonBox.Cancel)
+        self.btns.button(qtw.QDialogButtonBox.Ok).setEnabled(False)
+        self.btns.accepted.connect(self.close)
+        self.btns.rejected.connect(self.cancel)
 
         self._last_log_update = time.time()
 
         layout = qtw.QVBoxLayout()
         layout.addWidget(self.output_tabs)
-        layout.addWidget(self.closebtn)
+        layout.addWidget(self.btns)
         self.setLayout(layout)
 
         self.items = items
         self.outdir = Path(outdir)
+        self._should_cancel = False
+
+    def cancel(self):
+        self._should_cancel = True
+        btn = self.btns.button(qtw.QDialogButtonBox.Cancel)
+        if btn is not None:
+            btn.setEnabled(False)
+            btn.setText('Cancelling')
 
     def closeEvent(self, event) -> None:
-        if self.closebtn.isEnabled():
+        if self.btns.button(qtw.QDialogButtonBox.Ok).isEnabled():
             event.accept()
         else:
+            self.cancel()
             event.ignore()
 
     def _output_monitor(
-        self,
-        msg,
-        entity,
-        console,
-        default_fmt,
-        log_file,
-        model_log_file,
-        overview_console,
-        verbose=False,
-        progress=None,
-        total=None,
-        level=logging.INFO,
-        exc_info=None,
+            self,
+            msg,
+            entity,
+            console,
+            default_fmt,
+            log_file,
+            model_log_file,
+            overview_console,
+            verbose=False,
+            progress=None,
+            total=None,
+            level=logging.INFO,
+            exc_info=None,
     ):
         fmt = qtg.QTextCharFormat()
         overview_out = False
@@ -83,9 +93,9 @@ class BlueprintExportLog(qtw.QDialog):
             self._last_log_update = time.time()
 
         if (
-            model_log_file
-            and msg.startswith("zstd |")
-            and any(msg.casefold().endswith(_) for _ in CGF_CONVERTER_MODEL_EXTS)
+                model_log_file
+                and msg.startswith("zstd |")
+                and any(msg.casefold().endswith(_) for _ in CGF_CONVERTER_MODEL_EXTS)
         ):
             model_log_file.write(f"{msg.split(' | ')[-1]}\n")
 
@@ -124,6 +134,9 @@ class BlueprintExportLog(qtw.QDialog):
 
         start = datetime.now()
         for i, item in enumerate(self.items):
+            if self._should_cancel:
+                break
+
             model_log = ""
             try:
                 tab = qtw.QWidget()
@@ -142,16 +155,16 @@ class BlueprintExportLog(qtw.QDialog):
                     self.outdir / item.name if self.create_entity_dir else self.outdir
                 )
                 logfile = (
-                    output_dir
-                    / f'{item.name}_{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}.extraction.log'
+                        output_dir
+                        / f'{item.name}_{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}.extraction.log'
                 )
                 logfile.parent.mkdir(parents=True, exist_ok=True)
 
                 if self.output_model_log:
                     model_log = (
-                        output_dir
-                        / f'{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}_{item.name}'
-                        f".extracted_models.log"
+                            output_dir
+                            / f'{datetime.now().strftime("%Y_%m_%d-%H_%M_%S")}_{item.name}'
+                              f".extracted_models.log"
                     ).open("w")
 
                 with logfile.open("w") as log:
@@ -167,8 +180,8 @@ class BlueprintExportLog(qtw.QDialog):
                     )
                     try:
                         with log_time(
-                            f"Generating Blueprint for {item.name}",
-                            partial(monitor, level=logging.CRITICAL),
+                                f"Generating Blueprint for {item.name}",
+                                partial(monitor, level=logging.CRITICAL),
                         ):
                             bp = item.bp_generator(
                                 self.starfab.sc, item.object, monitor=monitor
@@ -176,8 +189,8 @@ class BlueprintExportLog(qtw.QDialog):
                             bp_file = (output_dir / item.name).with_suffix(".scbp")
                             bp.dump(bp_file.open("w"))
                         with log_time(
-                            "Extracting blueprint",
-                            partial(monitor, level=logging.CRITICAL),
+                                "Extracting blueprint",
+                                partial(monitor, level=logging.CRITICAL),
                         ):
                             bp.extract(outdir=output_dir, **self.export_options)
                     except Exception as e:
@@ -197,4 +210,5 @@ class BlueprintExportLog(qtw.QDialog):
         overview_console.append(f"Output directory: {self.outdir}")
         self.output_tabs.setCurrentWidget(overview_tab)
         show_file_in_filemanager(Path(self.outdir))
-        self.closebtn.setEnabled(True)
+        self.btns.button(qtw.QDialogButtonBox.Ok).setEnabled(True)
+        self.btns.removeButton(self.btns.button(qtw.QDialogButtonBox.Cancel))

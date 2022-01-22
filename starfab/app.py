@@ -36,7 +36,7 @@ from .gui.RibbonTextbox import RibbonTextbox
 from .gui.RibbonWidget import *
 
 
-class MainWindow(QMainWindow):
+class StarFab(QMainWindow):
     task_started = Signal(str, str, int, int)
     update_status_progress = Signal(str, int, int, int, str)
     task_finished = Signal(str, bool, str)
