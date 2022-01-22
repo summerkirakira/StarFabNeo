@@ -42,8 +42,6 @@ class ContentView(qtw.QWidget):
 
         self.buttonBox_Content.accepted.connect(self.handle_extract)
         self.buttonBox_Content.button(qtw.QDialogButtonBox.Save).setText("Export")
-        # self.buttonBox_Content.button(qtw.QDialogButtonBox.Open).setText("Add Job")
-        # self.buttonBox_Content.button(qtw.QDialogButtonBox.Open).setVisible(False)
 
         self.toolBox = qtw.QToolBox(self.tab_Assets)
         self.toolBox.addItem(VehicleSelector(content_page=self), "Vehicles")
@@ -53,6 +51,10 @@ class ContentView(qtw.QWidget):
         self.toolBox.addItem(PrefabSelector(content_page=self), "Prefabs")
         self.toolBox.addItem(EntitySelector(content_page=self), "Entities")
         self.tab_Assets.layout().addWidget(self.toolBox)
+
+        clear_selections_btn = qtw.QPushButton('Clear Selections')
+        clear_selections_btn.clicked.connect(self.clear_assets_selections)
+        self.tab_Assets.layout().addWidget(clear_selections_btn)
 
         self.export_options = ExportOptionsWidget(parent=self)
         self.options_layout.insertWidget(0, self.export_options)
@@ -78,6 +80,11 @@ class ContentView(qtw.QWidget):
         else:
             self.preview = None
             self.splitter.setSizes((1, 0))
+
+    def clear_assets_selections(self):
+        for i in range(self.toolBox.count()):
+            widget: EntitySelector = self.toolBox.widget(i)
+            widget.deselect_all()
 
     def closeEvent(self, event):
         if self.preview is not None:

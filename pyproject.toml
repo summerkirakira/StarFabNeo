@@ -4,14 +4,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "starfab"
-version = "0.4.0"
+version = "0.4.1"
 description = "StarFab - The Star Citizen data tool"
 authors = [ "ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
 
 [tool.briefcase]
 project_name = "StarFab"
 bundle = "scmodding.starfab"
-version = "0.4.0"
+version = "0.4.1"
 url = "https://gitlab.com/scmodding/tools/starfab"
 license = ""
 author = "ventorvar"

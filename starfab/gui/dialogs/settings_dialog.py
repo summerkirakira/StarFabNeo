@@ -1,4 +1,5 @@
 import json
+import typing
 from pathlib import Path
 from functools import partial
 
@@ -7,11 +8,18 @@ from qtpy.QtCore import Signal, Slot
 import qtawesome as qta
 import qtvscodestyle as qtvsc
 
+from scdatatools.utils import parse_bool
+
 from starfab.log import getLogger
-from starfab.settings import configure_defaults
 from starfab.gui import qtw
 from starfab.resources import RES_PATH
-from scdatatools.utils import parse_bool
+from starfab.gui.dialogs import list_dialog
+from starfab.settings import configure_defaults
+
+
+if typing.TYPE_CHECKING:
+    from starfab.app import StarFab
+
 
 button_group_2 = {"0": "data", "1": "content", "2": "toolbox"}
 
@@ -21,7 +29,7 @@ logger = getLogger(__name__)
 class SettingsDialog(qtw.QDialog):
     def __init__(self, starfab):
         super().__init__(parent=None)
-        self.starfab = starfab
+        self.starfab: StarFab = starfab
         uic.loadUi(
             str(RES_PATH / "ui" / "SettingsDialog.ui"), self
         )  # Load the ui into self
@@ -115,6 +123,45 @@ class SettingsDialog(qtw.QDialog):
             self.starfab.settings.value("external_tools/cgf-converter")
         )
         self.texconvPath.setText(self.starfab.settings.value("external_tools/texconv"))
+
+        self.starfab.blender_manager.updated.connect(self._sync_blender)
+        self.blenderConfigButton.setIcon(qta.icon("msc.settings-gear"))
+        self.blenderConfigButton.clicked.connect(self._config_blender_paths)
+        self.blenderComboBox.activated.connect(self._update_blender)
+        self._sync_blender()
+
+    def _config_blender_paths(self):
+        paths = [
+            _['path'].parent.as_posix() for _ in self.starfab.blender_manager.available_versions.values()
+        ]
+        dlg = list_dialog.QListDialog('Blender Paths', items=paths, parent=self)
+        if dlg.exec_() == qtw.QDialog.Accepted:
+            paths = [Path(_) for _ in dlg.items()]
+            self.starfab.blender_manager.set_additional_paths.emit(paths)
+            self.blenderComboBox.clear()
+            self.blenderComboBox.setEnabled(False)
+            self.blenderComboBox.addItems('...checking')
+
+    def _update_blender(self):
+        preferred = self.blenderComboBox.currentText()
+        self.starfab.blender_manager.set_preferred_blender.emit('' if preferred == 'auto' else preferred)
+
+    def _sync_blender(self):
+        preferred = self.starfab.blender_manager.preferred_blender
+        options = set(self.starfab.blender_manager.available_versions.keys())
+        if preferred:
+            options.add(preferred)
+
+        self.blenderComboBox.clear()
+        self.blenderComboBox.addItems(['auto'] + sorted(options))
+        self.blenderComboBox.setCurrentText(preferred if preferred else 'auto')
+        if preferred and preferred != 'auto' and preferred not in self.starfab.blender_manager.available_versions:
+            self.blenderComboBox.setStyleSheet("color: #ff0000")
+        else:
+            self.blenderComboBox.setStyleSheet("")
+        self.blenderComboBox.setEnabled(True)
+        width = self.blenderComboBox.minimumSizeHint().width()
+        self.blenderComboBox.view().setMinimumWidth(width)
 
     def _reset_settings(self):
         configure_defaults(self.starfab.settings)
