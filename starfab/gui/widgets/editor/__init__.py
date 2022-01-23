@@ -1,9 +1,61 @@
+import os
 from qtpy.QtCore import Slot, Signal, QObject
 from qtpy.QtWebChannel import QWebChannel
 from qtpy.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
 from . import embedrc
 from starfab.gui import qtc, qtw, qtg
+from starfab.settings import settings
+from scdatatools.utils import parse_bool
+
+
+WRAP_MODES = {
+    'off': 'off',
+    'view': 'free',
+    'margin': 'printMargin'
+}
+
+THEMES = {
+    "Chrome": "ace/theme/chrome",
+    "Clouds": "ace/theme/clouds",
+    "Crimson Editor": "ace/theme/crimson_editor",
+    "Dawn": "ace/theme/dawn",
+    "Dreamweaver": "ace/theme/dreamweaver",
+    "Eclipse": "ace/theme/eclipse",
+    "GitHub": "ace/theme/github",
+    "IPlastic": "ace/theme/iplastic",
+    "Solarized Light": "ace/theme/solarized_light",
+    "TextMate": "ace/theme/textmate",
+    "Tomorrow": "ace/theme/tomorrow",
+    "Xcode": "ace/theme/xcode",
+    "Kuroir": "ace/theme/kuroir",
+    "KatzenMilch": "ace/theme/katzenmilch",
+    "SQL Server": "ace/theme/sqlserver",
+    "Ambiance": "ace/theme/ambiance",
+    "Chaos": "ace/theme/chaos",
+    "Clouds Midnight": "ace/theme/clouds_midnight",
+    "Dracula": "ace/theme/dracula",
+    "Cobalt": "ace/theme/cobalt",
+    "Gruvbox": "ace/theme/gruvbox",
+    "Green on Black": "ace/theme/gob",
+    "idle Fingers": "ace/theme/idle_fingers",
+    "krTheme": "ace/theme/kr_theme",
+    "Merbivore": "ace/theme/merbivore",
+    "Merbivore Soft": "ace/theme/merbivore_soft",
+    "Mono Industrial": "ace/theme/mono_industrial",
+    "Monokai": "ace/theme/monokai",
+    "Nord Dark": "ace/theme/nord_dark",
+    "One Dark": "ace/theme/one_dark",
+    "Pastel on dark": "ace/theme/pastel_on_dark",
+    "Solarized Dark": "ace/theme/solarized_dark",
+    "Terminal": "ace/theme/terminal",
+    "Tomorrow Night": "ace/theme/tomorrow_night",
+    "Tomorrow Night Blue": "ace/theme/tomorrow_night_blue",
+    "Tomorrow Night Bright": "ace/theme/tomorrow_night_bright",
+    "Tomorrow Night 80s": "ace/theme/tomorrow_night_eighties",
+    "Twilight": "ace/theme/twilight",
+    "Vibrant Ink": "ace/theme/vibrant_ink",
+}
 
 
 SUPPORTED_EDITOR_FORMATS = [
@@ -64,7 +116,6 @@ init_js = """
     editor.setTheme("THEME");
     editor.session.setMode(mode);
     
-    editor.session.setMode("ace/mode/yaml");
     // https://stackoverflow.com/a/42122466/2512851
     var set_error_annotation = function(row, column, err_msg, type) {
     editor.getSession().setAnnotations([{
@@ -89,6 +140,26 @@ init_js = """
         starfab.save.connect(function(filename) {
             var blob = new Blob([editor.session.getValue()], {type: "text/plain;charset=utf-8"});
             saveAs(blob, filename);
+        })
+        
+        starfab.set_key_bindings.connect(function(keyboard_handler) {
+            if (keyboard_handler.toLowerCase() == 'default') {
+                editor.setKeyboardHandler(null);
+            } else {
+                editor.setKeyboardHandler('ace/keyboard/' + keyboard_handler.toLowerCase());
+            }
+        })
+        
+        starfab.set_str_option.connect(function(path, value) {
+            editor.setOption(path, value);
+        })
+        
+        starfab.set_bool_option.connect(function(path, value) {
+            editor.setOption(path, value);
+        })
+        
+        starfab.set_theme.connect(function(theme) {
+            editor.setTheme(theme);
         })
         
         starfab.append_text.connect(function(text) {
@@ -120,6 +191,11 @@ class AceChannel(QObject):
     ready = Signal()
     save = Signal(str)
 
+    set_bool_option = Signal(str, bool)
+    set_str_option = Signal(str, str)
+    set_theme = Signal(str)
+    set_key_bindings = Signal(str)
+
     @Slot(str)
     def session_change(self, message):
         self.changed.emit()
@@ -129,29 +205,29 @@ class AceChannel(QObject):
         self.ready.emit()
 
 
-DEFAULT_THEME = "ace/theme/dracula"
+DEFAULT_THEME = "Monokai"
 
 
 class Editor(QWebEngineView):
     changed = Signal()
 
-    def __init__(self, editor_item, theme=DEFAULT_THEME, *args, **kwargs):
+    def __init__(self, editor_item, theme=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.theme = theme
         self.editor_item = editor_item
 
-        self.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        self.settings().setAttribute(
-            QWebEngineSettings.LocalContentCanAccessRemoteUrls, True
-        )
-        self.settings().setAttribute(QWebEngineSettings.ErrorPageEnabled, True)
-        self.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-        # self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        we_settings = self.settings()
+        we_settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+        we_settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+        we_settings.setAttribute(QWebEngineSettings.ErrorPageEnabled, True)
+        we_settings.setAttribute(QWebEngineSettings.PluginsEnabled, True)
 
-        # self.dev_view = QWebEngineView()
-        # self.page().setDevToolsPage(self.dev_view.page())
-        # self.dev_view.show()
+        if parse_bool(os.environ.get('STARFAB_DEBUG_EDITOR', False)):
+            self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+
+            self.dev_view = QWebEngineView()
+            self.page().setDevToolsPage(self.dev_view.page())
+            self.dev_view.show()
 
         self.ace = AceChannel()
         self.channel = QWebChannel()
@@ -164,15 +240,17 @@ class Editor(QWebEngineView):
         page = self.page()
         page.setWebChannel(self.channel)
         js = init_js.replace("FILENAME", self.editor_item.name)
-        js = js.replace("THEME", self.theme)
+        js = js.replace("THEME", theme or settings.value('editor/theme', DEFAULT_THEME))
         h = html.replace("JSJSJS", js)
         page.setHtml(h, qtc.QUrl("qrc:/index.html"))
 
-        timer = qtc.QTimer()
-        timer.setSingleShot(True)
-        timer.setInterval(5000)
-        timer.timeout.connect(lambda x=None: self.ace.set_value.emit("Testing."))
-        timer.start()
+        settings.settings_updated.connect(self._update_settings)
+
+    def _update_settings(self):
+        self.ace.set_theme.emit(THEMES.get(settings.value('editor/theme'), DEFAULT_THEME))
+        self.ace.set_key_bindings.emit(settings.value('editor/key_bindings'))
+        self.ace.set_bool_option.emit('showLineNumbers', parse_bool(settings.value('editor/line_numbers')))
+        self.ace.set_str_option.emit('wrap', WRAP_MODES.get(settings.value('editor/word_wrap').lower(), 'off'))
 
     def contextMenuEvent(self, event):
         filter_actions = ["Back", "Forward", "Reload", "Save page", "View page source"]
@@ -210,6 +288,7 @@ class Editor(QWebEngineView):
     @Slot()
     def _on_ace_ready(self):
         try:
+            self._update_settings()
             self.ace.set_value.emit(
                 self.editor_item.contents().read().decode("utf-8").replace("\x00", "")
             )
