@@ -269,7 +269,7 @@ class DCBRecordItemView(qtw.QWidget):
 
     def _on_view(self, mode):
         content_item = ContentItem(
-            self.record_item.name,
+            f'{self.record_item.name}.{mode}',
             self.record_item.path,
             self.record_item.contents(mode=mode),
         )

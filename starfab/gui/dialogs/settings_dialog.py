@@ -14,12 +14,10 @@ from starfab.log import getLogger
 from starfab.gui import qtw
 from starfab.resources import RES_PATH
 from starfab.gui.dialogs import list_dialog
-from starfab.settings import configure_defaults
-
+from starfab.gui.widgets import editor
 
 if typing.TYPE_CHECKING:
     from starfab.app import StarFab
-
 
 button_group_2 = {"0": "data", "1": "content", "2": "toolbox"}
 
@@ -43,6 +41,8 @@ class SettingsDialog(qtw.QDialog):
                 logger.exception(f'Failed to load theme {theme_file}')
 
         self.theme.addItems(list(sorted(self.themes.keys())))
+        self.editorTheme.clear()
+        self.editorTheme.addItems(list(sorted(editor.THEMES.keys())))
 
         self._parse_settings()
 
@@ -69,47 +69,35 @@ class SettingsDialog(qtw.QDialog):
                 self._handle_path_chooser, self.lineEdit_Exports_Directory, dir=True
             )
         )
-        self.buttonGroup_2.buttonClicked.connect(self.button_group)
+        self.workspaceBtnGroup.buttonClicked.connect(self._save_settings)
 
         self.autoOpenMostRecent.stateChanged.connect(self._save_settings)
-        self.preloadTagDatabase.stateChanged.connect(self._save_settings)
-        self.preloadAudioDatabase.stateChanged.connect(self._save_settings)
-        self.preloadLocalization.stateChanged.connect(self._save_settings)
         self.theme.currentTextChanged.connect(self._save_settings)
         self.cryxmlbFormat.currentTextChanged.connect(self._save_settings)
         self.cgfconverterPath.textChanged.connect(self._save_settings)
         self.texconvPath.textChanged.connect(self._save_settings)
         self.lineEdit_Exports_Directory.textChanged.connect(self._save_settings)
 
+        self.editorTheme.currentTextChanged.connect(self._save_settings)
+        self.editorKeybindings.currentTextChanged.connect(self._save_settings)
+        self.editorWordWrap.currentTextChanged.connect(self._save_settings)
+        self.editorShowLineNumbers.stateChanged.connect(self._save_settings)
+
         self.buttonBox.button(qtw.QDialogButtonBox.RestoreDefaults).clicked.connect(
             self._reset_settings
         )
         self.buttonBox.accepted.connect(self.close)
 
-    @Slot()
-    def button_group(self):
-        indexOfChecked = [
-            self.sender().buttons()[x].isChecked()
-            for x in range(len(self.sender().buttons()))
-        ].index(True)
-        button_key = button_group_2[f"{indexOfChecked}"]
-        self.starfab.settings.setValue("defaultWorkspace", button_key)
-
     def _parse_settings(self):
+        default_ws = self.starfab.settings.value('defaultWorkspace')
+        self.defaultWS_Data.setChecked(default_ws == 'data')
+        self.defaultWS_Content.setChecked(default_ws == 'content')
+
         self.autoOpenMostRecent.setChecked(
             parse_bool(self.starfab.settings.value("autoOpenRecent"))
         )
         self.lineEdit_Exports_Directory.setText(
             self.starfab.settings.value("exportDirectory")
-        )
-        self.preloadTagDatabase.setChecked(
-            parse_bool(self.starfab.settings.value("preloadTagDatabase"))
-        )
-        self.preloadAudioDatabase.setChecked(
-            parse_bool(self.starfab.settings.value("preloadAudioDatabase"))
-        )
-        self.preloadLocalization.setChecked(
-            parse_bool(self.starfab.settings.value("preloadLocalization"))
         )
         theme = self.starfab.settings.value("theme")
         if theme in list(self.themes.values()):
@@ -128,6 +116,20 @@ class SettingsDialog(qtw.QDialog):
         self.blenderConfigButton.setIcon(qta.icon("msc.settings-gear"))
         self.blenderConfigButton.clicked.connect(self._config_blender_paths)
         self.blenderComboBox.activated.connect(self._update_blender)
+
+        self.editorTheme.setCurrentText(
+            self.starfab.settings.value("editor/theme", editor.DEFAULT_THEME)
+        )
+        self.editorKeybindings.setCurrentText(
+            self.starfab.settings.value("editor/key_bindings", 'Default')
+        )
+        self.editorWordWrap.setCurrentText(
+            self.starfab.settings.value("editor/word_wrap", 'Off')
+        )
+        self.editorShowLineNumbers.setChecked(
+            parse_bool(self.starfab.settings.value("editor/line_numbers", True))
+        )
+
         self._sync_blender()
 
     def _config_blender_paths(self):
@@ -164,25 +166,19 @@ class SettingsDialog(qtw.QDialog):
         self.blenderComboBox.view().setMinimumWidth(width)
 
     def _reset_settings(self):
-        configure_defaults(self.starfab.settings)
+        self.starfab.settings.configure_defaults()
         self.close()
 
     def _save_settings(self, *args, **kwargs):
         logger.debug("Saving settings")
         self.starfab.settings.setValue(
+            "defaultWorkspace", 'data' if self.defaultWS_Data.isChecked() else 'content'
+        )
+        self.starfab.settings.setValue(
             "autoOpenRecent", self.autoOpenMostRecent.isChecked()
         )
         self.starfab.settings.setValue(
             "cyxmlbConversionFormat", self.cryxmlbFormat.currentText()
-        )
-        self.starfab.settings.setValue(
-            "preloadTagDatabase", self.preloadTagDatabase.isChecked()
-        )
-        self.starfab.settings.setValue(
-            "preloadAudioDatabase", self.preloadAudioDatabase.isChecked()
-        )
-        self.starfab.settings.setValue(
-            "preloadLocalization", self.preloadLocalization.isChecked()
         )
         if self.theme.currentText() != self.starfab.settings.value("theme", "Monokai Dimmed"):
             self._update_theme(self.theme.currentText())
@@ -198,6 +194,19 @@ class SettingsDialog(qtw.QDialog):
         self.starfab.settings.setValue(
             "exportDirectory", self.lineEdit_Exports_Directory.text()
         )
+        self.starfab.settings.setValue(
+            "editor/theme", self.editorTheme.currentText()
+        )
+        self.starfab.settings.setValue(
+            "editor/key_bindings", self.editorKeybindings.currentText()
+        )
+        self.starfab.settings.setValue(
+            "editor/word_wrap", self.editorWordWrap.currentText()
+        )
+        self.starfab.settings.setValue(
+            "editor/line_numbers", self.editorShowLineNumbers.isChecked()
+        )
+
         self._parse_settings()
 
     def _handle_path_chooser(self, option, dir=False):
