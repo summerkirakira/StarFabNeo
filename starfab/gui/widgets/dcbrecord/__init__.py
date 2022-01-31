@@ -180,6 +180,8 @@ class DCBObjWidget(qtw.QWidget):
             for i, item in enumerate(
                 sorted(self.obj.properties[name], key=lambda o: getattr(o, "name", ""))
             ):
+                if item.instance_index == dftypes.DCB_NO_PARENT:
+                    continue
                 section.content.layout().addRow(
                     f"{i}",
                     widget_for_dcb_obj(getattr(item, "name", str(i)), item, self),
