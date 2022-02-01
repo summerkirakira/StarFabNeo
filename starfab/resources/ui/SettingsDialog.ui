@@ -224,7 +224,7 @@
              <number>9</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="checkBox_7">
+             <widget class="QCheckBox" name="checkForUpdates">
               <property name="text">
                <string>Check for updates</string>
               </property>

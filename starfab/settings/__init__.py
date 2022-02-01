@@ -7,6 +7,9 @@ from starfab import CONTRIB_DIR
 from starfab.gui import qtg, qtw, qtc
 
 settings_defaults = {
+    "ignoreUpdate": "",
+    "updateRemindLater": "",
+    "checkForUpdates": "true",
     "autoOpenRecent": "false",
     "theme": "Monokai Dimmed",
     "cryxmlbConversionFormat": "xml",
