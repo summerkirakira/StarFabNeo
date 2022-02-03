@@ -9,6 +9,7 @@ from starfab import __version__
 from starfab.gui import qtc, qtw, qtg
 from starfab.settings import settings
 from starfab.log import getLogger
+from starfab.gui.widgets.markdown import MarkdownView
 
 
 logger = getLogger(__name__)
@@ -51,10 +52,12 @@ class UpdateAvailableDialog(qtw.QDialog):
         label.setStyleSheet("font-weight: bold; font-size: 20px")
         layout.addWidget(label)
 
-        description = qtw.QTextBrowser()
-        description.setOpenExternalLinks(True)
-        description.setHtml(f"<pre>{release.get('description', '')}</pre>")
-        layout.addWidget(description)
+        # description = qtw.QTextBrowser()
+        # description.setOpenExternalLinks(True)
+        # description.setHtml(f"<pre>{release.get('description', '')}</pre>")
+        self.description = MarkdownView()
+        self.description.setMarkdown(release.get('description', ''))
+        layout.addWidget(self.description)
 
         btn_widget = qtw.QWidget()
         btn_layout = qtw.QHBoxLayout()

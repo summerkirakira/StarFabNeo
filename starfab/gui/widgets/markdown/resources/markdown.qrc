@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/markdown">
+        <file>index.html</file>
+        <file>markdown.css</file>
+        <file>gitlab.css</file>
+        <file>marked.js</file>
+        <file>showdown.min.js</file>
+    </qresource>
+</RCC>
