@@ -1,8 +1,19 @@
 
-
 # Version History
 
-See current relases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
+See current releases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
+
+# [0.4.3](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.3)
+
+- Fixed texture conversion issue when exporting directly from the p4k
+- Fixed issue displaying invalid entries in the datacore
+- Added new update check on startup (can be disabled in settings)
+- Updated scdatatools version to 1.0.1
+
+
+# [0.4.2](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.2)
+
+- Initial public release!
 
 
 # [0.3.1](https://gitlab.com/scmodding/tools/starfab/-/releases/0.3.1)
