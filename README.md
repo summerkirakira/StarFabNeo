@@ -18,6 +18,7 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 - Game audio explorer with auto-conversion
 - Blender Integration and Add-ons
 
+
 # Releases
 
 Check the [releases](https://gitlab.com/scmodding/tools/starfab/-/releases) for pre-built packages.
@@ -25,14 +26,18 @@ Check the [releases](https://gitlab.com/scmodding/tools/starfab/-/releases) for 
 
 # Documentation
 
+
+### To get started check out the [Introduction to StarFab Guide](https://gitlab.com/scmodding/scmodding/-/wikis/Guides/Introduction-To-Starfab)
+
 See the [StarFab Wiki](https://gitlab.com/scmodding/tools/starfab/-/wikis/home) for more information on how StarFab 
 works. If you're interested in helping out, check out the 
 [Developer Guide](https://gitlab.com/scmodding/tools/starfab/-/wikis/Developer-Guide)!
 
-## Attrib
 
- - qtmodern, https://github.com/facade-technologies-inc/qtmodern
- - QupyRibbon, https://github.com/pracedru/QupyRibbon
+---
+
+StarFab and it's supporting tools continue to take an **extereme** amount of time to research and develop. If you find the tools useful consider showing your appreciation, thanks!
+[![Support the project](https://img.shields.io/badge/-%E2%98%95%20buy%20me%20a%20coffee-red.svg)](https://ko-fi.com/ventorvar)
 
 ###
 
