@@ -24,7 +24,7 @@ def _handle_open_record(guid):
     starfab = get_starfab()
     obj = starfab.sc.datacore.records_by_guid.get(guid)
     if obj is not None:
-        item = starfab.dock_widgets["dcb_view"].sc_tree_model.itemForGUID(obj.id.value)
+        item = starfab.sc_manager.datacore_model.itemForGUID(obj.id.value)
         if item is not None:
             widget = DCBRecordItemView(item, starfab)
             objid = f"{item.guid}:{item.path.as_posix()}"
@@ -180,7 +180,7 @@ class DCBObjWidget(qtw.QWidget):
             for i, item in enumerate(
                 sorted(self.obj.properties[name], key=lambda o: getattr(o, "name", ""))
             ):
-                if item.instance_index == dftypes.DCB_NO_PARENT:
+                if hasattr(item, 'instance_index') and item.instance_index == dftypes.DCB_NO_PARENT:
                     continue
                 section.content.layout().addRow(
                     f"{i}",
