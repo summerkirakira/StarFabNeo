@@ -121,6 +121,13 @@ DEFAULT_LOGGING_CONFIG = {
             "level": "INFO",
             "propagate": False,
         },
+        "sentry": {
+            "handlers": ["console", "console_err", "logfile"],
+            "level": LOG_OVERRIDE
+                     or os.environ.get("STARFAB_LOG", "")
+                     or DEFAULT_LOG_LEVEL,
+            "propagate": False,
+        },
         "starfab": {
             "handlers": ["console", "console_err", "logfile"],
             "level": LOG_OVERRIDE
@@ -150,3 +157,5 @@ def setup_logging():
     #     d = 1/0
     # except ZeroDivisionError:
     #     logging.exception(f'test exception')
+
+

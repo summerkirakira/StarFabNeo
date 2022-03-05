@@ -72,6 +72,7 @@ class SettingsDialog(qtw.QDialog):
         self.workspaceBtnGroup.buttonClicked.connect(self._save_settings)
 
         self.checkForUpdates.stateChanged.connect(self._save_settings)
+        self.enableErrorReporting.stateChanged.connect(self._save_settings)
         self.autoOpenMostRecent.stateChanged.connect(self._save_settings)
         self.theme.currentTextChanged.connect(self._save_settings)
         self.cryxmlbFormat.currentTextChanged.connect(self._save_settings)
@@ -96,6 +97,9 @@ class SettingsDialog(qtw.QDialog):
 
         self.checkForUpdates.setChecked(
             parse_bool(self.starfab.settings.value("checkForUpdates"))
+        )
+        self.enableErrorReporting.setChecked(
+            parse_bool(self.starfab.settings.value("enableErrorReporting", True))
         )
         self.autoOpenMostRecent.setChecked(
             parse_bool(self.starfab.settings.value("autoOpenRecent"))
@@ -180,6 +184,9 @@ class SettingsDialog(qtw.QDialog):
         )
         self.starfab.settings.setValue(
             "checkForUpdates", self.checkForUpdates.isChecked()
+        )
+        self.starfab.settings.setValue(
+            "enableErrorErporting", self.enableErrorReporting.isChecked()
         )
         self.starfab.settings.setValue(
             "autoOpenRecent", self.autoOpenMostRecent.isChecked()

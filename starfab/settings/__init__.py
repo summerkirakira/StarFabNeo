@@ -16,6 +16,7 @@ settings_defaults = {
     "external_tools/cgf-converter": "",
     "external_tools/texconv": "",
     "defaultWorkspace": "data",
+    "enable_error_reporting": "true",
     "exportDirectory": str(qtc.QDir.homePath() + "/Desktop/StarFab_Exports"),
 }
 

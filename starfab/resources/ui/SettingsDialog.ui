@@ -231,6 +231,13 @@
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="enableErrorReporting">
+              <property name="text">
+               <string>Enable error reporting dialog</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="autoOpenMostRecent">
               <property name="text">
                <string>Automatically open most recent on startup</string>
