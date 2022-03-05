@@ -1,4 +1,4 @@
-# StarFab - A Star Citizen Data Toolsuite 
+# StarFab - A Star Citizen Data Toolsuite
 
 A GUI built on top of [scdatatools](https://gitlab.com/scmodding/frameworks/scdatatools).
 
@@ -8,7 +8,7 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 
 ![StarFab Screenshot](docs/assets/StarFab_screenshot.png "StarFab Screenshot")
 
-# Features
+## Features
 
 - Browse and export files from `Data.p4k`
 - Automatically converts `CryXmlb` files
@@ -18,28 +18,22 @@ If you have any problems or suggestions, create an [issue](https://gitlab.com/sc
 - Game audio explorer with auto-conversion
 - Blender Integration and Add-ons
 
-
-# Releases
+## Releases
 
 Check the [releases](https://gitlab.com/scmodding/tools/starfab/-/releases) for pre-built packages.
 
-
-# Documentation
-
+## Documentation
 
 ### To get started check out the [Introduction to StarFab Guide](https://gitlab.com/scmodding/scmodding/-/wikis/Guides/Introduction-To-Starfab)
 
-See the [StarFab Wiki](https://gitlab.com/scmodding/tools/starfab/-/wikis/home) for more information on how StarFab 
-works. If you're interested in helping out, check out the 
+See the [StarFab Wiki](https://gitlab.com/scmodding/tools/starfab/-/wikis/home) for more information on how StarFab works.
+If you're interested in helping out, check out the
 [Developer Guide](https://gitlab.com/scmodding/tools/starfab/-/wikis/Developer-Guide)!
-
 
 ---
 
-StarFab and it's supporting tools continue to take an **extereme** amount of time to research and develop. If you find the tools useful consider showing your appreciation, thanks!
+StarFab and it's supporting tools continue to take an **extreme** amount of time to research and develop. If you find the tools useful consider showing your appreciation, thanks!
 [![Support the project](https://img.shields.io/badge/-%E2%98%95%20buy%20me%20a%20coffee-red.svg)](https://ko-fi.com/ventorvar)
-
-###
 
 ![MadeByTheCommunity](docs/assets/MadeByTheCommunity_Black.png "Made By The Community")
 
