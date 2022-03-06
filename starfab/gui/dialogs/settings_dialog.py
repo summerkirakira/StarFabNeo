@@ -71,6 +71,8 @@ class SettingsDialog(qtw.QDialog):
         )
         self.workspaceBtnGroup.buttonClicked.connect(self._save_settings)
 
+        self.checkForUpdates.stateChanged.connect(self._save_settings)
+        self.enableErrorReporting.stateChanged.connect(self._save_settings)
         self.autoOpenMostRecent.stateChanged.connect(self._save_settings)
         self.theme.currentTextChanged.connect(self._save_settings)
         self.cryxmlbFormat.currentTextChanged.connect(self._save_settings)
@@ -93,6 +95,12 @@ class SettingsDialog(qtw.QDialog):
         self.defaultWS_Data.setChecked(default_ws == 'data')
         self.defaultWS_Content.setChecked(default_ws == 'content')
 
+        self.checkForUpdates.setChecked(
+            parse_bool(self.starfab.settings.value("checkForUpdates"))
+        )
+        self.enableErrorReporting.setChecked(
+            parse_bool(self.starfab.settings.value("enableErrorReporting", True))
+        )
         self.autoOpenMostRecent.setChecked(
             parse_bool(self.starfab.settings.value("autoOpenRecent"))
         )
@@ -173,6 +181,12 @@ class SettingsDialog(qtw.QDialog):
         logger.debug("Saving settings")
         self.starfab.settings.setValue(
             "defaultWorkspace", 'data' if self.defaultWS_Data.isChecked() else 'content'
+        )
+        self.starfab.settings.setValue(
+            "checkForUpdates", self.checkForUpdates.isChecked()
+        )
+        self.starfab.settings.setValue(
+            "enableErrorErporting", self.enableErrorReporting.isChecked()
         )
         self.starfab.settings.setValue(
             "autoOpenRecent", self.autoOpenMostRecent.isChecked()

@@ -7,12 +7,16 @@ from starfab import CONTRIB_DIR
 from starfab.gui import qtg, qtw, qtc
 
 settings_defaults = {
+    "ignoreUpdate": "",
+    "updateRemindLater": "",
+    "checkForUpdates": "true",
     "autoOpenRecent": "false",
     "theme": "Monokai Dimmed",
     "cryxmlbConversionFormat": "xml",
     "external_tools/cgf-converter": "",
     "external_tools/texconv": "",
     "defaultWorkspace": "data",
+    "enable_error_reporting": "true",
     "exportDirectory": str(qtc.QDir.homePath() + "/Desktop/StarFab_Exports"),
 }
 

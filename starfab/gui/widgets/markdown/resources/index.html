@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<head>
+  <link rel="stylesheet" type="text/css" href="qrc:/markdown/markdown.css">
+  <script src="qrc:/markdown/marked.js"></script>
+  <script src="qrc:/markdown/showdown.min.js"></script>
+  <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
+</head>
+<body>
+  <div id="md"></div>
+  <script>
+  'use strict';
+
+  var md = document.getElementById('md');
+
+  new QWebChannel(qt.webChannelTransport, function(channel) {
+    var content = channel.objects.content;
+
+    var converter = new showdown.Converter({
+      tables: true,
+      smartIndentationFix: true,
+      emoji: true,
+      ghCodeBlocks: true,
+      tasklists: true,
+      strikethrough: true
+    });
+    converter.setFlavor('github');
+
+    content.textChanged.connect(function(text) {
+      md.innerHTML = converter.makeHtml(text);
+    })
+
+    content.document_ready();
+  });
+  </script>
+</body>
+</html>
+
+
+

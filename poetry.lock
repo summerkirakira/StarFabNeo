@@ -1082,7 +1082,7 @@ plumbum = "*"
 
 [[package]]
 name = "scdatatools"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python tools for working with Star Citizen data files."
 category = "main"
 optional = false
@@ -1111,6 +1111,36 @@ python-versions = "*"
 
 [package.extras]
 cpu = ["psutil", "mkl"]
+
+[[package]]
+name = "sentry-sdk"
+version = "1.5.6"
+description = "Python client for Sentry (https://sentry.io)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+certifi = "*"
+urllib3 = ">=1.10.0"
+
+[package.extras]
+aiohttp = ["aiohttp (>=3.5)"]
+beam = ["apache-beam (>=2.12)"]
+bottle = ["bottle (>=0.12.13)"]
+celery = ["celery (>=3)"]
+chalice = ["chalice (>=1.16.0)"]
+django = ["django (>=1.8)"]
+falcon = ["falcon (>=1.4)"]
+flask = ["flask (>=0.11)", "blinker (>=1.1)"]
+httpx = ["httpx (>=0.16.0)"]
+pure_eval = ["pure-eval", "executing", "asttokens"]
+pyspark = ["pyspark (>=2.4.4)"]
+quart = ["quart (>=0.16.1)", "blinker (>=1.1)"]
+rq = ["rq (>=0.6)"]
+sanic = ["sanic (>=0.8)"]
+sqlalchemy = ["sqlalchemy (>=1.2)"]
+tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "setuptools-scm"
@@ -1341,7 +1371,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9.2,<3.10"
-content-hash = "79603f59269ef5a629844fff90f4ea39648d1f89bce7b7280a19dbb69cdd9fbc"
+content-hash = "b88d7cb1ab49bc68d2c9aa8fb78145ee7e74609b8628ba19075658047ead1a55"
 
 [metadata.files]
 aiohttp = [
@@ -2271,12 +2301,16 @@ rpyc = [
     {file = "rpyc-5.0.1-py3-none-any.whl", hash = "sha256:97c40d84994816e6b39be9224c936817bb6f76e71b9b49d29adb22531d9c820f"},
 ]
 scdatatools = [
-    {file = "scdatatools-1.0.0-py2.py3-none-any.whl", hash = "sha256:1ca82a69f55340926f814383501734c5bd32887756bd94171f68f3d40cf20338"},
-    {file = "scdatatools-1.0.0.tar.gz", hash = "sha256:c993b372610f38831bfcc4219cba6117742700b261fe565407c306f86d982e28"},
+    {file = "scdatatools-1.0.1-py2.py3-none-any.whl", hash = "sha256:1dae7c41a9392323b6bc1a9f4b45ff3f68bb39bc95f54aa2e29d03c6614e8b95"},
+    {file = "scdatatools-1.0.1.tar.gz", hash = "sha256:8ce2f867bb810e25b3f27c2d4d1191ac987fca63c222f73a802a5d11d081d24d"},
 ]
 scooby = [
     {file = "scooby-0.5.11-py3-none-any.whl", hash = "sha256:1289401ebb69bf66b0777e9fa7c5114c59515f29e0fba38b22893cd05e4fc965"},
     {file = "scooby-0.5.11.tar.gz", hash = "sha256:faa967bb74b038c08d873d97283298aa8f3f5eb0d7a3d9ca43c81ad6d79da852"},
+]
+sentry-sdk = [
+    {file = "sentry-sdk-1.5.6.tar.gz", hash = "sha256:ac2a50128409d57655279817aedcb7800cace1f76b266f3dd62055d5afd6e098"},
+    {file = "sentry_sdk-1.5.6-py2.py3-none-any.whl", hash = "sha256:1ab34e3851a34aeb3d1af1a0f77cec73978c4e9698e5210d050e4932953cb241"},
 ]
 setuptools-scm = [
     {file = "setuptools_scm-6.4.2-py3-none-any.whl", hash = "sha256:acea13255093849de7ccb11af9e1fb8bde7067783450cee9ef7a93139bddf6d4"},

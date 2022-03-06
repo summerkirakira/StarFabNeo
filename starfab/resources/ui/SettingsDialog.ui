@@ -224,9 +224,16 @@
              <number>9</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="checkBox_7">
+             <widget class="QCheckBox" name="checkForUpdates">
               <property name="text">
                <string>Check for updates</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="enableErrorReporting">
+              <property name="text">
+               <string>Enable error reporting dialog</string>
               </property>
              </widget>
             </item>
