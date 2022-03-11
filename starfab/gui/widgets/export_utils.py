@@ -93,6 +93,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
             "overwrite": self.opt_overwriteExisting.isChecked(),
             "convert_cryxml_fmt": self.opt_cryxmlFmt.currentText(),
             "convert_dds_fmt": self.opt_imgFmt.currentText(),
+            "convert_dds_unsplit": self.opt_autoUnsplitTextures.isChecked(),
             "auto_convert_sounds": self.opt_autoConvertSounds.isChecked(),
             "create_sub_folder": self.opt_createSubFolder.isChecked(),
             "gen_model_log": self.opt_genModelLog.isChecked(),

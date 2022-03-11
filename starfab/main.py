@@ -2,20 +2,20 @@ import os
 import sys
 import ctypes
 import asyncio
-from pathlib import Path
-import logging
+
+import sentry_sdk
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import Qt, QCoreApplication
 import qtvscodestyle as qtvsc
 
 
 from . import __version__
-from .settings import settings
-from .app import MainWindow
-from .log import setup_logging, getLogger
-from .plugins import plugin_manager
+from .app import StarFab
 from .resources import themes
-
+from .settings import settings
+from .plugins import plugin_manager
+from .log import setup_logging, getLogger
+from starfab.error import sentry_error_handler
 
 logger = getLogger(__name__)
 
@@ -32,12 +32,21 @@ def exception_hook(exctype, value, traceback):
 
 
 def main():
+    setup_logging()
+
+    sentry_sdk.init(
+        "https://6827c55631754b76a98f2cfc6374933e@o1159851.ingest.sentry.io/6244166",
+        debug=logger.logger.getEffectiveLevel() <= 10,  # logging is DEBUG or more
+        release=os.environ.get("STARFAB_SENTRY_RELEASE", __version__),
+        traces_sample_rate=float(os.environ.get('STARFAB_TRACES_SAMPLE_RATE', 1.0)),
+        server_name="StarFab",
+        before_send=sentry_error_handler
+    )
+
     plugin_manager.setup()
 
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-    setup_logging()
 
     # Back up the reference to the exceptionhook
     sys._excepthook = sys.excepthook
@@ -49,12 +58,6 @@ def main():
         # on windows - if we're running as a "window" (wihtout a console) redirect stdout/stderr to files
         sys.stdout = open("starfab.out", "w")
         sys.stderr = open("starfab.err", "w")
-    # else:
-    #     # if we've got a console, log to it as well as the log file
-    #     handler = logging.StreamHandler(sys.stdout)
-    #     handler.setLevel(logging.DEBUG)
-    #     handler.setFormatter(logging.Formatter(LOG_FMT))
-    #     logging.getLogger().addHandler(handler)
 
     logger.info(f"StarFab {__version__}")
     if sys.platform == "win32":
@@ -82,7 +85,7 @@ def main():
         settings.setValue("theme", "Monokai Dimmed")
 
     try:
-        mw = MainWindow()
+        mw = StarFab()
         mw.startup()
 
         sys.exit(app.exec_())

@@ -19,7 +19,7 @@ import starfab.gui.widgets.dock_widgets.file_view
 import starfab.gui.widgets.dock_widgets.datacore_widget
 
 
-from . import __version__
+from . import __version__, updates
 from .gui import qtg, qtw, qtc
 from .settings import settings
 from .blender import BlenderManager
@@ -38,7 +38,7 @@ from .gui.RibbonTextbox import RibbonTextbox
 from .gui.RibbonWidget import *
 
 
-class MainWindow(QMainWindow):
+class StarFab(QMainWindow):
     task_started = Signal(str, str, int, int)
     update_status_progress = Signal(str, int, int, int, str)
     task_finished = Signal(str, bool, str)
@@ -333,6 +333,8 @@ Contributors:
     def startup(self):
         self.restoreGeometry(settings.value("windowGeometry"))
         self.restoreState(settings.value("windowState"))
+
+        updates.check_and_notify()
         if os.environ.get("STARFAB_SC_PATH"):
             self.open_scdir.emit(os.environ["STARFAB_SC_PATH"])
         elif len(sys.argv) > 1:

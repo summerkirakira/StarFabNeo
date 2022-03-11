@@ -1,24 +1,24 @@
-import shutil
 import sys
+import shutil
+import typing
 from pathlib import Path
 
 from starfab import CONTRIB_DIR
 from starfab.gui import qtg, qtw, qtc
 
-
 settings_defaults = {
+    "ignoreUpdate": "",
+    "updateRemindLater": "",
+    "checkForUpdates": "true",
     "autoOpenRecent": "false",
     "theme": "Monokai Dimmed",
     "cryxmlbConversionFormat": "xml",
     "external_tools/cgf-converter": "",
     "external_tools/texconv": "",
     "defaultWorkspace": "data",
-    "preloadAudioDatabase": "false",
-    "preloadLocalization": "false",
-    "preloadTagDatabase": "true",
+    "enable_error_reporting": "true",
     "exportDirectory": str(qtc.QDir.homePath() + "/Desktop/StarFab_Exports"),
 }
-
 
 first_run_flags = {
     (1, "success"),  # no action needed
@@ -26,9 +26,33 @@ first_run_flags = {
 }
 
 
-def configure_defaults(settings):
-    for key, value in settings_defaults.items():
-        settings.setValue(key, value)
+class StarFabSettings(qtc.QSettings):
+    settings_updated = qtc.Signal()
+
+    def __init__(self, *args, **kwargs):
+        self._debounce = qtc.QTimer()
+        self._debounce.setInterval(500)
+        self._debounce.setSingleShot(True)
+        self._debounce.timeout.connect(self._settings_updated)
+
+        super().__init__(*args, **kwargs)
+
+        # TODO: combine first run flags with settings init to better serve initial interactions as needed,
+        #       for example check for updates, create default config, etc.
+        if self.value("theme") is None or self.value("first_run") is None:
+            self.configure_defaults()
+            self.setValue("first_run", "1")
+
+    def _settings_updated(self):
+        self.settings_updated.emit()
+
+    def setValue(self, key: str, value: typing.Any) -> None:
+        super().setValue(key, value)
+        self._debounce.start()
+
+    def configure_defaults(self):
+        for key, value in settings_defaults.items():
+            self.setValue(key, value)
 
 
 def _get_exec(name, settings_name):
@@ -65,21 +89,9 @@ def get_compressonatorcli():
     return _get_exec("compressonatorcli", "external_tools/compressonatorcli")
 
 
+settings = StarFabSettings("SCModding", "StarFab")
+
+
 def get_settings():
-    # TODO: combine first run flags with settings init to better serve initial interactions as needed,
-    #       for example check for updates, create default config, etc.
-    settings = qtc.QSettings("SCTools", "StarFab")
-    if settings.value("theme") is None:
-        configure_defaults(settings)
-
-    try:
-        first_run = settings.value("first_run")
-    except:
-        configure_defaults(settings)
-    finally:
-        settings.setValue("first_run", "1")
-
+    global settings
     return settings
-
-
-settings = get_settings()

@@ -34,7 +34,7 @@ def widget_for_chunk(info, obj, chunk, inline=False):
     if isinstance(chunk, (chunks.CryXMLBChunk, chunks.JSONChunk)):
         e = Editor(
             ContentItem(
-                f"{info.path.name}:{chunk.chunk_header.id}",
+                f"{info.path.name}:{chunk.chunk_header.id}.json",
                 info.path,
                 json.dumps(chunk.dict(), indent=2),
             ),
@@ -45,7 +45,7 @@ def widget_for_chunk(info, obj, chunk, inline=False):
     elif isinstance(chunk, chunks.SourceInfoChunk):
         e = Editor(
             ContentItem(
-                f"{info.path.name}:{chunk.chunk_header.id}",
+                f"{info.path.name}:{chunk.chunk_header.id}.txt",
                 info.path,
                 chunk.chunk_data.data,
             ),

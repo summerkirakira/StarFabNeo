@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>500</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -170,7 +170,7 @@
                   <bool>true</bool>
                  </property>
                  <attribute name="buttonGroup">
-                  <string notr="true">buttonGroup_2</string>
+                  <string notr="true">workspaceBtnGroup</string>
                  </attribute>
                 </widget>
                </item>
@@ -180,7 +180,7 @@
                   <string>Content View</string>
                  </property>
                  <attribute name="buttonGroup">
-                  <string notr="true">buttonGroup_2</string>
+                  <string notr="true">workspaceBtnGroup</string>
                  </attribute>
                 </widget>
                </item>
@@ -224,9 +224,16 @@
              <number>9</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="checkBox_7">
+             <widget class="QCheckBox" name="checkForUpdates">
               <property name="text">
                <string>Check for updates</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="enableErrorReporting">
+              <property name="text">
+               <string>Enable error reporting dialog</string>
               </property>
              </widget>
             </item>
@@ -235,48 +242,6 @@
               <property name="text">
                <string>Automatically open most recent on startup</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox_5">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="title">
-               <string>Preload Databases</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QCheckBox" name="preloadTagDatabase">
-                 <property name="text">
-                  <string>Tag Database</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="preloadAudioDatabase">
-                 <property name="text">
-                  <string>Audio Database</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="preloadLocalization">
-                 <property name="text">
-                  <string>Localization</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </widget>
             </item>
            </layout>
@@ -331,8 +296,25 @@
             <property name="spacing">
              <number>9</number>
             </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="cgfconverterPathLabel">
+              <property name="text">
+               <string>cgf-converter path</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="1">
              <widget class="QLineEdit" name="cgfconverterPath">
+              <property name="placeholderText">
+               <string>auto</string>
+              </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="texconvPath">
               <property name="placeholderText">
                <string>auto</string>
               </property>
@@ -348,34 +330,47 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QCheckBox" name="checkBox_2">
+            <item row="2" column="0">
+             <widget class="QLabel" name="blenderLabel">
               <property name="text">
-               <string>Override</string>
+               <string>Blender</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="checkBox">
-              <property name="text">
-               <string>Override</string>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="blenderComboBox">
+              <property name="styleSheet">
+               <string notr="true"/>
               </property>
+              <item>
+               <property name="text">
+                <string>auto</string>
+               </property>
+              </item>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="cgfconverterPathLabel">
+            <item row="2" column="2">
+             <widget class="QPushButton" name="blenderConfigButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
               <property name="text">
-               <string>cgf-converter path</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="texconvPath">
-              <property name="placeholderText">
-               <string>auto</string>
-              </property>
-              <property name="clearButtonEnabled">
-               <bool>true</bool>
+               <string/>
               </property>
              </widget>
             </item>
@@ -502,7 +497,14 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="lineEdit_Exports_Directory"/>
+             <widget class="QLineEdit" name="lineEdit_Exports_Directory">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
             </item>
             <item row="3" column="1">
              <widget class="QCheckBox" name="checkBox_9">
@@ -527,7 +529,7 @@
             <string>Editor</string>
            </property>
            <layout class="QFormLayout" name="formLayout">
-            <item row="0" column="1">
+            <item row="1" column="1">
              <widget class="QComboBox" name="editorKeybindings">
               <item>
                <property name="text">
@@ -556,21 +558,21 @@
               </item>
              </widget>
             </item>
-            <item row="0" column="0">
+            <item row="1" column="0">
              <widget class="QLabel" name="label">
               <property name="text">
                <string>Keybindings</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QLabel" name="label_3">
               <property name="text">
                <string>Word Wrap</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="2" column="1">
              <widget class="QComboBox" name="editorWordWrap">
               <item>
                <property name="text">
@@ -589,17 +591,27 @@
               </item>
              </widget>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QLabel" name="label_5">
               <property name="text">
                <string>Show Line Numbers</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
+            <item row="3" column="1">
              <widget class="QCheckBox" name="editorShowLineNumbers">
               <property name="text">
                <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="editorTheme"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Theme</string>
               </property>
              </widget>
             </item>
@@ -689,6 +701,6 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="workspaceBtnGroup"/>
  </buttongroups>
 </ui>
