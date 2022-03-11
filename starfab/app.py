@@ -14,6 +14,7 @@ from qtpy.QtWidgets import QMainWindow
 
 import qtawesome as qta
 
+from scdatatools.sc import StarCitizen
 import starfab.gui.widgets.dock_widgets.file_view
 import starfab.gui.widgets.dock_widgets.datacore_widget
 
@@ -192,7 +193,7 @@ class MainWindow(QMainWindow):
             self.lineEdit_LinkStatus.setStyleSheet("color: red")
 
     @property
-    def sc(self):
+    def sc(self) -> StarCitizen:
         return self.sc_manager.sc
 
     def add_action(
@@ -655,9 +656,8 @@ Contributors:
             self.page_DataView.sc_tabs.setTabToolTip(
                 index, tooltip if tooltip is not None else str(obj_id)
             )
-            self.page_DataView.sc_tabs.tabBar().tabButton(
-                index, qtw.QTabBar.RightSide
-            ).setFixedSize(14, 14)
+            if (btn := self.page_DataView.sc_tabs.tabBar().tabButton(index, qtw.QTabBar.RightSide)) is not None:
+                btn.setFixedSize(14, 14)
         if show_after_add:
             return self.page_DataView.sc_tabs.setCurrentWidget(self._open_tabs[obj_id])
 

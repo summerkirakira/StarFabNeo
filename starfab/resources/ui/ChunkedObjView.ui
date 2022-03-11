@@ -46,6 +46,9 @@
      <property name="lineWidth">
       <number>0</number>
      </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
@@ -66,7 +69,14 @@
       </property>
       <layout class="QVBoxLayout" name="obj_content">
        <item>
-        <layout class="QFormLayout" name="obj_info"/>
+        <layout class="QFormLayout" name="obj_info">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         </property>
+         <property name="formAlignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </layout>
        </item>
        <item>
         <widget class="QFrame" name="obj_actions_frame">

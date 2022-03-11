@@ -1,4 +1,4 @@
-from distutils.util import strtobool
+from scdatatools.utils import parse_bool
 
 from starfab.gui import qtc, qtw, qtg
 from starfab.resources import RES_PATH
@@ -29,7 +29,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_imgFmt.currentTextChanged.connect(self.save_settings)
         self.opt_autoUnsplitTextures.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/auto_unsplit_textures", "true"
                 )
@@ -37,7 +37,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_autoUnsplitTextures.stateChanged.connect(self.save_settings)
         self.opt_autoConvertTextures.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/auto_convert_textures", "true"
                 )
@@ -45,7 +45,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_autoConvertTextures.stateChanged.connect(self.save_settings)
         self.opt_autoConvertSounds.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/auto_convert_sounds", "true"
                 )
@@ -53,7 +53,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_autoConvertSounds.stateChanged.connect(self.save_settings)
         self.opt_convertModelsDAE.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/auto_convert_models", "false"
                 )
@@ -61,7 +61,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_convertModelsDAE.stateChanged.connect(self.save_settings)
         self.opt_createSubFolder.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/create_sub_folder", "false"
                 )
@@ -69,13 +69,13 @@ class ExportOptionsWidget(StarFabStaticWidget):
         )
         self.opt_createSubFolder.stateChanged.connect(self.save_settings)
         self.opt_genModelLog.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(f"{SETTINGS_PATH}/gen_model_log", "false")
             )
         )
         self.opt_genModelLog.stateChanged.connect(self.save_settings)
         self.opt_overwriteExisting.setChecked(
-            strtobool(
+            parse_bool(
                 self.starfab.settings.value(
                     f"{SETTINGS_PATH}/overwrite_existing", "false"
                 )

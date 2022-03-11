@@ -141,7 +141,7 @@ class AudioTreeModel(ThreadLoadedPathArchiveTreeModel):
             loader_task_status_msg="Processing Audio",
         )
 
-        self._sc_manager.p4k_model.loaded.connect(self._on_p4k_loaded)
+        # self._sc_manager.p4k_model.loaded.connect(self._on_p4k_loaded)
         self._sc_manager.p4k_model.unloading.connect(
             self._on_p4k_unloading, qtc.Qt.BlockingQueuedConnection
         )

@@ -66,7 +66,17 @@
       </property>
       <layout class="QVBoxLayout" name="record_content">
        <item>
-        <layout class="QFormLayout" name="record_info"/>
+        <layout class="QFormLayout" name="record_info">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::ExpandingFieldsGrow</enum>
+         </property>
+         <property name="formAlignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="verticalSpacing">
+          <number>5</number>
+         </property>
+        </layout>
        </item>
        <item>
         <widget class="QFrame" name="record_actions_frame">
@@ -116,6 +126,9 @@
        <item>
         <widget class="QWidget" name="record_widgets_widget" native="true">
          <layout class="QVBoxLayout" name="record_widgets">
+          <property name="spacing">
+           <number>0</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
