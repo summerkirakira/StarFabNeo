@@ -102,6 +102,8 @@ class ExportOptionsWidget(StarFabStaticWidget):
             "verbose": self.opt_Verbose.isChecked(),
         }
 
+        if self.opt_extractModelAssets.isChecked():
+            opts["converters"].append("model_assets_extractor")
         if self.opt_cryxmlFmt.currentText().lower() != "cryxmlb":
             opts["converters"].append("cryxml_converter")
         if self.opt_autoUnsplitTextures.isChecked():

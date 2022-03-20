@@ -21,8 +21,6 @@ setup_default_color_registry()
 # Setup project dir
 #_RESOURCES_BASE_DIR = Path.home() / ".q_vscode_style" / "resources"
 _RESOURCES_BASE_DIR = Path(__file__).parent / "resources"
-# Clean up project dir
-shutil.rmtree(str(_RESOURCES_BASE_DIR), ignore_errors=True)
 _RESOURCES_BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 global_current_colors = {}

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>283</width>
-    <height>340</height>
+    <height>372</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -123,7 +123,14 @@
         <property name="title">
          <string>Options</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_15">
+        <layout class="QVBoxLayout" name="export_options_layout">
+         <item>
+          <widget class="QCheckBox" name="opt_extractModelAssets">
+           <property name="text">
+            <string>Extract Model Assets</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QCheckBox" name="opt_autoUnsplitTextures">
            <property name="toolTip">
