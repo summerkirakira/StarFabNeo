@@ -25,6 +25,7 @@ class ScrollMessageBox(qtw.QMessageBox):
 
 _icon_cache = {}
 icon_provider = qtw.QFileIconProvider()
+ZIP_ICON_EXTS = ['dcb', 'p4k', 'pak', 'socpak']
 
 
 def icon_for_path(path: str, default=False):
@@ -33,12 +34,8 @@ def icon_for_path(path: str, default=False):
     path = path.lower()
     if "." in path:
         ext = path.rsplit(".", maxsplit=1)[-1]
-        if ext == "dcb":
-            path = path.replace("dcb", "zip")
-        elif ext == "p4k":
-            path = path.replace("p4k", "zip")
-        elif ext == "socpak":
-            path = path.replace("socpak", "zip")
+        if ext in ZIP_ICON_EXTS:
+            path = path.replace(ext, "zip")
         return _icon_cache.setdefault(ext, icon_provider.icon(qtc.QFileInfo(path)))
     if default:
         return _icon_cache.setdefault(

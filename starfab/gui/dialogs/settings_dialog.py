@@ -186,7 +186,7 @@ class SettingsDialog(qtw.QDialog):
             "checkForUpdates", self.checkForUpdates.isChecked()
         )
         self.starfab.settings.setValue(
-            "enableErrorErporting", self.enableErrorReporting.isChecked()
+            "enableErrorReporting", self.enableErrorReporting.isChecked()
         )
         self.starfab.settings.setValue(
             "autoOpenRecent", self.autoOpenMostRecent.isChecked()
