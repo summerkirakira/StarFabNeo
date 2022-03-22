@@ -1,6 +1,7 @@
 import time
 import typing
 import logging
+import sentry_sdk
 from pathlib import Path
 
 from scdatatools.sc import StarCitizen
@@ -75,6 +76,10 @@ class StarCitizenManager(qtc.QObject):
         self._starfab = starfab
         self.sc = None
 
+        sentry_sdk.set_context("sc", {})
+        sentry_sdk.set_tag('sc.version', None)
+        sentry_sdk.set_tag('sc.mode', None)
+
         self.unload.connect(self._unload)
         self.load_sc.connect(self._load_sc)
 
@@ -95,6 +100,9 @@ class StarCitizenManager(qtc.QObject):
         self.sc = None
         self.p4k_model.unload()
         self.datacore_model.unload()
+        sentry_sdk.set_context("sc", {})
+        sentry_sdk.set_tag('sc.version', None)
+        sentry_sdk.set_tag('sc.mode', None)
         self.unloaded.emit()
 
     @qtc.Slot()
@@ -108,10 +116,19 @@ class StarCitizenManager(qtc.QObject):
     @qtc.Slot(str)
     def _load_sc(self, game_folder: typing.Union[str, Path], p4k_file="Data.p4k"):
         if self.sc is not None:
-            self.unload()
+            self._unload()
 
         logger.debug(f"Opening {game_folder}")
         self.sc = StarCitizen(game_folder, p4k_file)
+        sc_dir = self.sc.p4k_file.parent.name
+        mode = sc_dir if sc_dir in ['LIVE', 'PTU'] else 'unknown'
+        sentry_sdk.set_context("sc", {
+            "version": self.sc.version,
+            "version_label": self.sc.version_label,
+            "mode": mode
+        })
+        sentry_sdk.set_tag('sc.version', self.sc.version_label)
+        sentry_sdk.set_tag('sc.mode', mode)
 
         self.preparing_to_load.emit(self.sc.game_folder)
         loader = _SCLoader(self.sc)
