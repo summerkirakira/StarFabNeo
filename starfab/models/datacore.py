@@ -11,7 +11,9 @@ from starfab.models.common import (
     ThreadLoadedPathArchiveTreeModel,
     PathArchiveTreeItem,
     ContentItem,
+    SKIP_MODELS,
 )
+
 
 logger = getLogger(__name__)
 DCBVIEW_COLUMNS = ["Name", "Type"]
@@ -47,6 +49,9 @@ class DCBLoader(PathArchiveTreeModelLoader):
     def items_to_load(self):
         # trigger datacore to load here
         self.model.archive = self.model.archive.datacore
+        if 'datacore' in SKIP_MODELS:
+            logger.debug(f'Skipping loading the datacore model')
+            return []
         return self.model.archive.records
 
     def load_item(self, item):

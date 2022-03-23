@@ -1,12 +1,16 @@
 from functools import cached_property
 from starfab.gui import qtc, qtw, qtg
 
+from starfab.log import getLogger
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeModel,
     PathArchiveTreeModelLoader,
+    SKIP_MODELS,
 )
 
+
+logger = getLogger(__name__)
 TAG_DATABASE_COLUMNS = ["Name"]
 
 
@@ -110,7 +114,10 @@ class TagDatabaseModel(PathArchiveTreeModel):
             parent=sc_manager,
         )
 
-        self._sc_manager.datacore_model.loaded.connect(self._on_datacore_loaded)
+        if 'tag_database' in SKIP_MODELS:
+            logger.debug(f'Skipping loading the tag_database model')
+        else:
+            self._sc_manager.datacore_model.loaded.connect(self._on_datacore_loaded)
         self._sc_manager.datacore_model.unloading.connect(
             self._on_datacore_unloading, qtc.Qt.BlockingQueuedConnection
         )

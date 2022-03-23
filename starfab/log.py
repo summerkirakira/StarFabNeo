@@ -76,7 +76,6 @@ class ThreadLogger:
 def getLogger(name):
     return ThreadLogger(name)
 
-
 logger = getLogger("starfab")
 
 

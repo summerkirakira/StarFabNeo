@@ -1,3 +1,4 @@
+import os
 import io
 import time
 import typing
@@ -16,6 +17,10 @@ from starfab.utils import show_file_in_filemanager
 from starfab.gui.utils import icon_provider, icon_for_path
 
 logger = getLogger(__name__)
+
+# This is a debug tool, you can set the environment var to a csv list of models to skip loading at start to make things
+# faster for testing
+SKIP_MODELS = os.environ.get('STARFAB_SKIP_MODELS', '').lower().split(',')
 
 
 class AudioConverter(qtc.QRunnable):

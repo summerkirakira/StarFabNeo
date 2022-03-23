@@ -3,6 +3,7 @@ from functools import cached_property
 from pathlib import Path
 
 from starfab import get_starfab
+from starfab.log import getLogger
 from starfab.gui import qtc, qtw, qtg
 from starfab.gui.utils import icon_provider
 from starfab.models.common import (
@@ -11,9 +12,12 @@ from starfab.models.common import (
     PathArchiveTreeItem,
     ContentItem,
     ThreadLoadedPathArchiveTreeModel,
+    SKIP_MODELS,
 )
 from starfab.settings import get_ww2ogg, get_revorb
 
+
+logger = getLogger(__name__)
 SCAUDIOVIEWW_COLUMNS = ["Name"]
 GAME_AUDIO_P4K_RELPATH = Path("Data/Libs/")
 GAME_AUDIO_P4K_SEARCH = str(GAME_AUDIO_P4K_RELPATH / "GameAudio" / "*.xml")
@@ -45,6 +49,10 @@ class AudioTreeSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
 
 class AudioTreeLoader(PathArchiveTreeModelLoader):
     def items_to_load(self):
+        if 'audio' in SKIP_MODELS:
+            logger.debug(f'Skipping loading the audio model')
+            return []
+
         ga_files = self.starfab.sc.p4k.search(GAME_AUDIO_P4K_SEARCH)
         self.starfab.task_started.emit(
             "init_gameaudio", "Initializing Game Audio", 0, len(ga_files)

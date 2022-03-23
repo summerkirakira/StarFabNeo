@@ -25,7 +25,7 @@ def sentry_error_handler(event, hint):
         if 'log_record' in hint:
             msg = hint['log_record']['message']
         else:
-            msg = hint['exc_info']
+            msg = str(hint['exc_info'][1])
         should_send = show_error_dialog(
             "StarFab Exception",
             f"An exception has occurred in StarFab, would you like to submit an error report?\n\n{msg}"

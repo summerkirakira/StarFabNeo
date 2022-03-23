@@ -3,6 +3,8 @@ import shutil
 from pathlib import Path
 from functools import partial
 
+import sentry_sdk
+
 from starfab.gui import qtc, qtw, qtg
 
 from starfab.models.common import AudioConverter
@@ -96,26 +98,34 @@ class P4KView(StarFabSearchableTreeWidget):
             return
 
         item = self.proxy_model.mapToSource(index).internalPointer()
-        try:
-            if item is not None:
-                if ".dds" in item.name:
-                    basename = f'{item.name.split(".dds")[0]}.dds'
-                    items = [
-                        _
-                        for _ in item.parent.children
-                        if _.path.name.startswith(basename)
-                    ]
-                    self._handle_item_action(
-                        {i.path.as_posix(): i for i in items}, self.sc_tree_model, index
-                    )
-                elif item.suffix == ".wem":
-                    self.starfab.play_wem(item.path.stem)
-                elif item.suffix.lower() == ".dcb":
-                    self.starfab.show_dcb_view()
-                else:
-                    self._handle_item_action(item, self.sc_tree_model, index)
-        except Exception as e:
-            ScrollMessageBox.critical(self, "Error opening file", f"{e}")
+        with sentry_sdk.push_scope() as scope:
+            try:
+                if item is not None:
+                    scope.set_context('starfab.p4k_widget.item', {
+                        'name': item.name,
+                        'path': item.path.as_posix(),
+                        'archive': item.archive,
+                    })
+                    if ".dds" in item.name:
+                        basename = f'{item.name.split(".dds")[0]}.dds'
+                        items = [
+                            _
+                            for _ in item.parent.children
+                            if _.path.name.startswith(basename)
+                        ]
+                        self._handle_item_action(
+                            {i.path.as_posix(): i for i in items}, self.sc_tree_model, index
+                        )
+                    elif item.suffix == ".wem":
+                        self.starfab.play_wem(item.path.stem)
+                    elif item.suffix.lower() == ".dcb":
+                        self.starfab.show_dcb_view()
+                    else:
+                        self._handle_item_action(item, self.sc_tree_model, index)
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
+                logger.exception(e)
+                ScrollMessageBox.critical(self, "Error opening file", f"{e}")
 
     def _handle_p4k_loaded(self):
         self.proxy_model.setSourceModel(self.sc_tree_model)
