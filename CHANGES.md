@@ -3,6 +3,17 @@
 
 See current releases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
 
+## [0.4.4](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.4)
+
+- Added (optional) error reporting. The dialog can be disabled in settings.
+- Added `Model Asset Extractor` "converter" that will automatically select the associated `mtl` and textures for each
+  model in the extraction task. Not recommended while extracting the entire p4k as this will just increase the overhead
+- Added initial object container view widget
+- Numerous Blender importer shader/material/texture improvements and fixes
+- Number of bug fixes throughout StarFab
+- Fixed icons disappearing
+- General logging improvements
+
 ## [0.4.3](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.3)
 
 - Fixed texture conversion issue when exporting directly from the p4k

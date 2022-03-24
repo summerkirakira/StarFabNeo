@@ -17,24 +17,28 @@ from starfab.gui.widgets.common import CollapsableWidget
 from starfab.plugins import plugin_manager
 from starfab.hooks import COLLAPSABLE_OBJECT_CONTAINER_WIDGET
 
-
 SUPPORTED_OBJECT_CONTAINER_FILE_FORMATS = [
     ".socpak",
 ]
 
 
 def widget_for_attr(name, value):
+    widget = qtw.QWidget()
     if isinstance(value, dict):
-        widget = qtw.QFormLayout()
+        layout = qtw.QFormLayout()
         for k, v in sorted(value.items(), key=lambda _: _[0].casefold()):
-            widget.addRow(k, widget_for_attr(k, v))
+            layout.addRow(k, widget_for_attr(k, v))
     elif isinstance(value, list):
-        widget = qtw.QFormLayout()
+        layout = qtw.QFormLayout()
         for i, v in enumerate(value):
-            widget.addRow(str(i), widget_for_attr(i, v))
+            layout.addRow(str(i), widget_for_attr(i, v))
     else:
-        widget = qtw.QLineEdit(str(value))
-        widget.setReadOnly(True)
+        layout = qtw.QVBoxLayout()
+        l = qtw.QLineEdit(str(value))
+        l.setReadOnly(True)
+        layout.addWidget(l)
+    layout.setContentsMargins(0, 0, 0, 0)
+    widget.setLayout(layout)
     return widget
 
 
@@ -44,9 +48,8 @@ class LazyObjectContainerWidget(CollapsableWidget):
         self.attrs['child_id'] = child_id
         self.name = self.attrs['name']
         self.label = self.attrs.get('label', self.attrs.get('entityName', self.name))
-        super().__init__(self.label, expand=False, *args, **kwargs)
+        super().__init__(self.label, expand=False, layout=qtw.QVBoxLayout, *args, **kwargs)
         self._loaded = False
-        self.content.setLayout(qtw.QVBoxLayout())
 
     def expand(self):
         if not self._loaded:
@@ -58,11 +61,10 @@ class LazyObjectContainerWidget(CollapsableWidget):
 
 class LazyContainerChildrenWidget(CollapsableWidget):
     def __init__(self, object_container, additional_children=None, *args, **kwargs):
-        super().__init__(f"Children", expand=False, *args, **kwargs)
+        super().__init__(f"Children", expand=False, layout=qtw.QVBoxLayout, *args, **kwargs)
         self.additional_children = additional_children or {}
         self.object_container = object_container
         self._loaded = False
-        self.content.setLayout(qtw.QVBoxLayout())
 
     def expand(self):
         if not self._loaded:
@@ -82,6 +84,17 @@ class ObjectContainerView(qtw.QWidget):
 
         self.extra_attrs = extra_attrs or {}
         self.starfab = get_starfab()
+        self.children_widget = None
+
+        if no_scroll:
+            self.scrollArea.takeWidget()
+            self.chunked_obj_view_layout.addWidget(self.obj_content_widget)
+            self.scrollArea.setVisible(False)
+        else:
+            self.scrollArea.setWidgetResizable(True)
+
+        # TODO: support dynamically adding actions for object containers from plugins
+        self.obj_actions_frame.setVisible(False)
 
         if isinstance(info_or_path, (str, Path)):
             self.info = None
@@ -92,7 +105,11 @@ class ObjectContainerView(qtw.QWidget):
             self.path = self.info.path
             self.name = self.info.name
 
-        self.object_container = self.starfab.sc.oc_manager.load_socpak(self.path.as_posix())
+        try:
+            self.object_container = self.starfab.sc.oc_manager.load_socpak(self.path.as_posix())
+        except KeyError:
+            self.object_container = None
+
         if self.object_container is None:
             l = qtw.QLineEdit(self.path.as_posix())
             l.setReadOnly(True)
@@ -120,20 +137,10 @@ class ObjectContainerView(qtw.QWidget):
         for attr in attrs_to_show:
             self.obj_info.addRow(attr, widget_for_attr(attr, attrs[attr]))
 
-        if no_scroll:
-            self.chunked_obj_view_layout.addWidget(self.obj_content_widget)
-            self.chunked_obj_view_layout.removeWidget(self.scrollArea)
-            # self.obj_content_widget.setParent(self.chunked_obj_view)
-            # self.scrollArea.setVisible(False)
-        else:
-            self.scrollArea.setWidgetResizable(True)
-
-        # TODO: support dynamically adding actions for chunked objects from plugins
-        self.obj_actions_frame.setVisible(False)
-
-        self.obj_widget = LazyContainerChildrenWidget(self.object_container, additional_children=additional_children,
-                                                      parent=self)
-        self.obj_content.insertWidget(self.obj_content.count() - 1, self.obj_widget)
+        self.children_widget = LazyContainerChildrenWidget(self.object_container,
+                                                           additional_children=additional_children,
+                                                           parent=self.obj_content_widget)
+        self.obj_content.insertWidget(self.obj_content.count() - 1, self.children_widget)
 
         self.extra_widgets = []
 
@@ -147,12 +154,13 @@ class ObjectContainerView(qtw.QWidget):
             pass
 
         for widget in reversed(self.extra_widgets):
-            self.obj_widget.layout().insertWidget(0, widget)
+            self.children_widget.layout().insertWidget(0, widget)
 
-        self.obj_widget.show()
+        self.children_widget.show()
 
     def deleteLater(self) -> None:
-        # self.obj_widget.deleteLater()
+        if self.children_widget is not None:
+            self.children_widget.deleteLater()
         for w in self.extra_widgets:
             w.deleteLater()
         super().deleteLater()
