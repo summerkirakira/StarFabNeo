@@ -392,8 +392,40 @@
             <property name="spacing">
              <number>9</number>
             </property>
-            <item row="2" column="1">
-             <widget class="QComboBox" name="cryxmlbFormat">
+            <item row="1" column="0">
+             <widget class="QLabel" name="cryxmlbFormatLabel">
+              <property name="text">
+               <string>CryXMLb Format</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="opt_imgFmt">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <item>
+               <property name="text">
+                <string>png</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>tif</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>tga</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="opt_cryxmlbFmt">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>1</horstretch>
@@ -425,51 +457,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="opt_imgFmt">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>1</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <item>
-               <property name="text">
-                <string>png</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>tif</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>tga</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="checkBox_12">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>1</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Automatically convert textures</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="cryxmlbFormatLabel">
-              <property name="text">
-               <string>CryXMLb Format</string>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
          </item>
@@ -482,10 +469,13 @@
             <property name="spacing">
              <number>9</number>
             </property>
-            <item row="2" column="1">
-             <widget class="QCheckBox" name="checkBox_8">
-              <property name="text">
-               <string>Create sub-folder for blueprint entities</string>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="opt_Exports_Directory">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
              </widget>
             </item>
@@ -496,27 +486,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="lineEdit_Exports_Directory">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QCheckBox" name="checkBox_9">
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="opt_autoOpenExportFolder">
               <property name="text">
                <string>Automatically open folder after completion</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QCheckBox" name="checkBox_10">
-              <property name="text">
-               <string>Generate Extracted Models Log</string>
               </property>
              </widget>
             </item>

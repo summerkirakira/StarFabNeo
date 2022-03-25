@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>283</width>
-    <height>372</height>
+    <height>424</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -220,7 +220,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="opt_Verbose">
+          <widget class="QCheckBox" name="opt_autoOpenExportFolder">
+           <property name="text">
+            <string>Open folder after completion</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="opt_verbose">
            <property name="text">
             <string>Verbose Logging</string>
            </property>

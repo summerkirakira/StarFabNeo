@@ -6,19 +6,47 @@ from pathlib import Path
 from starfab import CONTRIB_DIR
 from starfab.gui import qtg, qtw, qtc
 
+
 settings_defaults = {
+    "theme": "Monokai Dimmed",
+    "defaultWorkspace": "data",
+    "checkForUpdates": "true",
+    "enableErrorReporting": "true",
     "ignoreUpdate": "",
     "updateRemindLater": "",
-    "checkForUpdates": "true",
     "autoOpenRecent": "false",
-    "theme": "Monokai Dimmed",
-    "cryxmlbConversionFormat": "xml",
+
+    # external tools
     "external_tools/cgf-converter": "",
     "external_tools/texconv": "",
-    "defaultWorkspace": "data",
-    "enable_error_reporting": "true",
+
+    # conversion
+    "convert/cryxml_fmt": "xml",
+    "convert/img_fmt": "png",
+
+    # exporting
     "exportDirectory": str(qtc.QDir.homePath() + "/Desktop/StarFab_Exports"),
+    "extract/auto_open_folder": "true",
+
+    # editor
+    "editor/theme": "Monokai",
+    "editor/key_bindings": "Default",
+    "editor/word_wrap": "Off",
+    "editor/line_numbers": "true",
+
+    # extract
+    "extract/extract_model_assets": "false",
+    "extract/auto_unsplit_textures": "true",
+    "extract/auto_convert_textures": "true",
+    "extract/auto_convert_sounds": "true",
+    "extract/auto_convert_models": "false",
+    "extract/create_sub_folder": "false",
+    "extract/gen_model_log": "false",
+    "extract/overwrite_existing": "false",
+    "extract/verbose": "false",
+
 }
+
 
 first_run_flags = {
     (1, "success"),  # no action needed
@@ -39,12 +67,16 @@ class StarFabSettings(qtc.QSettings):
 
         # TODO: combine first run flags with settings init to better serve initial interactions as needed,
         #       for example check for updates, create default config, etc.
-        if self.value("theme") is None or self.value("first_run") is None:
+        if self.value("first_run") is None:
             self.configure_defaults()
             self.setValue("first_run", "1")
 
     def _settings_updated(self):
         self.settings_updated.emit()
+
+    def value(self, key: str, defaultValue: typing.Optional[typing.Any] = None, *args, **kwargs) -> object:
+        default = defaultValue or settings_defaults.get(key)
+        return super().value(key, default, *args, **kwargs)
 
     def setValue(self, key: str, value: typing.Any) -> None:
         super().setValue(key, value)

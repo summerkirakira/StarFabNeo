@@ -56,7 +56,7 @@ class ContentView(qtw.QWidget):
         clear_selections_btn.clicked.connect(self.clear_assets_selections)
         self.tab_Assets.layout().addWidget(clear_selections_btn)
 
-        self.export_options = ExportOptionsWidget(parent=self)
+        self.export_options = ExportOptionsWidget(exclude=['extract_model_assets'], parent=self)
         self.options_layout.insertWidget(0, self.export_options)
 
         self.audio_tree = AudioTreeWidget(starfab=self.starfab, parent=self)

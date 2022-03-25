@@ -9,10 +9,11 @@ from datetime import timedelta
 from functools import cached_property
 
 from scdatatools.p4k import P4KInfo
+from scdatatools.utils import parse_bool
 
 from starfab import get_starfab
-from starfab.gui import qtc, qtw
 from starfab.log import getLogger
+from starfab.gui import qtc, qtw, qtg
 from starfab.utils import show_file_in_filemanager
 from starfab.gui.utils import icon_provider, icon_for_path
 
@@ -67,9 +68,14 @@ class ExportRunner(qtc.QRunnable):
             task_id, f"Extracting to {self.outdir}", 0, len(self.p4k_files)
         )
 
+        t = time.time()
         def _monitor(msg, progress=None, total=None, level=logging.INFO, exc_info=None):
+            nonlocal t
             logger.log(level, msg)
             self.starfab.update_status_progress.emit(task_id, progress, 0, total, "")
+            if (time.time() - t) > 1.0:
+                t = time.time()
+                qtg.QGuiApplication.processEvents()
 
         try:
             self.starfab.sc_manager.sc.p4k.extractall(
@@ -87,7 +93,11 @@ class ExportRunner(qtc.QRunnable):
             self.starfab.task_finished.emit(task_id, False, f"Error during export: {e}")
         else:
             self.signals.finished.emit({"error": ""})
-            show_file_in_filemanager(Path(self.outdir).absolute())
+            open_dir = parse_bool(
+                self.export_options.get('auto_open_folder', self.starfab.settings.value('extract/auto_open_folder'))
+            )
+            if open_dir:
+                show_file_in_filemanager(Path(self.outdir).absolute())
             self.starfab.task_finished.emit(task_id, True, "")
 
 

@@ -46,97 +46,83 @@ class SettingsDialog(qtw.QDialog):
 
         self._parse_settings()
 
-        open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_DirIcon)
-        cgfconvfind = self.cgfconverterPath.addAction(
-            open_dir_icon, qtw.QLineEdit.TrailingPosition
-        )
-        cgfconvfind.triggered.connect(
-            partial(self._handle_path_chooser, self.cgfconverterPath)
-        )
-
-        texconvfind = self.texconvPath.addAction(
-            open_dir_icon, qtw.QLineEdit.TrailingPosition
-        )
-        texconvfind.triggered.connect(
-            partial(self._handle_path_chooser, self.texconvPath)
-        )
-
-        exportsdirfind = self.lineEdit_Exports_Directory.addAction(
-            open_dir_icon, qtw.QLineEdit.TrailingPosition
-        )
-        exportsdirfind.triggered.connect(
-            partial(
-                self._handle_path_chooser, self.lineEdit_Exports_Directory, dir=True
-            )
-        )
+        # left side
+        self.theme.currentTextChanged.connect(self._save_settings)
         self.workspaceBtnGroup.buttonClicked.connect(self._save_settings)
-
         self.checkForUpdates.stateChanged.connect(self._save_settings)
         self.enableErrorReporting.stateChanged.connect(self._save_settings)
         self.autoOpenMostRecent.stateChanged.connect(self._save_settings)
-        self.theme.currentTextChanged.connect(self._save_settings)
-        self.cryxmlbFormat.currentTextChanged.connect(self._save_settings)
-        self.cgfconverterPath.textChanged.connect(self._save_settings)
-        self.texconvPath.textChanged.connect(self._save_settings)
-        self.lineEdit_Exports_Directory.textChanged.connect(self._save_settings)
 
-        self.editorTheme.currentTextChanged.connect(self._save_settings)
-        self.editorKeybindings.currentTextChanged.connect(self._save_settings)
-        self.editorWordWrap.currentTextChanged.connect(self._save_settings)
-        self.editorShowLineNumbers.stateChanged.connect(self._save_settings)
-
-        self.buttonBox.button(qtw.QDialogButtonBox.RestoreDefaults).clicked.connect(
-            self._reset_settings
-        )
-        self.buttonBox.accepted.connect(self.close)
-
-    def _parse_settings(self):
-        default_ws = self.starfab.settings.value('defaultWorkspace')
-        self.defaultWS_Data.setChecked(default_ws == 'data')
-        self.defaultWS_Content.setChecked(default_ws == 'content')
-
-        self.checkForUpdates.setChecked(
-            parse_bool(self.starfab.settings.value("checkForUpdates"))
-        )
-        self.enableErrorReporting.setChecked(
-            parse_bool(self.starfab.settings.value("enableErrorReporting", True))
-        )
-        self.autoOpenMostRecent.setChecked(
-            parse_bool(self.starfab.settings.value("autoOpenRecent"))
-        )
-        self.lineEdit_Exports_Directory.setText(
-            self.starfab.settings.value("exportDirectory")
-        )
-        theme = self.starfab.settings.value("theme")
-        if theme in list(self.themes.values()):
-            self.theme.setCurrentText(next(iter(n for n, f in self.themes.items() if f == theme)))
-        elif theme in self.themes:
-            self.theme.setCurrentText(theme)
-        self.cryxmlbFormat.setCurrentText(
-            self.starfab.settings.value("cryxmlbConversionFormat")
-        )
-        self.cgfconverterPath.setText(
-            self.starfab.settings.value("external_tools/cgf-converter")
-        )
-        self.texconvPath.setText(self.starfab.settings.value("external_tools/texconv"))
+        # external tools
+        open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_DirIcon)
+        cgfconvfind = self.cgfconverterPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        cgfconvfind.triggered.connect(partial(self._handle_path_chooser, self.cgfconverterPath))
+        texconvfind = self.texconvPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        texconvfind.triggered.connect(partial(self._handle_path_chooser, self.texconvPath))
 
         self.starfab.blender_manager.updated.connect(self._sync_blender)
         self.blenderConfigButton.setIcon(qta.icon("msc.settings-gear"))
         self.blenderConfigButton.clicked.connect(self._config_blender_paths)
         self.blenderComboBox.activated.connect(self._update_blender)
 
-        self.editorTheme.setCurrentText(
-            self.starfab.settings.value("editor/theme", editor.DEFAULT_THEME)
+        self.cgfconverterPath.textChanged.connect(self._save_settings)
+        self.texconvPath.textChanged.connect(self._save_settings)
+
+        # conversion
+        self.opt_cryxmlbFmt.currentTextChanged.connect(self._save_settings)
+        self.opt_imgFmt.currentTextChanged.connect(self._save_settings)
+
+        # export
+        self.opt_Exports_Directory.textChanged.connect(self._save_settings)
+        exportsdirfind = self.opt_Exports_Directory.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        exportsdirfind.triggered.connect(
+            partial(self._handle_path_chooser, self.opt_Exports_Directory, dir=True)
         )
-        self.editorKeybindings.setCurrentText(
-            self.starfab.settings.value("editor/key_bindings", 'Default')
+        self.opt_autoOpenExportFolder.stateChanged.connect(self._save_settings)
+
+        # editor
+        self.editorTheme.currentTextChanged.connect(self._save_settings)
+        self.editorKeybindings.currentTextChanged.connect(self._save_settings)
+        self.editorWordWrap.currentTextChanged.connect(self._save_settings)
+        self.editorShowLineNumbers.stateChanged.connect(self._save_settings)
+
+        self.buttonBox.button(qtw.QDialogButtonBox.RestoreDefaults).clicked.connect(self._reset_settings)
+        self.buttonBox.accepted.connect(self.close)
+
+    def _parse_settings(self):
+        # left side
+        theme = self.starfab.settings.value("theme")
+        if theme in list(self.themes.values()):
+            self.theme.setCurrentText(next(iter(n for n, f in self.themes.items() if f == theme)))
+        elif theme in self.themes:
+            self.theme.setCurrentText(theme)
+        default_ws = self.starfab.settings.value('defaultWorkspace')
+        self.defaultWS_Data.setChecked(default_ws == 'data')
+        self.defaultWS_Content.setChecked(default_ws == 'content')
+
+        self.checkForUpdates.setChecked(parse_bool(self.starfab.settings.value("checkForUpdates")))
+        self.enableErrorReporting.setChecked(parse_bool(self.starfab.settings.value("enableErrorReporting")))
+        self.autoOpenMostRecent.setChecked(parse_bool(self.starfab.settings.value("autoOpenRecent")))
+
+        # external tools
+        self.cgfconverterPath.setText(self.starfab.settings.value("external_tools/cgf-converter"))
+        self.texconvPath.setText(self.starfab.settings.value("external_tools/texconv"))
+
+        # conversion
+        self.opt_cryxmlbFmt.setCurrentText(self.starfab.settings.value("convert/cryxml_fmt"))
+        self.opt_imgFmt.setCurrentText(self.starfab.settings.value("convert/img_fmt"))
+
+        # exporting
+        self.opt_Exports_Directory.setText(self.starfab.settings.value("exportDirectory"))
+        self.opt_autoOpenExportFolder.setChecked(
+            parse_bool(self.starfab.settings.value("extract/auto_open_folder"))
         )
-        self.editorWordWrap.setCurrentText(
-            self.starfab.settings.value("editor/word_wrap", 'Off')
-        )
-        self.editorShowLineNumbers.setChecked(
-            parse_bool(self.starfab.settings.value("editor/line_numbers", True))
-        )
+
+        # editor
+        self.editorTheme.setCurrentText(self.starfab.settings.value("editor/theme"))
+        self.editorKeybindings.setCurrentText(self.starfab.settings.value("editor/key_bindings"))
+        self.editorWordWrap.setCurrentText(self.starfab.settings.value("editor/word_wrap"))
+        self.editorShowLineNumbers.setChecked(parse_bool(self.starfab.settings.value("editor/line_numbers")))
 
         self._sync_blender()
 
@@ -179,47 +165,32 @@ class SettingsDialog(qtw.QDialog):
 
     def _save_settings(self, *args, **kwargs):
         logger.debug("Saving settings")
-        self.starfab.settings.setValue(
-            "defaultWorkspace", 'data' if self.defaultWS_Data.isChecked() else 'content'
-        )
-        self.starfab.settings.setValue(
-            "checkForUpdates", self.checkForUpdates.isChecked()
-        )
-        self.starfab.settings.setValue(
-            "enableErrorReporting", self.enableErrorReporting.isChecked()
-        )
-        self.starfab.settings.setValue(
-            "autoOpenRecent", self.autoOpenMostRecent.isChecked()
-        )
-        self.starfab.settings.setValue(
-            "cyxmlbConversionFormat", self.cryxmlbFormat.currentText()
-        )
+
+        # left side
         if self.theme.currentText() != self.starfab.settings.value("theme", "Monokai Dimmed"):
             self._update_theme(self.theme.currentText())
-        self.starfab.settings.setValue(
-            "cryxmlbConversionFormat", self.cryxmlbFormat.currentText()
-        )
-        self.starfab.settings.setValue(
-            "external_tools/cgf-converter", self.cgfconverterPath.text()
-        )
-        self.starfab.settings.setValue(
-            "external_tools/texconv", self.texconvPath.text()
-        )
-        self.starfab.settings.setValue(
-            "exportDirectory", self.lineEdit_Exports_Directory.text()
-        )
-        self.starfab.settings.setValue(
-            "editor/theme", self.editorTheme.currentText()
-        )
-        self.starfab.settings.setValue(
-            "editor/key_bindings", self.editorKeybindings.currentText()
-        )
-        self.starfab.settings.setValue(
-            "editor/word_wrap", self.editorWordWrap.currentText()
-        )
-        self.starfab.settings.setValue(
-            "editor/line_numbers", self.editorShowLineNumbers.isChecked()
-        )
+        self.starfab.settings.setValue("defaultWorkspace", 'data' if self.defaultWS_Data.isChecked() else 'content')
+        self.starfab.settings.setValue("checkForUpdates", self.checkForUpdates.isChecked())
+        self.starfab.settings.setValue("enableErrorReporting", self.enableErrorReporting.isChecked())
+        self.starfab.settings.setValue("autoOpenRecent", self.autoOpenMostRecent.isChecked())
+
+        # external tools
+        self.starfab.settings.setValue("external_tools/cgf-converter", self.cgfconverterPath.text())
+        self.starfab.settings.setValue("external_tools/texconv", self.texconvPath.text())
+
+        # conversion
+        self.starfab.settings.setValue("convert/cryxml_fmt", self.opt_cryxmlbFmt.currentText())
+        self.starfab.settings.setValue("convert/img_fmt", self.opt_imgFmt.currentText())
+
+        # exporting
+        self.starfab.settings.setValue("exportDirectory", self.opt_Exports_Directory.text())
+        self.starfab.settings.setValue("export/auto_open_folder", self.opt_autoOpenExportFolder.isChecked())
+
+        # editor
+        self.starfab.settings.setValue("editor/theme", self.editorTheme.currentText())
+        self.starfab.settings.setValue("editor/key_bindings", self.editorKeybindings.currentText())
+        self.starfab.settings.setValue("editor/word_wrap", self.editorWordWrap.currentText())
+        self.starfab.settings.setValue("editor/line_numbers", self.editorShowLineNumbers.isChecked())
 
         self._parse_settings()
 

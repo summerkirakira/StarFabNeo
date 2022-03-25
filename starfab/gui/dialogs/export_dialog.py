@@ -30,7 +30,9 @@ class P4KExportDialog(qtw.QDialog):
         self.setFixedWidth(400)
 
         layout = qtw.QVBoxLayout()
-        self.export_options = ExportOptionsWidget()
+        self.export_options = ExportOptionsWidget(
+            exclude=['create_sub_folder', 'gen_model_log']
+        )
         layout.addWidget(self.export_options)
 
         btns = qtw.QDialogButtonBox()
