@@ -1,20 +1,17 @@
-import json
 import typing
-from pathlib import Path
 from functools import partial
+from pathlib import Path
 
-from qtpy import uic
-from qtpy.QtCore import Signal, Slot
 import qtawesome as qta
+from qtpy import uic
+
 import qtvscodestyle as qtvsc
-
 from scdatatools.utils import parse_bool
-
-from starfab.log import getLogger
 from starfab.gui import qtw
-from starfab.resources import RES_PATH
 from starfab.gui.dialogs import list_dialog
 from starfab.gui.widgets import editor
+from starfab.log import getLogger
+from starfab.resources import RES_PATH
 
 if typing.TYPE_CHECKING:
     from starfab.app import StarFab
@@ -131,12 +128,17 @@ class SettingsDialog(qtw.QDialog):
             _['path'].parent.as_posix() for _ in self.starfab.blender_manager.available_versions.values()
         ]
         dlg = list_dialog.QListDialog('Blender Paths', items=paths, parent=self)
-        if dlg.exec_() == qtw.QDialog.Accepted:
-            paths = [Path(_) for _ in dlg.items()]
-            self.starfab.blender_manager.set_additional_paths.emit(paths)
-            self.blenderComboBox.clear()
-            self.blenderComboBox.setEnabled(False)
-            self.blenderComboBox.addItems('...checking')
+        try:
+            if dlg.exec_() == qtw.QDialog.Accepted:
+                paths = [Path(_) for _ in dlg.items()]
+                self.starfab.blender_manager.set_additional_paths.emit(paths)
+                self.blenderComboBox.clear()
+                self.blenderComboBox.setEnabled(False)
+                self.blenderComboBox.addItems('...checking')
+        except KeyboardInterrupt:
+            pass
+        finally:
+            dlg.destroy()
 
     def _update_blender(self):
         preferred = self.blenderComboBox.currentText()
