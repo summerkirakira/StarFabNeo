@@ -25,7 +25,9 @@ class DCBSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
         if not self._filter and not self.additional_filters:
             return True
 
-        if parent := source_parent.internalPointer():
+        if (parent := source_parent.internalPointer()) is None:
+            parent = getattr(self.sourceModel(), 'root_item')
+        if parent:
             try:
                 item = parent.children[source_row]
             except IndexError:
