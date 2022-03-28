@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import threading
 import logging.config
@@ -76,6 +77,7 @@ class ThreadLogger:
 def getLogger(name):
     return ThreadLogger(name)
 
+
 logger = getLogger("starfab")
 
 
@@ -116,26 +118,26 @@ DEFAULT_LOGGING_CONFIG = {
     },
     "loggers": {
         "": {  # root logger
-            "handlers": ["console", "console_err", "logfile"],
+            "handlers": ["console_err", "logfile"],
             "level": "INFO",
             "propagate": False,
         },
         "sentry": {
-            "handlers": ["console", "console_err", "logfile"],
+            "handlers": ["console_err", "logfile"],
             "level": LOG_OVERRIDE
                      or os.environ.get("STARFAB_LOG", "")
                      or DEFAULT_LOG_LEVEL,
             "propagate": False,
         },
         "starfab": {
-            "handlers": ["console", "console_err", "logfile"],
+            "handlers": ["console_err", "logfile"],
             "level": LOG_OVERRIDE
             or os.environ.get("STARFAB_LOG", "")
             or DEFAULT_LOG_LEVEL,
             "propagate": False,
         },
         "scdatatools": {
-            "handlers": ["console", "console_err", "logfile"],
+            "handlers": ["console_err", "logfile"],
             "level": LOG_OVERRIDE
             or os.environ.get("SCDT_LOG", "")
             or DEFAULT_LOG_LEVEL,
@@ -146,6 +148,14 @@ DEFAULT_LOGGING_CONFIG = {
 
 
 def setup_logging():
+    if sys.executable.lower().endswith("pythonw.exe") or sys.executable.lower().endswith("starfab.exe"):
+        # on windows - if we're running as a "window" (without a console) redirect stdout/stderr to files
+        sys.stdout = open("starfab.out", "w")
+        sys.stderr = open("starfab.err", "w")
+    else:
+        for logger in DEFAULT_LOGGING_CONFIG['loggers']:
+            DEFAULT_LOGGING_CONFIG['loggers'][logger]['handlers'].extend(['console', 'console_err'])
+
     logging.config.dictConfig(DEFAULT_LOGGING_CONFIG)
     # logging.debug('test')
     # logging.info('test')

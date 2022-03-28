@@ -115,18 +115,7 @@ class ContentView(qtw.QWidget):
         edir = qtw.QFileDialog.getExistingDirectory(self.starfab, "Export To...", edir)
 
         if Path(edir).is_dir():
-            options = {
-                "cgf_converter_bin": get_cgf_converter(),
-                "ww2ogg": get_ww2ogg(),
-                "revorb": get_revorb(),
-                "tex_converter": image_converter.converter,
-                "tex_converter_bin": image_converter.converter_bin,
-            }
-            options.update(self.export_options.get_options())
-            options["auto_convert_textures"] = (
-                "ddstexture_converter" in options["converters"]
-            )
-            options["auto_convert_models"] = "cgf_converter" in options["converters"]
+            options = self.export_options.get_options()
 
             dlg = BlueprintExportLog(
                 starfab=self.starfab,

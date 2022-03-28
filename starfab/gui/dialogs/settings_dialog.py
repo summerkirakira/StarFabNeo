@@ -205,7 +205,7 @@ class SettingsDialog(qtw.QDialog):
         if not dir:
             new_path = qtw.QFileDialog.getOpenFileName(
                 self, "Choose a file", cur_value.as_posix()
-            )
+            )[0]
         else:
             new_path = qtw.QFileDialog.getExistingDirectory(
                 self, "Choose a directory", cur_value.as_posix()

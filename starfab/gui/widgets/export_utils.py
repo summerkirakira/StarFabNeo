@@ -2,9 +2,12 @@ import typing
 
 from scdatatools.utils import parse_bool
 
+from starfab import settings
 from starfab.gui import qtc, qtw, qtg
 from starfab.resources import RES_PATH
+from starfab.utils import image_converter
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
+
 
 EXPORT_SETTINGS = {
     # {scdatatools reference}: [ {widget_name}, {settings_key} ]
@@ -56,6 +59,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
                     w.setCurrentText(str(self.starfab.settings.value(EXPORT_SETTINGS[option][1])).lower())
         finally:
             self._resetting = False
+        self.on_opt_autoConvertTextures_stateChanged()
 
     def save_settings(self):
         if self._resetting:
@@ -77,18 +81,32 @@ class ExportOptionsWidget(StarFabStaticWidget):
             elif isinstance(w, qtw.QComboBox):
                 opts[option] = w.currentText()
 
+        # TODO: when audio converters come into play
+        # opts.update({
+        #     "ww2ogg_bin": settings.get_ww2ogg(),
+        #     "revorb_bin": settings.get_revorb(),
+        # })
+
         if opts.get('extract_model_assets', False):
             opts["converters"].append("model_assets_extractor")
         if opts.get('cryxml_fmt').lower() != "cryxmlb":
             opts["converters"].append("cryxml_converter")
+            opts["cryxml_converter_fmt"] = settings.settings.value('convert/cryxml_fmt')
         if opts.get('auto_unsplit_textures', False):
             opts["converters"].append("ddstexture_converter")
+            opts.update({
+                "ddstexture_converter_unsplit": True,
+                "ddstexture_converter_converter": image_converter.converter,
+                "ddstexture_converter_converter_bin": image_converter.converter_bin,
+                "ddstexture_converter_replace": opts.get('overwrite', False),
+            })
             if opts.get('auto_convert_textures', False):
-                opts["convert_dds_fmt"] = opts.get('img_fmt', self.starfab.settings.value('convert/img_fmt'))
+                opts["ddstexture_converter_fmt"] = opts.get('img_fmt', self.starfab.settings.value('convert/img_fmt'))
             else:
-                opts["convert_dds_fmt"] = "dds"
+                opts["ddstexture_converter_fmt"] = "dds"
         if opts.get('auto_convert_models', False):
             opts["converters"].append("cgf_converter")
+            opts["cgf_converter_bin"] = settings.get_cgf_converter()
 
         return opts
 

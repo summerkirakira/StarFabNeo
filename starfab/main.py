@@ -52,13 +52,6 @@ def main():
     sys._excepthook = sys.excepthook
     sys.excepthook = exception_hook
 
-    if sys.executable.lower().endswith(
-        "pythonw.exe"
-    ) or sys.executable.lower().endswith("starfab.exe"):
-        # on windows - if we're running as a "window" (wihtout a console) redirect stdout/stderr to files
-        sys.stdout = open("starfab.out", "w")
-        sys.stderr = open("starfab.err", "w")
-
     logger.info(f"StarFab {__version__}")
     if sys.platform == "win32":
         appid = "scdatatools.starfab"
