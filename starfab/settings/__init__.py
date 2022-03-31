@@ -1,11 +1,10 @@
-import sys
 import shutil
+import sys
 import typing
 from pathlib import Path
 
 from starfab import CONTRIB_DIR
-from starfab.gui import qtg, qtw, qtc
-
+from starfab.gui import qtc
 
 settings_defaults = {
     "theme": "Monokai Dimmed",
@@ -75,7 +74,7 @@ class StarFabSettings(qtc.QSettings):
         self.settings_updated.emit()
 
     def value(self, key: str, defaultValue: typing.Optional[typing.Any] = None, *args, **kwargs) -> object:
-        default = defaultValue or settings_defaults.get(key)
+        default = settings_defaults.get(key) if defaultValue is None else defaultValue
         return super().value(key, default, *args, **kwargs)
 
     def setValue(self, key: str, value: typing.Any) -> None:
