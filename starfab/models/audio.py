@@ -3,9 +3,9 @@ from functools import cached_property
 from pathlib import Path
 
 from starfab import get_starfab
-from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
+from starfab.gui import qtc, qtg
 from starfab.gui.utils import icon_provider
+from starfab.log import getLogger
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeModelLoader,
@@ -15,7 +15,6 @@ from starfab.models.common import (
     SKIP_MODELS,
 )
 from starfab.settings import get_ww2ogg, get_revorb
-
 
 logger = getLogger(__name__)
 SCAUDIOVIEWW_COLUMNS = ["Name"]
@@ -151,7 +150,7 @@ class AudioTreeModel(ThreadLoadedPathArchiveTreeModel):
 
         self._sc_manager.p4k_model.loaded.connect(self._on_p4k_loaded)
         self._sc_manager.p4k_model.unloading.connect(
-            self._on_p4k_unloading, qtc.Qt.BlockingQueuedConnection
+            self._on_p4k_unloading,  # qtc.Qt.BlockingQueuedConnection
         )
 
     @qtc.Slot()

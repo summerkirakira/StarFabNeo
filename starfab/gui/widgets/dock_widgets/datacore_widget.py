@@ -1,25 +1,23 @@
-import os
-import time
-import shutil
-import typing
 import operator
-from pathlib import Path
+import os
+import shutil
+import time
+import typing
 from functools import partial
+from pathlib import Path
 
 from scdatatools.forge.dftypes import StructureInstance
-
 from starfab import get_starfab
 from starfab.gui import qtc, qtw, qtg
-from starfab.gui.widgets.dcbrecord import DCBRecordItemView
 from starfab.gui.widgets.common import TagBar
-from starfab.utils import show_file_in_filemanager, reload_starfab_modules
-from starfab.models.datacore import DCBSortFilterProxyModel, DCBItem
+from starfab.gui.widgets.dcbrecord import DCBRecordItemView
 from starfab.gui.widgets.dock_widgets.common import (
     StarFabSearchableTreeWidget,
     StarFabSearchableTreeFilterWidget,
 )
 from starfab.log import getLogger
-
+from starfab.models.datacore import DCBSortFilterProxyModel, DCBItem
+from starfab.utils import show_file_in_filemanager, reload_starfab_modules
 
 logger = getLogger(__name__)
 
@@ -154,6 +152,7 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         self.starfab.sc_manager.datacore_model.loaded.connect(
             self._handle_datacore_loaded
         )
+
         self.proxy_model.setFilterKeyColumn(3)
 
         self.ctx_manager.default_menu.addSeparator()

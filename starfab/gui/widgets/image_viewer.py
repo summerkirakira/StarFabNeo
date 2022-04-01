@@ -2,22 +2,19 @@
  Based on https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py
 """
 
-import sys
-import struct
 from io import BytesIO
-from pathlib import Path
 
 from PIL import Image, ImageQt
 from qtpy.QtCore import Slot, Signal
 
-from starfab.gui import qtc, qtg, qtw
-from starfab.utils import image_converter
-from starfab.gui.utils import ScrollMessageBox
-
 from scdatatools.engine.textures.dds import unsplit_dds
+from starfab.gui import qtc, qtg, qtw
+from starfab.gui.utils import ScrollMessageBox
+from starfab.utils import image_converter
 
 Image.init()
-SUPPORTED_IMG_FORMATS = list(Image.EXTENSION.keys())
+SUPPORTED_IMG_FORMATS = set(Image.EXTENSION.keys())
+SUPPORTED_IMG_FORMATS.update(['.' + bytes(_).decode('utf-8') for _ in qtg.QImageReader.supportedImageFormats()])
 DDS_CONV_FORMAT = "png"
 
 

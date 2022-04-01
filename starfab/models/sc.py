@@ -1,20 +1,18 @@
 import time
 import typing
-import logging
-import sentry_sdk
 from pathlib import Path
+
+import sentry_sdk
 
 from scdatatools.sc import StarCitizen
 from scdatatools.utils import log_time
-
+from starfab.gui import qtc
 from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
-
-from .p4k import P4KModel
-from .datacore import DCBModel
 from .audio import AudioTreeModel
-from .tag_database import TagDatabaseModel
+from .datacore import DCBModel
 from .localization import LocalizationModel
+from .p4k import P4KModel
+from .tag_database import TagDatabaseModel
 
 logger = getLogger(__name__)
 
@@ -66,6 +64,7 @@ class StarCitizenManager(qtc.QObject):
     preparing_to_unload = qtc.Signal()
     loaded = qtc.Signal()
     unloaded = qtc.Signal()
+    load_failed = qtc.Signal(str, object)
 
     opened = qtc.Signal()
     unload = qtc.Signal()
@@ -96,14 +95,14 @@ class StarCitizenManager(qtc.QObject):
         logger.debug(f"Unloading {self.sc.game_folder}")
         if self.sc is not None:
             self.preparing_to_unload.emit()
-        del self.sc
-        self.sc = None
         self.p4k_model.unload()
         self.datacore_model.unload()
         sentry_sdk.set_context("sc", {})
         sentry_sdk.set_tag('sc.version', None)
         sentry_sdk.set_tag('sc.mode', None)
         self.unloaded.emit()
+        del self.sc
+        self.sc = None
 
     @qtc.Slot()
     def _loaded(self):
@@ -119,7 +118,12 @@ class StarCitizenManager(qtc.QObject):
             self._unload()
 
         logger.debug(f"Opening {game_folder}")
-        self.sc = StarCitizen(game_folder, p4k_file)
+        try:
+            self.sc = StarCitizen(game_folder, p4k_file)
+        except Exception as e:
+            self.load_failed.emit(str(e), e)
+            return
+
         sc_dir = self.sc.p4k_file.parent.name
         mode = sc_dir if sc_dir in ['LIVE', 'PTU'] else 'unknown'
         sentry_sdk.set_context("sc", {

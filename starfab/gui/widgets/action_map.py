@@ -1,11 +1,8 @@
-import io
 import csv
-import copy
+import io
 
 from scdatatools.sc.config import ACTION_MAP_FIELD_NAMES
-
-from starfab import get_starfab
-from starfab.gui import qtc, qtw, qtg
+from starfab.gui import qtc, qtg
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
 from starfab.resources import RES_PATH
 
@@ -28,6 +25,7 @@ class ActionMapView(StarFabStaticWidget):
         self.debounce.timeout.connect(self._update_search)
 
         self.starfab.sc_manager.p4k_model.loaded.connect(self.handle_sc_opened)
+
         self.tree_model = None
         self.proxy_model = qtc.QSortFilterProxyModel(self)
         self.proxy_model.setRecursiveFilteringEnabled(True)

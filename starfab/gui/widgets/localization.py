@@ -1,9 +1,9 @@
-import io
 import csv
+import io
 
 from starfab.gui import qtc, qtg
-from starfab.resources import RES_PATH
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
+from starfab.resources import RES_PATH
 
 
 class LocalizationView(StarFabStaticWidget):
@@ -21,7 +21,7 @@ class LocalizationView(StarFabStaticWidget):
             self.handle_localization_loaded
         )
         self.starfab.sc_manager.localization_model.unloading.connect(
-            self.handle_localization_unloaded
+            self.handle_localization_unloaded  # , qtc.Qt.BlockingQueuedConnection
         )
 
         self.proxy_model = None

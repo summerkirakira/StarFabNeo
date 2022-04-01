@@ -1,26 +1,22 @@
 from pathlib import Path
-from distutils.util import strtobool
 
-from qtpy import uic
 import qtawesome as qta
+from qtpy import uic
 
-from starfab.gui import qtc, qtw, qtg
-from starfab.log import getLogger
-from starfab.resources import RES_PATH
-from starfab.settings import get_cgf_converter, get_ww2ogg, get_revorb
-from starfab.utils import image_converter
-from starfab.hooks import GEOMETRY_PREVIEW_WIDGET
-from starfab.plugins import plugin_manager
-
-from .soc_selector import SOCSelector
-from .entity_selector import EntitySelector
-from .weapon_selector import WeaponSelector
-from .prefab_selector import PrefabSelector
-from .vehicle_selector import VehicleSelector
-from .character_selector import CharacterSelector
-from .export_log import BlueprintExportLog, ExtractionItem
-from starfab.gui.widgets.export_utils import ExportOptionsWidget
+from starfab.gui import qtw
 from starfab.gui.widgets.dock_widgets.audio_widget import AudioTreeWidget
+from starfab.gui.widgets.export_utils import ExportOptionsWidget
+from starfab.hooks import GEOMETRY_PREVIEW_WIDGET
+from starfab.log import getLogger
+from starfab.plugins import plugin_manager
+from starfab.resources import RES_PATH
+from .character_selector import CharacterSelector
+from .entity_selector import EntitySelector
+from .export_log import BlueprintExportLog, ExtractionItem
+from .prefab_selector import PrefabSelector
+from .soc_selector import SOCSelector
+from .vehicle_selector import VehicleSelector
+from .weapon_selector import WeaponSelector
 
 logger = getLogger(__name__)
 
@@ -32,7 +28,6 @@ class ContentView(qtw.QWidget):
         uic.loadUi(
             str(RES_PATH / "ui" / "ContentView.ui"), self
         )  # Load the ui into self
-        # self.starfab.sc_manager.datacore_model.loaded.connect(self.handle_datacore_opened)
 
         self.starfab.close.connect(self.close)
 

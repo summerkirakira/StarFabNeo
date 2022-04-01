@@ -1,15 +1,12 @@
 import sys
-from os import path
-import os
 from pathlib import Path
 
 from qtpy import uic
 
-from starfab import CONTRIB_DIR
-from starfab.gui import qtg, qtw, qtc
-from starfab.resources import RES_PATH
 from scdatatools.launcher import get_installed_sc_versions, get_library_folder
 from scdatatools.utils import parse_bool
+from starfab.gui import qtg, qtw, qtc
+from starfab.resources import RES_PATH
 
 
 class RunDialog(qtw.QDialog):
@@ -89,9 +86,10 @@ class RunDialog(qtw.QDialog):
             else:
                 scdir = p4k_file_or_scdir.absolute()
 
-            if scdir.is_dir() and (scdir / "Data.p4k").is_file():
-                self.hide()
-                self.starfab.handle_file_open(scdir)
+            # if scdir.is_dir() and (scdir / "Data.p4k").is_file():
+            #     self.hide()
+            self.starfab.handle_file_open(scdir)
+            self.destroy()
         else:
             return
 

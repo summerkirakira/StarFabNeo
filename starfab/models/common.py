@@ -1,21 +1,20 @@
-import os
 import io
-import time
-import typing
 import logging
 import operator
-from pathlib import Path
+import os
+import time
+import typing
 from datetime import timedelta
 from functools import cached_property
+from pathlib import Path
 
 from scdatatools.p4k import P4KInfo
 from scdatatools.utils import parse_bool
-
 from starfab import get_starfab
-from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
-from starfab.utils import show_file_in_filemanager
+from starfab.gui import qtc, qtg
 from starfab.gui.utils import icon_provider, icon_for_path
+from starfab.log import getLogger
+from starfab.utils import show_file_in_filemanager
 
 logger = getLogger(__name__)
 
@@ -365,7 +364,7 @@ class PathArchiveTreeModelLoader(qtc.QRunnable):
         self.task_name = task_name or self.__class__.__name__
         self.task_status_message = task_status_msg
         self.signals.cancel.connect(
-            self._handle_cancel, qtc.Qt.BlockingQueuedConnection
+            self._handle_cancel,  # qtc.Qt.BlockingQueuedConnection
         )
         self.setAutoDelete(True)
 
@@ -539,10 +538,14 @@ class ThreadLoadedPathArchiveTreeModel(PathArchiveTreeModel):
     def unload(self):
         if self._loader is not None:
             self._loader.signals.cancel.emit()
+        self.unloading.emit()
         self.clear()
+        self.is_loaded = False
 
     def _loaded(self):
         self.is_loaded = True
+        del self._loader
+        self._loader = None
         self.loaded.emit()
 
     def load(self, archive, task_name="", task_status_msg=""):
