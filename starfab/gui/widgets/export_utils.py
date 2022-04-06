@@ -1,13 +1,11 @@
 import typing
 
 from scdatatools.utils import parse_bool
-
 from starfab import settings
-from starfab.gui import qtc, qtw, qtg
+from starfab.gui import qtc, qtw
+from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
 from starfab.resources import RES_PATH
 from starfab.utils import image_converter
-from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
-
 
 EXPORT_SETTINGS = {
     # {scdatatools reference}: [ {widget_name}, {settings_key} ]
@@ -106,6 +104,7 @@ class ExportOptionsWidget(StarFabStaticWidget):
                 opts["ddstexture_converter_fmt"] = "dds"
         if opts.get('auto_convert_models', False):
             opts["converters"].append("cgf_converter")
+            opts["cryxml_converter_mtl_fix_names"] = True   # convert spaces in material names for dae conversion
             opts["cgf_converter_bin"] = settings.get_cgf_converter()
 
         return opts

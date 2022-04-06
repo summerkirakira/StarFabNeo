@@ -356,11 +356,14 @@ Contributors:
         self.handle_workspace(settings.value("defaultWorkspace", "data"))
 
     def closeEvent(self, event) -> None:
-        self.settings.setValue("windowGeometry", self.saveGeometry())
-        self.settings.setValue("windowState", self.saveState())
-        self.hide()
-        self.close.emit()
-        super().closeEvent(event)
+        try:
+            self.settings.setValue("windowGeometry", self.saveGeometry())
+            self.settings.setValue("windowState", self.saveState())
+            self.handle_file_close()
+            self.hide()
+            self.close.emit()
+        finally:
+            sys.exit(0)
 
     def _refresh_recent(self, recent=None):
         if recent is None:
