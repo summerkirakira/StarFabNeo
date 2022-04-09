@@ -67,6 +67,13 @@ class TagDatabaseTreeItem:
             return self.parent.tag.children.index(self.tag)
         return 0
 
+    def has_children(self):
+        return bool(self.tag.children)
+
+    @property
+    def children(self):
+        return self.model.itemForGUID(self.tag.chilren)
+
     def child(self, row):
         try:
             return self.model.itemForGUID(self.tag.children[row].guid)

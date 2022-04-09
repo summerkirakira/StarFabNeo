@@ -144,6 +144,16 @@
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="opt_treeViewFoldersFirst">
+              <property name="toolTip">
+               <string>In tree views, folders are listed before files, otherwise sort alphabetically.</string>
+              </property>
+              <property name="text">
+               <string>Tree view folders first</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QGroupBox" name="groupBox_8">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">

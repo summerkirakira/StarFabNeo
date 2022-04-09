@@ -45,6 +45,7 @@ class SettingsDialog(qtw.QDialog):
 
         # left side
         self.theme.currentTextChanged.connect(self._save_settings)
+        self.opt_treeViewFoldersFirst.stateChanged.connect(self._save_settings)
         self.workspaceBtnGroup.buttonClicked.connect(self._save_settings)
         self.checkForUpdates.stateChanged.connect(self._save_settings)
         self.enableErrorReporting.stateChanged.connect(self._save_settings)
@@ -93,6 +94,7 @@ class SettingsDialog(qtw.QDialog):
             self.theme.setCurrentText(next(iter(n for n, f in self.themes.items() if f == theme)))
         elif theme in self.themes:
             self.theme.setCurrentText(theme)
+        self.opt_treeViewFoldersFirst.setChecked(parse_bool(self.starfab.settings.value("tree_view_folders_first")))
         default_ws = self.starfab.settings.value('defaultWorkspace')
         self.defaultWS_Data.setChecked(default_ws == 'data')
         self.defaultWS_Content.setChecked(default_ws == 'content')
@@ -171,6 +173,7 @@ class SettingsDialog(qtw.QDialog):
         # left side
         if self.theme.currentText() != self.starfab.settings.value("theme", "Monokai Dimmed"):
             self._update_theme(self.theme.currentText())
+        self.starfab.settings.setValue("tree_view_folders_first", self.opt_treeViewFoldersFirst.isChecked())
         self.starfab.settings.setValue("defaultWorkspace", 'data' if self.defaultWS_Data.isChecked() else 'content')
         self.starfab.settings.setValue("checkForUpdates", self.checkForUpdates.isChecked())
         self.starfab.settings.setValue("enableErrorReporting", self.enableErrorReporting.isChecked())

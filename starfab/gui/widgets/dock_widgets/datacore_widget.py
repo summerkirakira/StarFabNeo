@@ -164,6 +164,10 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         extract_all.triggered.connect(
             partial(self.ctx_manager.handle_action, "extract_all")
         )
+        copy_path = self.ctx_manager.menus[""].addAction("Copy Path")
+        copy_path.triggered.connect(
+            partial(self.ctx_manager.handle_action, "copy_path")
+        )
 
         self.proxy_model.setRecursiveFilteringEnabled(True)
         self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
@@ -231,13 +235,15 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
 
     @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
+        selected_items = self.get_selected_items()
         if action == "extract":
-            selected_items = self.get_selected_items()
             # Item Actions
             if not selected_items:
                 return
             self.extract_items(selected_items)
         elif action == "extract_all":
             self.extract_items(self.sc_tree_model._guid_cache.values())
+        elif action == "copy_path":
+            qtg.QGuiApplication.clipboard().setText(selected_items[0].path.as_posix())
         else:
             return super()._on_ctx_triggered(action)

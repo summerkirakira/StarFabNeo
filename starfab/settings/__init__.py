@@ -8,6 +8,7 @@ from starfab.gui import qtc
 
 settings_defaults = {
     "theme": "Monokai Dimmed",
+    "tree_view_folders_first": "true",
     "defaultWorkspace": "data",
     "checkForUpdates": "true",
     "enableErrorReporting": "true",

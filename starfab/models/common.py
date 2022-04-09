@@ -14,6 +14,7 @@ from starfab import get_starfab
 from starfab.gui import qtc, qtg
 from starfab.gui.utils import icon_provider, icon_for_path
 from starfab.log import getLogger
+from starfab.settings import settings
 from starfab.utils import show_file_in_filemanager
 
 logger = getLogger(__name__)
@@ -134,6 +135,16 @@ class PathArchiveTreeSortFilterProxyModel(qtc.QSortFilterProxyModel):
                 accepted = op(accepted, adfilt(item))
         return accepted
 
+    def lessThan(self, source_left, source_right):
+        if settings.value('tree_view_folders_first'):
+            left_has_children = bool(source_left.internalPointer().has_children())
+            right_has_children = bool(source_right.internalPointer().has_children())
+            if left_has_children and not right_has_children:
+                return True
+            elif right_has_children and not left_has_children:
+                return False
+        return super().lessThan(source_left, source_right)
+
     def filterAcceptsRow(self, source_row, source_parent: qtc.QModelIndex) -> bool:
         if not self._filter and not self.additional_filters:
             return True
@@ -199,6 +210,9 @@ class PathArchiveTreeItem:
     @cached_property
     def icon(self):
         return icon_for_path(self.name) or icon_provider.icon(icon_provider.Folder)
+
+    def has_children(self):
+        return bool(self.children)
 
     def appendChild(self, child):
         child.parent = self
