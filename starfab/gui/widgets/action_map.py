@@ -2,7 +2,7 @@ import csv
 import io
 
 from scdatatools.sc.config import ACTION_MAP_FIELD_NAMES
-from starfab.gui import qtc, qtg
+from starfab.gui import qtc, qtg, qtw
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
 from starfab.resources import RES_PATH
 
@@ -35,6 +35,7 @@ class ActionMapView(StarFabStaticWidget):
 
         self.search_bar.textChanged.connect(self.debounce.start)
         self.search_bar.setClearButtonEnabled(True)
+        self.exportButton.clicked.connect(self.export)
 
         # TODO: filter will require some tweaking to show parents before search works
         # self.search_bar.hide()
@@ -91,6 +92,12 @@ class ActionMapView(StarFabStaticWidget):
                         )
                     )
                     category_item.appendRow(row)
+
+    def export(self):
+        path, _ = qtw.QFileDialog.getSaveFileName(self, "Export Action Map", '', "*.csv")
+        if path:
+            with open(path, 'w', newline='') as out:
+                self.starfab.sc.default_profile.dump_actionmap_csv(out)
 
     def handle_sc_opened(self):
         if self.starfab.sc is not None and self.starfab.sc.is_loaded("p4k"):
