@@ -3,6 +3,29 @@
 
 See current releases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
 
+## [0.4.7](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.7)
+
+* New material name normalization. All material names in `mtl` have spaces converted to underscores as the Blender
+  DAE importer does not handle material names with spaces. This happens during any export as long as cryxml
+  conversion is enabled
+* Added export to the action map
+* Tree views now sort folders before files by default
+
+## [0.4.6](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.6)
+
+- Added support for changes from SC 3.17.0 (lighting and chr changes)
+- Fixed HardSurface shader normals and emission issues
+- Fixed StarFab not launching when it had never been used before
+- Fixed crash when trying to load an invalid SC folder
+- Fixed crash when unloading (when attempting to open a different SC folder when one was already loaded)
+
+## [0.4.5](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.5)
+
+- Content view filtering fixes
+- Settings refactor. Fixed settings not saving/persisting
+- Export options refactor. Fixed export converters not running in certain instances
+- General logging improvements
+
 ## [0.4.4](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.4)
 
 - Added (optional) error reporting. The dialog can be disabled in settings.

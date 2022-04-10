@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
     from starfab.app import StarFab
 
 CONTRIB_DIR = Path(__file__).parent / "contrib"
-__version__ = "0.4.6"
+__version__ = "0.4.7"
 
 
 if CONTRIB_DIR.is_dir() and str(CONTRIB_DIR) not in sys.path:

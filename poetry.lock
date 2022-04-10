@@ -1070,7 +1070,7 @@ plumbum = "*"
 
 [[package]]
 name = "scdatatools"
-version = "1.0.2"
+version = "1.0.3"
 description = "Python tools for working with Star Citizen data files."
 category = "main"
 optional = false
@@ -1340,7 +1340,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9.2,<3.10"
-content-hash = "b04ececda9c17f52dfea353531a80bf3dbc6708ff1d1fc56f7f8cc89539d5453"
+content-hash = "a3f83c740035b431b3a10746d21e87e599bbca5dc3c18b2458c03f2778ef237b"
 
 [metadata.files]
 aiohttp = [
@@ -2358,8 +2358,8 @@ rpyc = [
     {file = "rpyc-5.0.1-py3-none-any.whl", hash = "sha256:97c40d84994816e6b39be9224c936817bb6f76e71b9b49d29adb22531d9c820f"},
 ]
 scdatatools = [
-    {file = "scdatatools-1.0.2-py2.py3-none-any.whl", hash = "sha256:df38b17e19ca051425b03e1565a6974513a0d4c57b10f5bd9dfceee25ff391e8"},
-    {file = "scdatatools-1.0.2.tar.gz", hash = "sha256:141e2a79482dd848f60898adb13e575bdd0f5b9b25f1553b317447371e6db369"},
+    {file = "scdatatools-1.0.3-py2.py3-none-any.whl", hash = "sha256:2cb76bcc31276318bde165d8cef3948a5db462b039bcad410032fe4322c1724c"},
+    {file = "scdatatools-1.0.3.tar.gz", hash = "sha256:ffb087c52778eac6e983b277a1e299f03302756ba788c982d9377857f3cfa121"},
 ]
 scooby = [
     {file = "scooby-0.5.11-py3-none-any.whl", hash = "sha256:1289401ebb69bf66b0777e9fa7c5114c59515f29e0fba38b22893cd05e4fc965"},

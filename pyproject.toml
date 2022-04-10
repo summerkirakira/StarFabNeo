@@ -4,14 +4,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "starfab"
-version = "0.4.6"
+version = "0.4.7"
 description = "StarFab - The Star Citizen data tool"
 authors = [ "ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
 
 [tool.briefcase]
 project_name = "StarFab"
 bundle = "scmodding.starfab"
-version = "0.4.6"
+version = "0.4.7"
 url = "https://gitlab.com/scmodding/tools/starfab"
 license = ""
 author = "ventorvar"
@@ -24,7 +24,7 @@ QtAwesome = "^1.1.0"
 PySide2 = "^5.15.2"
 Pillow = "^8.0.1"
 qtconsole = "^5.0.1"
-scdatatools = "1.0.2"
+scdatatools = "1.0.3"
 humanize = "^3.9.0"
 rpyc = "^5.0.1"
 pyvistaqt = "^0.5.0"
