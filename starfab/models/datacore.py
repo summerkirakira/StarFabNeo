@@ -2,9 +2,9 @@ import io
 from functools import cached_property
 
 from starfab import get_starfab
-from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
+from starfab.gui import qtc
 from starfab.gui.utils import icon_provider
+from starfab.log import getLogger
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeModelLoader,
@@ -13,7 +13,6 @@ from starfab.models.common import (
     ContentItem,
     SKIP_MODELS,
 )
-
 
 logger = getLogger(__name__)
 DCBVIEW_COLUMNS = ["Name", "Type"]
@@ -58,9 +57,11 @@ class DCBLoader(PathArchiveTreeModelLoader):
 
     def load_item(self, item):
         path = item.filename.replace(RECORDS_ROOT_PATH, "")
-        parent_path, name = path.rsplit("/", maxsplit=1) if "/" in path else ("", path)
+        parent_path, _ = path.rsplit("/", maxsplit=1) if "/" in path else ("", path)
         parent = self.model.parentForPath(parent_path)
-        name = name.replace(".xml", "")
+
+        # name = name.replace(".xml", "")
+        name = item.name
         if name in parent.children_by_name:
             name = f"{name}.{item.id.value}"
 

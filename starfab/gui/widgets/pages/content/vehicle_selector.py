@@ -1,13 +1,10 @@
-from scdatatools.forge.utils import geometry_for_record
 from scdatatools.sc.blueprints.generators.datacore_entity import (
     blueprint_from_datacore_entity,
 )
-
 from starfab.gui import qtc, qtw
+from starfab.gui.widgets.dock_widgets.datacore_widget import DCBSortFilterProxyModel
 from starfab.models.common import CheckableModelWrapper
 from starfab.models.datacore import DCBModel, DCBLoader, RECORDS_ROOT_PATH
-from starfab.gui.widgets.dock_widgets.datacore_widget import DCBSortFilterProxyModel
-
 from .common import DCBContentSelector
 from .export_log import ExtractionItem
 
@@ -28,6 +25,9 @@ class VehiclesLoader(DCBLoader):
 
         items = []
         for r in self.model.archive.records:
+            if r.type != 'EntityClassDefinition':
+                continue
+
             category = ""
             if r.filename.startswith(VEHICLES_ROOT):
                 category = VEHICLES_CATEGORY
@@ -60,7 +60,8 @@ class VehiclesLoader(DCBLoader):
         parent_path, name = path.rsplit("/", maxsplit=1) if "/" in path else ("", path)
         parent_path = f"{category} / {parent_path}" if parent_path else category
         parent = self.model.parentForPath(parent_path)
-        name = name.replace(".xml", "")
+        # name = name.replace(".xml", "")
+        name = item.name
         if name in parent.children_by_name:
             name = f"{name}.{item.id.value}"
         new_item = self._item_cls(
