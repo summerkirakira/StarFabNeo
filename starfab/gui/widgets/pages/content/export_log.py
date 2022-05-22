@@ -6,6 +6,8 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 
+import sentry_sdk
+
 from scdatatools.engine.chunkfile.converter import CGF_CONVERTER_MODEL_EXTS
 from scdatatools.utils import parse_bool, log_time
 from starfab.gui import qtc, qtw, qtg
@@ -195,8 +197,10 @@ class BlueprintExportLog(qtw.QDialog):
                     except Exception as e:
                         monitor(f"ERROR: Extraction failed - {e}", level=logging.ERROR)
                         logger.exception(f"Extraction failed")
+                        sentry_sdk.capture_exception(e)
             except Exception as e:
                 print(f"ERROR EXTRACTING SHIP {item}: {e}")
+                sentry_sdk.capture_exception(e)
             finally:
                 if model_log:
                     model_log.close()
