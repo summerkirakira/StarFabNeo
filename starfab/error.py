@@ -22,9 +22,13 @@ def show_error_dialog(title, message):
 
 def sentry_error_handler(event, hint):
     if parse_bool(settings.value('enableErrorReporting', True)):
+        if 'log_record' in hint:
+            msg = hint['log_record']['message']
+        else:
+            msg = str(hint['exc_info'][1])
         should_send = show_error_dialog(
             "StarFab Exception",
-            f"An exception has occurred in StarFab, would you like to submit an error report?\n\n{hint['exc_info'][1]}"
+            f"An exception has occurred in StarFab, would you like to submit an error report?\n\n{msg}"
         )
         if should_send:
             return event

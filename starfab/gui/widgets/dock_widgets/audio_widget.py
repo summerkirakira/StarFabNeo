@@ -421,6 +421,6 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         item = self.wem_list.item(row)
         if item is not None:
             if should_highlight:
-                item.setBackground(qtc.Qt.darkGray)
+                item.setBackground(qtg.QPalette().highlight())
             else:
                 item.setBackground(qtg.QBrush())

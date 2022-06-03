@@ -249,8 +249,8 @@ class Editor(QWebEngineView):
     def _update_settings(self):
         self.ace.set_theme.emit(THEMES.get(settings.value('editor/theme'), DEFAULT_THEME))
         self.ace.set_key_bindings.emit(settings.value('editor/key_bindings'))
-        self.ace.set_bool_option.emit('showLineNumbers', parse_bool(settings.value('editor/line_numbers')))
         self.ace.set_str_option.emit('wrap', WRAP_MODES.get(settings.value('editor/word_wrap').lower(), 'off'))
+        self.ace.set_bool_option.emit('showLineNumbers', parse_bool(settings.value('editor/line_numbers')))
 
     def contextMenuEvent(self, event):
         filter_actions = ["Back", "Forward", "Reload", "Save page", "View page source"]

@@ -1,16 +1,17 @@
+import logging
 import time
 import typing
-import logging
-from pathlib import Path
+from collections import namedtuple
 from datetime import datetime
 from functools import partial
-from collections import namedtuple
-from scdatatools.utils import log_time
+from pathlib import Path
 
+import sentry_sdk
+
+from scdatatools.engine.chunkfile.converter import CGF_CONVERTER_MODEL_EXTS
+from scdatatools.utils import parse_bool, log_time
 from starfab.gui import qtc, qtw, qtg
 from starfab.log import getLogger
-from scdatatools.engine.chunkfile.converter import CGF_CONVERTER_MODEL_EXTS
-from starfab.models.common import BackgroundRunnerSignals
 from starfab.utils import show_file_in_filemanager
 
 ExtractionItem = namedtuple("ExtractionItem", ["name", "object", "bp_generator"])
@@ -196,8 +197,10 @@ class BlueprintExportLog(qtw.QDialog):
                     except Exception as e:
                         monitor(f"ERROR: Extraction failed - {e}", level=logging.ERROR)
                         logger.exception(f"Extraction failed")
+                        sentry_sdk.capture_exception(e)
             except Exception as e:
                 print(f"ERROR EXTRACTING SHIP {item}: {e}")
+                sentry_sdk.capture_exception(e)
             finally:
                 if model_log:
                     model_log.close()
@@ -209,6 +212,11 @@ class BlueprintExportLog(qtw.QDialog):
         )
         overview_console.append(f"Output directory: {self.outdir}")
         self.output_tabs.setCurrentWidget(overview_tab)
-        show_file_in_filemanager(Path(self.outdir))
+
+        open_dir = parse_bool(
+            self.export_options.get('auto_open_folder', self.starfab.settings.value('extract/auto_open_folder'))
+        )
+        if open_dir:
+            show_file_in_filemanager(Path(self.outdir))
         self.btns.button(qtw.QDialogButtonBox.Ok).setEnabled(True)
         self.btns.removeButton(self.btns.button(qtw.QDialogButtonBox.Cancel))

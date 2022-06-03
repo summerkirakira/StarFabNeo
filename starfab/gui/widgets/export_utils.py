@@ -1,115 +1,111 @@
-from distutils.util import strtobool
+import typing
 
-from starfab.gui import qtc, qtw, qtg
-from starfab.resources import RES_PATH
+from scdatatools.utils import parse_bool
+from starfab import settings
+from starfab.gui import qtc, qtw
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
+from starfab.resources import RES_PATH
+from starfab.utils import image_converter
 
-
-SETTINGS_PATH = "extractor"
+EXPORT_SETTINGS = {
+    # {scdatatools reference}: [ {widget_name}, {settings_key} ]
+    "cryxml_fmt": ['opt_cryxmlFmt', 'convert/cryxml_fmt'],
+    "img_fmt": ['opt_imgFmt', 'convert/img_fmt'],
+    "extract_model_assets": ['opt_extractModelAssets', 'extract/extract_model_assets'],
+    "auto_unsplit_textures": ['opt_autoUnsplitTextures', "extract/auto_unsplit_textures"],
+    "auto_convert_textures": ['opt_autoConvertTextures', "extract/auto_convert_textures"],
+    "auto_convert_sounds": ['opt_autoConvertSounds', "extract/auto_convert_sounds"],
+    "auto_convert_models": ['opt_convertModelsDAE', "extract/auto_convert_models"],
+    "create_sub_folder": ['opt_createSubFolder', "extract/create_sub_folder"],
+    "gen_model_log": ['opt_genModelLog', "extract/gen_model_log"],
+    "overwrite": ['opt_overwriteExisting', "extract/overwrite_existing"],
+    "auto_open_folder": ['opt_autoOpenExportFolder', "extract/auto_open_folder"],
+    "verbose": ['opt_verbose', "extract/verbose"],
+}
 
 
 class ExportOptionsWidget(StarFabStaticWidget):
     __ui_file__ = str(RES_PATH / "ui" / "ExportSettingsForm.ui")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, exclude: typing.List[str] = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.options = []
+        exclude = exclude or []
+        for k, v in EXPORT_SETTINGS.items():
+            if (w := getattr(self, v[0], None)) is not None:
+                if k in exclude:
+                    w.setVisible(False)
+                    continue
+                if isinstance(w, qtw.QCheckBox):
+                    w.stateChanged.connect(self.save_settings)
+                elif isinstance(w, qtw.QComboBox):
+                    w.activated.connect(self.save_settings)
+                else:
+                    continue
+                self.options.append(k)
+        self._resetting = False
         self.reset_from_settings()
 
     def reset_from_settings(self):
-        self.opt_cryxmlFmt.setCurrentText(
-            self.starfab.settings.value(
-                f"{SETTINGS_PATH}/convert_cryxml_fmt", "xml"
-            ).lower()
-        )
-        self.opt_cryxmlFmt.currentTextChanged.connect(self.save_settings)
-        self.opt_imgFmt.setCurrentText(
-            self.starfab.settings.value(
-                f"{SETTINGS_PATH}/convert_dds_fmt", "png"
-            ).lower()
-        )
-        self.opt_imgFmt.currentTextChanged.connect(self.save_settings)
-        self.opt_autoUnsplitTextures.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/auto_unsplit_textures", "true"
-                )
-            )
-        )
-        self.opt_autoUnsplitTextures.stateChanged.connect(self.save_settings)
-        self.opt_autoConvertTextures.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/auto_convert_textures", "true"
-                )
-            )
-        )
-        self.opt_autoConvertTextures.stateChanged.connect(self.save_settings)
-        self.opt_autoConvertSounds.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/auto_convert_sounds", "true"
-                )
-            )
-        )
-        self.opt_autoConvertSounds.stateChanged.connect(self.save_settings)
-        self.opt_convertModelsDAE.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/auto_convert_models", "false"
-                )
-            )
-        )
-        self.opt_convertModelsDAE.stateChanged.connect(self.save_settings)
-        self.opt_createSubFolder.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/create_sub_folder", "false"
-                )
-            )
-        )
-        self.opt_createSubFolder.stateChanged.connect(self.save_settings)
-        self.opt_genModelLog.setChecked(
-            strtobool(
-                self.starfab.settings.value(f"{SETTINGS_PATH}/gen_model_log", "false")
-            )
-        )
-        self.opt_genModelLog.stateChanged.connect(self.save_settings)
-        self.opt_overwriteExisting.setChecked(
-            strtobool(
-                self.starfab.settings.value(
-                    f"{SETTINGS_PATH}/overwrite_existing", "false"
-                )
-            )
-        )
-        self.opt_overwriteExisting.stateChanged.connect(self.save_settings)
+        self._resetting = True
+        try:
+            for option in self.options:
+                w = getattr(self, EXPORT_SETTINGS[option][0])
+                if isinstance(w, qtw.QCheckBox):
+                    w.setChecked(parse_bool(self.starfab.settings.value(EXPORT_SETTINGS[option][1])))
+                elif isinstance(w, qtw.QComboBox):
+                    w.setCurrentText(str(self.starfab.settings.value(EXPORT_SETTINGS[option][1])).lower())
+        finally:
+            self._resetting = False
+        self.on_opt_autoConvertTextures_stateChanged()
 
     def save_settings(self):
-        for k, v in self.get_options().items():
-            self.starfab.settings.setValue(f"{SETTINGS_PATH}/{k}", v)
+        if self._resetting:
+            return
+        for option in self.options:
+            w = getattr(self, EXPORT_SETTINGS[option][0])
+            if isinstance(w, qtw.QCheckBox):
+                self.starfab.settings.setValue(EXPORT_SETTINGS[option][1], w.isChecked())
+            elif isinstance(w, qtw.QComboBox):
+                self.starfab.settings.setValue(EXPORT_SETTINGS[option][1], w.currentText())
+        self.on_opt_autoConvertTextures_stateChanged()
 
     def get_options(self):
-        opts = {
-            "converters": [],
-            "overwrite": self.opt_overwriteExisting.isChecked(),
-            "convert_cryxml_fmt": self.opt_cryxmlFmt.currentText(),
-            "convert_dds_fmt": self.opt_imgFmt.currentText(),
-            "convert_dds_unsplit": self.opt_autoUnsplitTextures.isChecked(),
-            "auto_convert_sounds": self.opt_autoConvertSounds.isChecked(),
-            "create_sub_folder": self.opt_createSubFolder.isChecked(),
-            "gen_model_log": self.opt_genModelLog.isChecked(),
-            "auto_convert_textures": self.opt_autoConvertTextures.isChecked(),
-            "auto_convert_models": self.opt_convertModelsDAE.isChecked(),
-            "verbose": self.opt_Verbose.isChecked(),
-        }
+        opts = {'converters': []}
+        for option in self.options:
+            w = getattr(self, EXPORT_SETTINGS[option][0])
+            if isinstance(w, qtw.QCheckBox):
+                opts[option] = w.isChecked()
+            elif isinstance(w, qtw.QComboBox):
+                opts[option] = w.currentText()
 
-        if self.opt_cryxmlFmt.currentText().lower() != "cryxmlb":
+        # TODO: when audio converters come into play
+        # opts.update({
+        #     "ww2ogg_bin": settings.get_ww2ogg(),
+        #     "revorb_bin": settings.get_revorb(),
+        # })
+
+        if opts.get('extract_model_assets', False):
+            opts["converters"].append("model_assets_extractor")
+        if opts.get('cryxml_fmt').lower() != "cryxmlb":
             opts["converters"].append("cryxml_converter")
-        if self.opt_autoUnsplitTextures.isChecked():
+            opts["cryxml_converter_fmt"] = settings.settings.value('convert/cryxml_fmt')
+        if opts.get('auto_unsplit_textures', False):
             opts["converters"].append("ddstexture_converter")
-            if not self.opt_autoConvertTextures.isChecked():
-                opts["convert_dds_fmt"] = "dds"
-        if self.opt_convertModelsDAE.isChecked():
+            opts.update({
+                "ddstexture_converter_unsplit": True,
+                "ddstexture_converter_converter": image_converter.converter,
+                "ddstexture_converter_converter_bin": image_converter.converter_bin,
+                "ddstexture_converter_replace": opts.get('overwrite', False),
+            })
+            if opts.get('auto_convert_textures', False):
+                opts["ddstexture_converter_fmt"] = opts.get('img_fmt', self.starfab.settings.value('convert/img_fmt'))
+            else:
+                opts["ddstexture_converter_fmt"] = "dds"
+        if opts.get('auto_convert_models', False):
             opts["converters"].append("cgf_converter")
+            opts["cryxml_converter_mtl_fix_names"] = True   # convert spaces in material names for dae conversion
+            opts["cgf_converter_bin"] = settings.get_cgf_converter()
 
         return opts
 

@@ -17,10 +17,10 @@ from qtvscodestyle.vscode.color_registry_manager import ColorRegistry
 
 setup_default_color_registry()
 
+### STARFAB MODIFICATION
 # Setup project dir
-_RESOURCES_BASE_DIR = Path.home() / ".q_vscode_style" / "resources"
-# Clean up project dir
-shutil.rmtree(str(_RESOURCES_BASE_DIR), ignore_errors=True)
+#_RESOURCES_BASE_DIR = Path.home() / ".q_vscode_style" / "resources"
+_RESOURCES_BASE_DIR = Path(__file__).parent / "resources"
 _RESOURCES_BASE_DIR.mkdir(parents=True, exist_ok=True)
 
 global_current_colors = {}
@@ -131,10 +131,14 @@ def load_stylesheet_for_designer(theme: Theme, custom_colors: dict[str, str], re
 
 def load_stylesheet(theme: Union[Theme, str, Path, dict] = Theme.DARK_VS, custom_colors: dict[str, str] = {}) -> str:
     """Load the style sheet which used by vscode."""
-    global _temp_dir  # Set to global value the temporary directory so that it is not cached.
-    _temp_dir = TemporaryDirectory(prefix="temp", dir=str(_RESOURCES_BASE_DIR))
-    temp_dir_path = Path(_temp_dir.name)
-    return _load_stylesheet(theme, custom_colors, temp_dir_path)
+    # global _temp_dir  # Set to global value the temporary directory so that it is not cached.
+    # _temp_dir = TemporaryDirectory(prefix="temp", dir=str(_RESOURCES_BASE_DIR))
+    # temp_dir_path = Path(_temp_dir.name)
+    # return _load_stylesheet(theme, custom_colors, temp_dir_path)
+    icons_dir = _RESOURCES_BASE_DIR / 'theme'
+    shutil.rmtree(icons_dir, ignore_errors=True)
+    icons_dir.mkdir(parents=True, exist_ok=True)
+    return _load_stylesheet(theme, custom_colors, icons_dir)
 
 
 def loads_stylesheet(theme_text: str, custom_colors: dict[str, str] = {}) -> str:

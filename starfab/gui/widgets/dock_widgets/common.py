@@ -21,6 +21,7 @@ from starfab.gui.widgets.chunked_file_viewer import (
     SUPPORTED_CHUNK_FILE_FORMATS,
     ChunkedObjView,
 )
+from starfab.gui.widgets.object_container_viewer import ObjectContainerView, SUPPORTED_OBJECT_CONTAINER_FILE_FORMATS
 from starfab.log import getLogger
 
 
@@ -127,6 +128,8 @@ class StarFabStaticWidget(qtw.QWidget):
             widget = ChunkedObjView(item)
         elif item.path.suffix.lower() in SUPPORTED_IMG_FORMATS:
             widget = QImageViewer.fromFile(item.contents())
+        elif item.path.suffix.lower() in SUPPORTED_OBJECT_CONTAINER_FILE_FORMATS:
+            widget = ObjectContainerView(item)
 
         if widget is not None:
             self.starfab.add_tab_widget(item.path, widget, item.path.name)

@@ -47,6 +47,13 @@
       <item>
        <widget class="QLineEdit" name="search_bar"/>
       </item>
+      <item>
+       <widget class="QPushButton" name="exportButton">
+        <property name="text">
+         <string>Export</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

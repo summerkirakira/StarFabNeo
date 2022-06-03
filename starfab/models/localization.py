@@ -1,6 +1,6 @@
 import copy
 
-from starfab.gui import qtc, qtg
+from starfab.gui import qtc
 
 
 class LocalizationModel(qtc.QAbstractTableModel):
@@ -19,7 +19,7 @@ class LocalizationModel(qtc.QAbstractTableModel):
 
         self._sc_manager.p4k_model.loaded.connect(self._on_p4k_loaded)
         self._sc_manager.p4k_model.unloading.connect(
-            self._on_p4k_unloading, qtc.Qt.BlockingQueuedConnection
+            self._on_p4k_unloading,  # qtc.Qt.BlockingQueuedConnection
         )
 
     @qtc.Slot()
@@ -30,12 +30,12 @@ class LocalizationModel(qtc.QAbstractTableModel):
         self.languages.insert(0, self.localization.default_language)
         self.translations = copy.copy(self.localization.translations)
 
-        self.columns = ["Name"] + self.languages
         self.beginInsertColumns(qtc.QModelIndex(), 0, len(self.columns))
+        self.columns = ["Name"] + self.languages
         self.endInsertColumns()
 
-        self.names = list(self.translations["english"].keys())
         self.beginInsertRows(qtc.QModelIndex(), 0, len(self.names))
+        self.names = list(self.translations["english"].keys())
         self.endInsertColumns()
         self.loaded.emit()
 
@@ -61,7 +61,10 @@ class LocalizationModel(qtc.QAbstractTableModel):
 
     def headerData(self, section, orientation, role=None):
         if role == qtc.Qt.DisplayRole and orientation == qtc.Qt.Horizontal:
-            return self.columns[section]
+            try:
+                return self.columns[section]
+            except IndexError:
+                pass
         return None
 
     def data(self, index, role=None):

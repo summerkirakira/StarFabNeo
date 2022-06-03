@@ -1,21 +1,27 @@
 import io
-import time
-import typing
 import logging
 import operator
-from pathlib import Path
+import os
+import time
+import typing
 from datetime import timedelta
 from functools import cached_property
+from pathlib import Path
 
 from scdatatools.p4k import P4KInfo
-
+from scdatatools.utils import parse_bool
 from starfab import get_starfab
-from starfab.gui import qtc, qtw
-from starfab.log import getLogger
-from starfab.utils import show_file_in_filemanager
+from starfab.gui import qtc, qtg
 from starfab.gui.utils import icon_provider, icon_for_path
+from starfab.log import getLogger
+from starfab.settings import settings
+from starfab.utils import show_file_in_filemanager
 
 logger = getLogger(__name__)
+
+# This is a debug tool, you can set the environment var to a csv list of models to skip loading at start to make things
+# faster for testing
+SKIP_MODELS = os.environ.get('STARFAB_SKIP_MODELS', '').lower().split(',')
 
 
 class AudioConverter(qtc.QRunnable):
@@ -62,9 +68,14 @@ class ExportRunner(qtc.QRunnable):
             task_id, f"Extracting to {self.outdir}", 0, len(self.p4k_files)
         )
 
+        t = time.time()
         def _monitor(msg, progress=None, total=None, level=logging.INFO, exc_info=None):
+            nonlocal t
             logger.log(level, msg)
             self.starfab.update_status_progress.emit(task_id, progress, 0, total, "")
+            if (time.time() - t) > 1.0:
+                t = time.time()
+                qtg.QGuiApplication.processEvents()
 
         try:
             self.starfab.sc_manager.sc.p4k.extractall(
@@ -82,7 +93,11 @@ class ExportRunner(qtc.QRunnable):
             self.starfab.task_finished.emit(task_id, False, f"Error during export: {e}")
         else:
             self.signals.finished.emit({"error": ""})
-            show_file_in_filemanager(Path(self.outdir).absolute())
+            open_dir = parse_bool(
+                self.export_options.get('auto_open_folder', self.starfab.settings.value('extract/auto_open_folder'))
+            )
+            if open_dir:
+                show_file_in_filemanager(Path(self.outdir).absolute())
             self.starfab.task_finished.emit(task_id, True, "")
 
 
@@ -120,11 +135,23 @@ class PathArchiveTreeSortFilterProxyModel(qtc.QSortFilterProxyModel):
                 accepted = op(accepted, adfilt(item))
         return accepted
 
+    def lessThan(self, source_left, source_right):
+        if settings.value('tree_view_folders_first'):
+            left_has_children = bool(source_left.internalPointer().has_children())
+            right_has_children = bool(source_right.internalPointer().has_children())
+            if left_has_children and not right_has_children:
+                return True
+            elif right_has_children and not left_has_children:
+                return False
+        return super().lessThan(source_left, source_right)
+
     def filterAcceptsRow(self, source_row, source_parent: qtc.QModelIndex) -> bool:
         if not self._filter and not self.additional_filters:
             return True
 
-        if parent := source_parent.internalPointer():
+        if (parent := source_parent.internalPointer()) is None:
+            parent = getattr(self.sourceModel(), 'root_item')
+        if parent:
             try:
                 item = parent.children[source_row]
             except IndexError:
@@ -183,6 +210,9 @@ class PathArchiveTreeItem:
     @cached_property
     def icon(self):
         return icon_for_path(self.name) or icon_provider.icon(icon_provider.Folder)
+
+    def has_children(self):
+        return bool(self.children)
 
     def appendChild(self, child):
         child.parent = self
@@ -348,7 +378,7 @@ class PathArchiveTreeModelLoader(qtc.QRunnable):
         self.task_name = task_name or self.__class__.__name__
         self.task_status_message = task_status_msg
         self.signals.cancel.connect(
-            self._handle_cancel, qtc.Qt.BlockingQueuedConnection
+            self._handle_cancel,  # qtc.Qt.BlockingQueuedConnection
         )
         self.setAutoDelete(True)
 
@@ -522,10 +552,14 @@ class ThreadLoadedPathArchiveTreeModel(PathArchiveTreeModel):
     def unload(self):
         if self._loader is not None:
             self._loader.signals.cancel.emit()
+        self.unloading.emit()
         self.clear()
+        self.is_loaded = False
 
     def _loaded(self):
         self.is_loaded = True
+        del self._loader
+        self._loader = None
         self.loaded.emit()
 
     def load(self, archive, task_name="", task_status_msg=""):

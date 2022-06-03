@@ -2,15 +2,16 @@ import io
 from functools import cached_property
 
 from starfab import get_starfab
-from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
+from starfab.gui import qtc
 from starfab.gui.utils import icon_provider
+from starfab.log import getLogger
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeModelLoader,
     ThreadLoadedPathArchiveTreeModel,
     PathArchiveTreeItem,
     ContentItem,
+    SKIP_MODELS,
 )
 
 logger = getLogger(__name__)
@@ -23,7 +24,9 @@ class DCBSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
         if not self._filter and not self.additional_filters:
             return True
 
-        if parent := source_parent.internalPointer():
+        if (parent := source_parent.internalPointer()) is None:
+            parent = getattr(self.sourceModel(), 'root_item')
+        if parent:
             try:
                 item = parent.children[source_row]
             except IndexError:
@@ -47,13 +50,18 @@ class DCBLoader(PathArchiveTreeModelLoader):
     def items_to_load(self):
         # trigger datacore to load here
         self.model.archive = self.model.archive.datacore
+        if 'datacore' in SKIP_MODELS:
+            logger.debug(f'Skipping loading the datacore model')
+            return []
         return self.model.archive.records
 
     def load_item(self, item):
         path = item.filename.replace(RECORDS_ROOT_PATH, "")
-        parent_path, name = path.rsplit("/", maxsplit=1) if "/" in path else ("", path)
+        parent_path, _ = path.rsplit("/", maxsplit=1) if "/" in path else ("", path)
         parent = self.model.parentForPath(parent_path)
-        name = name.replace(".xml", "")
+
+        # name = name.replace(".xml", "")
+        name = item.name
         if name in parent.children_by_name:
             name = f"{name}.{item.id.value}"
 

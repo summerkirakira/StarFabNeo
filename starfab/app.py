@@ -1,39 +1,41 @@
 import os
 import sys
 import time
-from pathlib import Path
 from os import path
-from .resources import RES_PATH
+from pathlib import Path
 from functools import partial
+from distutils.util import strtobool
 
+import qtawesome as qta
 from qtpy import uic
 from qtpy.QtCore import Signal, Slot, QTimer, Qt
 from qtpy.QtGui import QKeySequence, QKeyEvent, QPixmap
 from qtpy.QtWidgets import QMainWindow
 
-import qtawesome as qta
 
-import starfab.gui.widgets.dock_widgets.file_view
 import starfab.gui.widgets.dock_widgets.datacore_widget
-
-
-from . import __version__, updates
-from .gui import qtg, qtw, qtc
-from .settings import settings
-from .blender import BlenderManager
-from .gui.utils import icon_for_path
-from .gui.widgets import dock_widgets
-from .models import StarCitizenManager
-from .utils import reload_starfab_modules, parsebool
-from .gui.dialogs.settings_dialog import SettingsDialog
-from .gui.dialogs.run_dialog import RunDialog
-from .gui.dialogs.splash_screen import StarFabSplashScreen
+import starfab.gui.widgets.dock_widgets.file_view
+from scdatatools.sc import StarCitizen
 from starfab.gui.widgets.pages.content import ContentView
-from .gui.widgets.pages.page_DataView import DataView
-
+from . import __version__, updates
+from .blender import BlenderManager
+from .gui import qtg, qtw, qtc
 from .gui.RibbonButton import RibbonButton
 from .gui.RibbonTextbox import RibbonTextbox
 from .gui.RibbonWidget import *
+from .gui.dialogs.run_dialog import RunDialog
+from .gui.dialogs.settings_dialog import SettingsDialog
+from .gui.dialogs.splash_screen import StarFabSplashScreen
+from .gui.utils import icon_for_path
+from .gui.widgets import dock_widgets
+from .gui.widgets.pages.page_DataView import DataView
+from .log import getLogger
+from .models import StarCitizenManager
+from .resources import RES_PATH
+from .settings import settings
+from .utils import reload_starfab_modules
+
+logger = getLogger(__name__)
 
 
 class StarFab(QMainWindow):
@@ -101,6 +103,8 @@ class StarFab(QMainWindow):
         self.sc_manager = StarCitizenManager(self)
         self.sc_manager.loaded.connect(self._handle_sc_loaded)
         self.sc_manager.datacore_model.loaded.connect(self._handle_datacore_loaded)
+        self.sc_manager.load_failed.connect(self._load_failed)
+        self.sc_manager.preparing_to_load.connect(self._loading)
 
         self.blender_manager = BlenderManager(self)
         self.blender_manager.updated.connect(self._blender_manager_updated)
@@ -191,7 +195,7 @@ class StarFab(QMainWindow):
             self.lineEdit_LinkStatus.setStyleSheet("color: red")
 
     @property
-    def sc(self):
+    def sc(self) -> StarCitizen:
         return self.sc_manager.sc
 
     def add_action(
@@ -356,11 +360,14 @@ Contributors:
         self.handle_workspace(settings.value("defaultWorkspace", "data"))
 
     def closeEvent(self, event) -> None:
-        self.settings.setValue("windowGeometry", self.saveGeometry())
-        self.settings.setValue("windowState", self.saveState())
-        self.hide()
-        self.close.emit()
-        super().closeEvent(event)
+        try:
+            self.settings.setValue("windowGeometry", self.saveGeometry())
+            self.settings.setValue("windowState", self.saveState())
+            self.handle_file_close()
+            self.hide()
+            self.close.emit()
+        finally:
+            sys.exit(0)
 
     def _refresh_recent(self, recent=None):
         if recent is None:
@@ -416,7 +423,8 @@ Contributors:
     def show_run_dialog(self):
         self.hide()
         dlg = RunDialog(self)
-        dlg.exec_()
+        dlg.show()
+        return dlg
 
     def show_settings_dialog(self):
         dlg = SettingsDialog(self)
@@ -656,9 +664,8 @@ Contributors:
             self.page_DataView.sc_tabs.setTabToolTip(
                 index, tooltip if tooltip is not None else str(obj_id)
             )
-            self.page_DataView.sc_tabs.tabBar().tabButton(
-                index, qtw.QTabBar.RightSide
-            ).setFixedSize(14, 14)
+            if (btn := self.page_DataView.sc_tabs.tabBar().tabButton(index, qtw.QTabBar.RightSide)) is not None:
+                btn.setFixedSize(14, 14)
         if show_after_add:
             return self.page_DataView.sc_tabs.setCurrentWidget(self._open_tabs[obj_id])
 
@@ -668,7 +675,7 @@ Contributors:
 
     @Slot(str)
     def _handle_open_scdir(self, scdir):
-        if self.sc is not None:
+        if self.sc_manager.sc is not None:
             # TODO: handle asking if we want to close the current one first
             qm = qtw.QMessageBox(self)
             ret = qm.question(
@@ -687,14 +694,19 @@ Contributors:
             self.sc_manager.load_sc.emit(scdir)
             self.actionDataView.setChecked(True)
             self.actionClose.setEnabled(True)
-            self.splash_screen()
         except Exception as e:
-            raise
-            self.show_run_dialog()
-            dlg = qtw.QErrorMessage(self)
-            dlg.setWindowTitle("Could not open Star Citizen directory")
-            dlg.showMessage(f"Could not open {scdir}: {e}")
-            dlg.raise_()
+            self._load_failed(str(e), exc_info=e)
+
+    def _loading(self):
+        self.splash_screen()
+
+    def _load_failed(self, msg, exc_info=None):
+        logger.exception(f'Failed to load Star Citizen', exc_info=exc_info)
+        run = self.show_run_dialog()
+        dlg = qtw.QErrorMessage(parent=run)
+        dlg.setWindowTitle("Could not open Star Citizen directory")
+        dlg.showMessage(f"Could not open Star Citizen: {msg}")
+        dlg.raise_()
 
     def clear_recent(self):
         self._refresh_recent([])

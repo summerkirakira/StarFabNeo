@@ -4,12 +4,7 @@ from functools import partial
 from starfab.gui import qtc, qtw, qtg
 from starfab.gui.widgets.dock_widgets.common import StarFabSearchableTreeWidget
 from starfab.log import getLogger
-from starfab.models.tag_database import (
-    TAG_DATABASE_COLUMNS,
-    TagDatabaseSortFilterProxyModel,
-    TagDatabaseModel,
-    TagDatabaseTreeItem,
-)
+from starfab.models.tag_database import TagDatabaseSortFilterProxyModel
 
 logger = getLogger(__name__)
 

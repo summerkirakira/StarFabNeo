@@ -15,15 +15,24 @@ from .common import DCBContentSelector, AlternateRootModel
 
 
 class EntityExporterSortFilter(DCBSortFilterProxyModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._geom_cache = {}
+
     def filterAcceptsRow(self, source_row, source_parent: qtc.QModelIndex) -> bool:
-        if parent := source_parent.internalPointer():
+        parent = source_parent.internalPointer() if source_parent.isValid() else self.sourceModel().root_item
+        if parent:
             try:
                 item: DCBItem = parent.children[source_row]
             except IndexError:
                 return False
 
-            if item.record is not None and item.record.type == "EntityClassDefinition":
-                return bool(geometry_for_record(item.record))
+            if item.record is not None:
+                if item.path not in self._geom_cache and item.record.type == "EntityClassDefinition":
+                    self._geom_cache[item.path] = bool(geometry_for_record(item.record))
+                if item.path in self._geom_cache:
+                    return self._geom_cache[item.path] and super().filterAcceptsRow(source_row, source_parent)
+            return False
         return super().filterAcceptsRow(source_row, source_parent)
 
 

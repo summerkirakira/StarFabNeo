@@ -1,25 +1,23 @@
-import os
-import time
-import shutil
-import typing
 import operator
-from pathlib import Path
+import os
+import shutil
+import time
+import typing
 from functools import partial
+from pathlib import Path
 
 from scdatatools.forge.dftypes import StructureInstance
-
 from starfab import get_starfab
 from starfab.gui import qtc, qtw, qtg
-from starfab.gui.widgets.dcbrecord import DCBRecordItemView
 from starfab.gui.widgets.common import TagBar
-from starfab.utils import show_file_in_filemanager, reload_starfab_modules
-from starfab.models.datacore import DCBSortFilterProxyModel, DCBItem
+from starfab.gui.widgets.dcbrecord import DCBRecordItemView
 from starfab.gui.widgets.dock_widgets.common import (
     StarFabSearchableTreeWidget,
     StarFabSearchableTreeFilterWidget,
 )
 from starfab.log import getLogger
-
+from starfab.models.datacore import DCBSortFilterProxyModel, DCBItem
+from starfab.utils import show_file_in_filemanager, reload_starfab_modules
 
 logger = getLogger(__name__)
 
@@ -154,6 +152,7 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         self.starfab.sc_manager.datacore_model.loaded.connect(
             self._handle_datacore_loaded
         )
+
         self.proxy_model.setFilterKeyColumn(3)
 
         self.ctx_manager.default_menu.addSeparator()
@@ -164,6 +163,10 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         extract_all = self.ctx_manager.menus[""].addAction("Extract All...")
         extract_all.triggered.connect(
             partial(self.ctx_manager.handle_action, "extract_all")
+        )
+        copy_path = self.ctx_manager.menus[""].addAction("Copy Path")
+        copy_path.triggered.connect(
+            partial(self.ctx_manager.handle_action, "copy_path")
         )
 
         self.proxy_model.setRecursiveFilteringEnabled(True)
@@ -232,13 +235,15 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
 
     @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
+        selected_items = self.get_selected_items()
         if action == "extract":
-            selected_items = self.get_selected_items()
             # Item Actions
             if not selected_items:
                 return
             self.extract_items(selected_items)
         elif action == "extract_all":
             self.extract_items(self.sc_tree_model._guid_cache.values())
+        elif action == "copy_path":
+            qtg.QGuiApplication.clipboard().setText(selected_items[0].path.as_posix())
         else:
             return super()._on_ctx_triggered(action)

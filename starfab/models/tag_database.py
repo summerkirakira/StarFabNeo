@@ -1,12 +1,15 @@
 from functools import cached_property
-from starfab.gui import qtc, qtw, qtg
 
+from starfab.gui import qtc
+from starfab.log import getLogger
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeModel,
     PathArchiveTreeModelLoader,
+    SKIP_MODELS,
 )
 
+logger = getLogger(__name__)
 TAG_DATABASE_COLUMNS = ["Name"]
 
 
@@ -64,6 +67,13 @@ class TagDatabaseTreeItem:
             return self.parent.tag.children.index(self.tag)
         return 0
 
+    def has_children(self):
+        return bool(self.tag.children)
+
+    @property
+    def children(self):
+        return self.model.itemForGUID(self.tag.chilren)
+
     def child(self, row):
         try:
             return self.model.itemForGUID(self.tag.children[row].guid)
@@ -110,10 +120,13 @@ class TagDatabaseModel(PathArchiveTreeModel):
             parent=sc_manager,
         )
 
-        self._sc_manager.datacore_model.loaded.connect(self._on_datacore_loaded)
-        self._sc_manager.datacore_model.unloading.connect(
-            self._on_datacore_unloading, qtc.Qt.BlockingQueuedConnection
-        )
+        if 'tag_database' in SKIP_MODELS:
+            logger.debug(f'Skipping loading the tag_database model')
+        else:
+            self._sc_manager.datacore_model.loaded.connect(self._on_datacore_loaded)
+            self._sc_manager.datacore_model.unloading.connect(
+                self._on_datacore_unloading,  # qtc.Qt.BlockingQueuedConnection
+            )
 
     @qtc.Slot()
     def _on_datacore_loaded(self):
@@ -143,12 +156,15 @@ class TagDatabaseModel(PathArchiveTreeModel):
         return self.itemForGUID(tag.guid)
 
     def unload(self):
-        if self._laoder is not None:
+        if self._loader is not None:
             self._loader.cancel.emit()
         self.clear()
+        self.is_loaded = False
 
     def _loaded(self):
         self._setup_root()
+        del self._loader
+        self._loader = None
         self.is_loaded = True
         self.loaded.emit()
 
