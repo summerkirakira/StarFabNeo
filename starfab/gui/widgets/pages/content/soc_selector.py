@@ -1,13 +1,10 @@
 import operator
 
-from scdatatools.forge.utils import geometry_for_record
 from scdatatools.sc.blueprints.generators.object_containers import blueprint_from_socpak
-
-from starfab.gui import qtc, qtw
-from starfab.models.p4k import P4KItem, P4KSortFilterProxyModelArchive
-
-from .export_log import ExtractionItem
+from starfab.gui import qtc
+from starfab.models.p4k import P4KSortFilterProxyModelArchive
 from .common import P4KContentSelector, AlternateRootModel
+from .export_log import ExtractionItem
 
 
 class SOCExporterSortFilter(P4KSortFilterProxyModelArchive):
@@ -21,6 +18,7 @@ class SOCSelector(P4KContentSelector):
         super().__init__(*args, **kwargs)
         self.sc_tree_model = AlternateRootModel(self.starfab.sc_manager.p4k_model)
         self.proxy_model = SOCExporterSortFilter(parent=self)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):

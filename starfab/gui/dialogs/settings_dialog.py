@@ -126,9 +126,9 @@ class SettingsDialog(qtw.QDialog):
         self._sync_blender()
 
     def _config_blender_paths(self):
-        paths = [
-            _['path'].parent.as_posix() for _ in self.starfab.blender_manager.available_versions.values()
-        ]
+        paths = set(_['path'].parent.as_posix() for _ in self.starfab.blender_manager.available_versions.values())
+        paths.update(self.starfab.blender_manager.additional_blender_paths)
+
         dlg = list_dialog.QListDialog('Blender Paths', items=paths, parent=self)
         try:
             if dlg.exec_() == qtw.QDialog.Accepted:

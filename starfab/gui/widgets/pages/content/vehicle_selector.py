@@ -80,6 +80,7 @@ class VehicleSelector(DCBContentSelector):
         self.model.loaded.connect(self._loaded)
         self.sc_tree_model = CheckableModelWrapper(self.model)
         self.proxy_model = DCBSortFilterProxyModel(parent=self)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):

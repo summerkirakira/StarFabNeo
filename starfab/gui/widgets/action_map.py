@@ -71,12 +71,13 @@ class ActionMapView(StarFabStaticWidget):
         self.tree_model.setHorizontalHeaderLabels(ACTION_MAP_FIELD_NAMES + ["filter"])
         am = self.starfab.sc.default_profile.actionmap()
         root = self.tree_model.invisibleRootItem()
+        # empty_action_item = ActionItem("")
         for ui_category, action_category in am.items():
             ui_category_item = ActionItem(ui_category)
-            root.appendRow([ui_category_item] + [ActionItem("")] * 7)
+            root.appendRow([ui_category_item])
             for category, actions in action_category.items():
                 category_item = ActionItem(category)
-                ui_category_item.appendRow([category_item] + [ActionItem("")] * 7)
+                ui_category_item.appendRow([category_item])
                 for label, action in actions.items():
                     row = [ActionItem(""), ActionItem(label)]
                     row[1].setToolTip(label)

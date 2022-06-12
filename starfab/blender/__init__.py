@@ -1,28 +1,24 @@
-import os
-import sys
-import time
 import json
-import shutil
-import logging
+import os
 import secrets
 import subprocess
+import sys
+import time
 from pathlib import Path
 
 import rpyc
+from qtpy.QtCore import QObject, Signal, Slot, QThread
 from rpyc import ThreadedServer
 from rpyc.utils.authenticators import AuthenticationError
 
-from starfab.gui import qtc, qtw, qtg
-from qtpy.QtCore import QObject, Signal, Slot, QThread
-
 from scdatatools.blender import addon as scdt_blender_addon
 from scdatatools.blender.utils import available_blender_installations
-
+from starfab.gui import qtc, qtw, qtg
+from starfab.log import getLogger
 from . import addon as starfab_blender_addon
+from .conf import LINK_SECRET_LEN, LINK_TOKEN_LEN, BLENDERLINK_CONFIG
 from .status_dialog import BlenderLinkStatusDialog
 from .utils import find_free_port, parse_auth_token
-from .conf import LINK_SECRET_LEN, LINK_TOKEN_LEN, BLENDERLINK_CONFIG
-from starfab.log import getLogger
 
 logger = getLogger(__name__)
 
@@ -165,7 +161,8 @@ class BlenderManager(QObject):
         self.set_additional_paths.connect(self._handle_set_additional_paths)
 
         self.blender = ""
-        self.additional_blender_paths = self.starfab.settings.value("external_tools/blender/additional_paths", [])
+        self.additional_blender_paths = []
+        self._handle_set_additional_paths(self.starfab.settings.value("external_tools/blender/additional_paths", []))
         self.preferred_blender = ""
         self.available_versions = {}
         self._handle_set_preferred_blender(self.starfab.settings.value("external_tools/blender/preferred", ''))
@@ -222,7 +219,7 @@ class BlenderManager(QObject):
 
         if self.blender not in available_versions:
             self.blender_version = ""
-            self.blender = Path()
+            self.blender = None
         else:
             self.blender_version = available_versions[self.blender]['version']
             self.blender = available_versions[self.blender]["path"]
