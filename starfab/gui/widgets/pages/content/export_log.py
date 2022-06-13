@@ -188,7 +188,8 @@ class BlueprintExportLog(qtw.QDialog):
                                 self.starfab.sc, item.object, monitor=monitor
                             )
                             bp_file = (output_dir / item.name).with_suffix(".scbp")
-                            bp.dump(bp_file.open("w"))
+                            with bp_file.open('w') as o:
+                                bp.dump(o)
                         with log_time(
                                 "Extracting blueprint",
                                 partial(monitor, level=logging.CRITICAL),

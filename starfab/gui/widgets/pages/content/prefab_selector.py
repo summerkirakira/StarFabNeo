@@ -1,10 +1,8 @@
 from scdatatools.sc.blueprints.generators.prefab import blueprint_from_prefab_xml
-
 from starfab.gui import qtc
 from starfab.models.p4k import P4KSortFilterProxyModelArchive
-
-from .export_log import ExtractionItem
 from .common import P4KContentSelector, AlternateRootModel
+from .export_log import ExtractionItem
 
 
 class PrefabSelector(P4KContentSelector):
@@ -12,6 +10,7 @@ class PrefabSelector(P4KContentSelector):
         super().__init__(*args, **kwargs)
         self.sc_tree_model = AlternateRootModel(self.starfab.sc_manager.p4k_model)
         self.proxy_model = P4KSortFilterProxyModelArchive(parent=self)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):

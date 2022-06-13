@@ -2,16 +2,13 @@ from scdatatools.forge.utils import geometry_for_record
 from scdatatools.sc.blueprints.generators.datacore_entity import (
     blueprint_from_datacore_entity,
 )
-
-from starfab.gui import qtc, qtw
-from starfab.models.common import CheckableModelWrapper
+from starfab.gui import qtc
 from starfab.gui.widgets.dock_widgets.datacore_widget import (
     DCBSortFilterProxyModel,
     DCBItem,
 )
-
-from .export_log import ExtractionItem
 from .common import DCBContentSelector, AlternateRootModel
+from .export_log import ExtractionItem
 
 
 class EntityExporterSortFilter(DCBSortFilterProxyModel):
@@ -41,6 +38,7 @@ class EntitySelector(DCBContentSelector):
         super().__init__(*args, **kwargs)
         self.sc_tree_model = AlternateRootModel(self.starfab.sc_manager.datacore_model)
         self.proxy_model = EntityExporterSortFilter(parent=self)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):

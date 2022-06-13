@@ -7,9 +7,8 @@ from scdatatools.engine.cryxml import (
     etree_from_cryxml_file,
     is_cryxmlb_file,
 )
-
+from starfab.gui import qtc
 from starfab.log import getLogger
-from starfab.gui import qtc, qtw, qtg
 from starfab.models.common import (
     PathArchiveTreeSortFilterProxyModel,
     PathArchiveTreeItem,
@@ -17,7 +16,6 @@ from starfab.models.common import (
     PathArchiveTreeModelLoader,
     ThreadLoadedPathArchiveTreeModel,
 )
-
 
 logger = getLogger(__name__)
 P4K_MODEL_COLUMNS = ["Name", "Size", "Kind", "Date Modified"]
@@ -134,6 +132,7 @@ class P4KItem(PathArchiveTreeItem, ContentItem):
 
 class P4KModelLoader(PathArchiveTreeModelLoader):
     def items_to_load(self):
+        self.model.archive.expand_subarchives()
         return self.model.archive.filelist
 
     def load_item(self, item):
