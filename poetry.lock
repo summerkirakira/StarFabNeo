@@ -1,12 +1,4 @@
 [[package]]
-name = "appdirs"
-version = "1.4.4"
-description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "appnope"
 version = "0.1.3"
 description = "Disable App Nap on macOS >= 10.9"
@@ -303,35 +295,6 @@ description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
 python-versions = ">=3.5"
-
-[[package]]
-name = "imageio"
-version = "2.19.3"
-description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-numpy = "*"
-pillow = ">=8.3.2"
-
-[package.extras]
-all-plugins = ["astropy", "av", "imageio-ffmpeg", "opencv-python", "psutil", "tifffile"]
-all-plugins-pypy = ["av", "imageio-ffmpeg", "psutil", "tifffile"]
-build = ["wheel"]
-dev = ["invoke", "pytest", "pytest-cov", "fsspec", "black", "flake8"]
-docs = ["sphinx", "numpydoc", "pydata-sphinx-theme"]
-ffmpeg = ["imageio-ffmpeg", "psutil"]
-fits = ["astropy"]
-full = ["astropy", "av", "black", "flake8", "fsspec", "gdal", "imageio-ffmpeg", "invoke", "itk", "numpydoc", "opencv-python", "psutil", "pydata-sphinx-theme", "pytest", "pytest-cov", "sphinx", "tifffile", "wheel"]
-gdal = ["gdal"]
-itk = ["itk"]
-linting = ["black", "flake8"]
-opencv = ["opencv-python"]
-pyav = ["av"]
-test = ["invoke", "pytest", "pytest-cov", "fsspec"]
-tifffile = ["tifffile"]
 
 [[package]]
 name = "ipykernel"
@@ -822,39 +785,6 @@ text-unidecode = ">=1.3"
 unidecode = ["Unidecode (>=1.1.1)"]
 
 [[package]]
-name = "pyvista"
-version = "0.34.1"
-description = "Easier Pythonic interface to VTK"
-category = "main"
-optional = false
-python-versions = ">=3.7.*"
-
-[package.dependencies]
-appdirs = "*"
-imageio = "*"
-numpy = "*"
-pillow = "*"
-scooby = ">=0.5.1"
-vtk = "*"
-
-[package.extras]
-all = ["matplotlib", "colorcet", "cmocean", "meshio"]
-colormaps = ["matplotlib", "colorcet", "cmocean"]
-io = ["meshio (>=5.2)"]
-
-[[package]]
-name = "pyvistaqt"
-version = "0.9.0"
-description = "pyvista qt plotter"
-category = "main"
-optional = false
-python-versions = ">=3.6.*"
-
-[package.dependencies]
-pyvista = ">=0.32.0"
-QtPy = ">=1.9.0"
-
-[[package]]
 name = "pywin32"
 version = "304"
 description = "Python for Window Extensions"
@@ -979,17 +909,6 @@ sentry-sdk = "1.5.8"
 tqdm = ">=4.62.3,<4.63.0"
 xxhash = ">=2.0.2,<2.1.0"
 zstandard = ">=0.12.0,<0.13.0"
-
-[[package]]
-name = "scooby"
-version = "0.5.12"
-description = "A Great Dane turned Python environment detective"
-category = "main"
-optional = false
-python-versions = ">=3.7.*"
-
-[package.extras]
-cpu = ["psutil", "mkl"]
 
 [[package]]
 name = "sentry-sdk"
@@ -1162,21 +1081,6 @@ secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "cer
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
-name = "vtk"
-version = "9.1.0.dev0"
-description = "VTK is an open-source toolkit for 3D computer graphics, image processing, and visualization"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-numpy = ["numpy (>=1.9)"]
-
-[package.source]
-type = "url"
-url = "https://wheels.pyvista.org/vtk-9.1.0.dev0-cp310-cp310-win_amd64.whl#sha256=cede5251ba3c22f4255af18bb360d64b4fba5c285a4224c2fd3a08f3a5f3ba15"
-
-[[package]]
 name = "wcwidth"
 version = "0.2.5"
 description = "Measures the displayed width of unicode strings in a terminal"
@@ -1203,13 +1107,9 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10.2,<3.11"
-content-hash = "bcbd05c3fa676a2be71e5ffb20ce1458dbbe18a783ab6753d2c08cfaba336a35"
+content-hash = "54194498510d23ba3b7290d42675a4f1bb26a8bd0b3f320b5cb0265680b4da43"
 
 [metadata.files]
-appdirs = [
-    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
-    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
-]
 appnope = [
     {file = "appnope-0.1.3-py2.py3-none-any.whl", hash = "sha256:265a455292d0bd8a72453494fa24df5a11eb18373a60c7c0430889f22548605e"},
     {file = "appnope-0.1.3.tar.gz", hash = "sha256:02bd91c4de869fbb1e1c50aafc4098827a7a54ab2f39d9dcba6c9547ed920e24"},
@@ -1385,10 +1285,6 @@ humanize = [
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
-]
-imageio = [
-    {file = "imageio-2.19.3-py3-none-any.whl", hash = "sha256:d36ab8616175a093676693a4dbc85c6cc767f981c9ce93041422569c76d06347"},
-    {file = "imageio-2.19.3.tar.gz", hash = "sha256:0c9df80e42f2ee68bea92001e7fcf612aa149910efe040eb757f5ce323250ae1"},
 ]
 ipykernel = [
     {file = "ipykernel-6.13.1-py3-none-any.whl", hash = "sha256:fedc79bebd8a438162d056e0c7662d5ac8a47d1f6ef33a702e8460248dc4517f"},
@@ -1724,14 +1620,6 @@ python-slugify = [
     {file = "python-slugify-6.1.2.tar.gz", hash = "sha256:272d106cb31ab99b3496ba085e3fea0e9e76dcde967b5e9992500d1f785ce4e1"},
     {file = "python_slugify-6.1.2-py2.py3-none-any.whl", hash = "sha256:7b2c274c308b62f4269a9ba701aa69a797e9bca41aeee5b3a9e79e36b6656927"},
 ]
-pyvista = [
-    {file = "pyvista-0.34.1-py3-none-any.whl", hash = "sha256:93d725b84eb037b44cccc45ea65f59bb25f9515238781217614a297f9cdff5fd"},
-    {file = "pyvista-0.34.1.tar.gz", hash = "sha256:3fe322d76c5e74797242026d338f948c4cebeee99efcc817fbf97e39a09ccfb0"},
-]
-pyvistaqt = [
-    {file = "pyvistaqt-0.9.0-py3-none-any.whl", hash = "sha256:0c885e2032c45463cd00474ea69c9e230d72c98ee34026993fbc172c8c251202"},
-    {file = "pyvistaqt-0.9.0.tar.gz", hash = "sha256:259ff09e3f36086a11fa49bd27d4749e502799ef1f51419fa81f5dd540babe9e"},
-]
 pywin32 = [
     {file = "pywin32-304-cp310-cp310-win32.whl", hash = "sha256:3c7bacf5e24298c86314f03fa20e16558a4e4138fc34615d7de4070c23e65af3"},
     {file = "pywin32-304-cp310-cp310-win_amd64.whl", hash = "sha256:4f32145913a2447736dad62495199a8e280a77a0ca662daa2332acf849f0be48"},
@@ -1865,10 +1753,6 @@ scdatatools = [
     {file = "scdatatools-1.0.3-py2.py3-none-any.whl", hash = "sha256:2cb76bcc31276318bde165d8cef3948a5db462b039bcad410032fe4322c1724c"},
     {file = "scdatatools-1.0.3.tar.gz", hash = "sha256:ffb087c52778eac6e983b277a1e299f03302756ba788c982d9377857f3cfa121"},
 ]
-scooby = [
-    {file = "scooby-0.5.12-py3-none-any.whl", hash = "sha256:4e0a467a357e5499b36ac336f84404337f174af650b0f9e8f935f9b39ea8409d"},
-    {file = "scooby-0.5.12.tar.gz", hash = "sha256:874828e38834c1ccb2236a7491e0739675086608c6588abf132cdd0049458192"},
-]
 sentry-sdk = [
     {file = "sentry-sdk-1.5.8.tar.gz", hash = "sha256:38fd16a92b5ef94203db3ece10e03bdaa291481dd7e00e77a148aa0302267d47"},
     {file = "sentry_sdk-1.5.8-py2.py3-none-any.whl", hash = "sha256:32af1a57954576709242beb8c373b3dbde346ac6bd616921def29d68846fb8c3"},
@@ -1969,7 +1853,6 @@ urllib3 = [
     {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
     {file = "urllib3-1.26.9.tar.gz", hash = "sha256:aabaf16477806a5e1dd19aa41f8c2b7950dd3c746362d7e3223dbe6de6ac448e"},
 ]
-vtk = []
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
     {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
