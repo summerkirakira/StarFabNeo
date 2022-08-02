@@ -162,7 +162,8 @@ class BlenderManager(QObject):
 
         self.blender = ""
         self.additional_blender_paths = []
-        self._handle_set_additional_paths(self.starfab.settings.value("external_tools/blender/additional_paths", []))
+        self._handle_set_additional_paths(self.starfab.settings.value("external_tools/blender/additional_paths", []),
+                                          init=True)
         self.preferred_blender = ""
         self.available_versions = {}
         self._handle_set_preferred_blender(self.starfab.settings.value("external_tools/blender/preferred", ''))
@@ -203,10 +204,11 @@ class BlenderManager(QObject):
         qtc.QThreadPool.globalInstance().start(CheckBlenderVersions(self))
 
     @qtc.Slot(list)
-    def _handle_set_additional_paths(self, blender_paths):
+    def _handle_set_additional_paths(self, blender_paths, init=False):
         self.additional_blender_paths = [p.as_posix() if isinstance(p, Path) else p for p in blender_paths]
-        self.starfab.settings.setValue("external_tools/blender/additional_paths", self.additional_blender_paths)
-        qtc.QThreadPool.globalInstance().start(CheckBlenderVersions(self))
+        if not init:
+            self.starfab.settings.setValue("external_tools/blender/additional_paths", self.additional_blender_paths)
+            qtc.QThreadPool.globalInstance().start(CheckBlenderVersions(self))
 
     @qtc.Slot(dict)
     def _handle_update_versions(self, available_versions):
@@ -367,11 +369,10 @@ class BlenderManager(QObject):
         if not self.blender:
             raise ValueError(f"Could not find blender installation")
 
-        cmd = f"{self.blender.name} --python-use-system-env"
+        cmd = f"{self.blender.name}"
         procid, token = self._gen_auth_token()
 
         env = os.environ.copy()
-        env["PYTHONPATH"] = ";".join(sys.path)
 
         if init_blenderlink:
             if self.ensure_blenderlink_is_running():
