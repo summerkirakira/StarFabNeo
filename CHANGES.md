@@ -3,6 +3,14 @@
 
 See current releases on [GitLab](https://gitlab.com/scmodding/tools/starfab/-/releases/)
 
+## [0.4.8](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.8)
+
+**NOTE:** This version **requires** Blender 3.1+, 3.0 and below are no longer supported
+
+* Massive Blender shader improvements
+* Handling for changes in SC 3.17.1
+* Migration to Python 3.10 and Blender 3.1+ support
+
 ## [0.4.7](https://gitlab.com/scmodding/tools/starfab/-/releases/0.4.7)
 
 * New material name normalization. All material names in `mtl` have spaces converted to underscores as the Blender

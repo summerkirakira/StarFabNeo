@@ -9,5 +9,6 @@ rm -rf windows/msi/StarFab/src/app/*
 poetry run briefcase update $@
 mkdir -p windows/msi/StarFab/src/app/
 cp -R ../../frameworks/scdatatools/scdatatools windows/msi/StarFab/src/app/starfab/contrib/
+rm -rf windows/msi/StarFab/src/app_packages/scdatatools
 
 popd &> /dev/null || exit
