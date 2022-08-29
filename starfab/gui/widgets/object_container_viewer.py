@@ -1,8 +1,10 @@
 from pathlib import Path
 
 from qtpy import uic
+from pyvistaqt import QtInteractor
 
-from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer
+from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer, ObjectContainerPlotter
+
 from starfab import get_starfab
 from starfab.gui import qtw
 from starfab.gui.widgets.common import CollapsableWidget
@@ -33,6 +35,36 @@ def widget_for_attr(name, value):
     layout.setContentsMargins(0, 0, 0, 0)
     widget.setLayout(layout)
     return widget
+
+
+class ObjectContainerViewer(qtw.QWidget):
+    def __init__(self, object_container, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object_container = object_container
+        self.plotter = None
+
+        layout = qtw.QHBoxLayout(self)
+        show_btn = qtw.QPushButton(f'View Object Container')
+        show_btn.clicked.connect(self._show_plotter)
+        layout.addWidget(show_btn)
+
+    def deleteLater(self) -> None:
+        if self.plotter is not None:
+            self.plotter.plotter.clear()
+            self.plotter.plotter.close()
+        super().deleteLater()
+
+    def _show_plotter(self):
+        layout = self.layout()
+        btn = layout.takeAt(0)  # remove the button
+        btn.widget().deleteLater()
+        del btn
+
+        self.setMinimumHeight(480)
+        self.plotter = ObjectContainerPlotter(
+            self.object_container, plotter=QtInteractor(), label_font_size=24, point_max_size=24
+        )
+        layout.addWidget(self.plotter.plotter)
 
 
 class LazyObjectContainerWidget(CollapsableWidget):
@@ -131,6 +163,12 @@ class ObjectContainerView(qtw.QWidget):
 
         for attr in attrs_to_show:
             self.obj_info.addRow(attr, widget_for_attr(attr, attrs[attr]))
+
+        try:
+            self.oc_viewer = ObjectContainerViewer(self.object_container)
+            self.obj_content.insertWidget(self.obj_content.count() - 1, self.oc_viewer)
+        except ImportError:
+            pass  # not available
 
         self.children_widget = LazyContainerChildrenWidget(self.object_container,
                                                            parent=self.obj_content_widget)
