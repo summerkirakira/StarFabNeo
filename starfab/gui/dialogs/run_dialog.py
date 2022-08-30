@@ -21,7 +21,7 @@ class RunDialog(qtw.QDialog):
         )
         self.setWindowIcon(icon)
 
-        self.label_PixLogo.setPixmap(qtg.QPixmap(str(RES_PATH / "starfab.png")))
+        self.label_PixLogo.setPixmap(qtg.QPixmap(str(RES_PATH / "starfab_v.png")))
 
         self._ptu_data = ""
         self._live_data = ""

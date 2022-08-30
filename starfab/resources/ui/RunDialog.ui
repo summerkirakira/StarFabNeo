@@ -25,6 +25,13 @@
     <height>600</height>
    </size>
   </property>
+  <property name="font">
+   <font>
+    <family>System</family>
+    <pointsize>9</pointsize>
+    <bold>true</bold>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>StarFab Launcher</string>
   </property>
@@ -98,28 +105,31 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>150</height>
+          <height>220</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>150</height>
+          <height>220</height>
          </size>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
          <item>
           <widget class="QLabel" name="label_PixLogo">
            <property name="minimumSize">
             <size>
              <width>150</width>
-             <height>150</height>
+             <height>200</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>150</width>
-             <height>150</height>
+             <height>200</height>
             </size>
            </property>
            <property name="autoFillBackground">
@@ -129,13 +139,13 @@
             <string/>
            </property>
            <property name="pixmap">
-            <pixmap>../starfab.png</pixmap>
+            <pixmap>../starfab_v.png</pixmap>
            </property>
            <property name="scaledContents">
             <bool>true</bool>
            </property>
            <property name="alignment">
-            <set>Qt::AlignHCenter|Qt::AlignTop</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
