@@ -3,6 +3,8 @@ from pathlib import Path
 
 from scdatatools.blender.addon.utils import install_blender_addon
 
+from starfab import __version__
+
 ADDON_TEMPLATE = """
 # StarFab Add-on
 # https://gitlab.com/scmodding/tools/starfab
@@ -17,7 +19,7 @@ bl_info = {{
     "name": "StarFab Blender Link",
     "author": "ventorvar",
     "version": (0, 1, 0),
-    "blender": (2, 93, 0),
+    "blender": (3, 1, 0),
     "location": "View3D > Panel",
     "category": "SC Modding",
     "doc_url": "https://gitlab.com/scmodding/tools/starfab",

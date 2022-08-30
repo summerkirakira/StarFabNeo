@@ -36,17 +36,18 @@ class VehiclesLoader(DCBLoader):
 
             if not category:
                 continue
+            items.append((category, r))
 
-            # try:
-            #     e = next(iter(_ for _ in r.properties['StaticEntityClassData']
-            #                   if _.name == 'DefaultEntitlementEntityParams'))
-            #     if e.properties.get('canEntitleThroughWebsite', False):
-            #         items.append((category, r))
-            # except StopIteration:
-            #     if not any(_.name in FILTER_TAGS for _ in r.properties.get('tags', [])):
-            #         items.append((category, r))
-            if not any(_.name in FILTER_TAGS for _ in r.properties.get("tags", [])):
-                items.append((category, r))
+        #     # try:
+        #     #     e = next(iter(_ for _ in r.properties['StaticEntityClassData']
+        #     #                   if _.name == 'DefaultEntitlementEntityParams'))
+        #     #     if e.properties.get('canEntitleThroughWebsite', False):
+        #     #         items.append((category, r))
+        #     # except StopIteration:
+        #     #     if not any(_.name in FILTER_TAGS for _ in r.properties.get('tags', [])):
+        #     #         items.append((category, r))
+        #     if not any(_.name in FILTER_TAGS for _ in r.properties.get("tags", [])):
+        #         items.append((category, r))
 
         return items
 
