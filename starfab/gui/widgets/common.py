@@ -9,6 +9,7 @@ class CollapsableWidget(qtw.QFrame):
         self.label = label
         self.expanded = expand
         self.setObjectName("CollapseableWidget")
+        self.setSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred)
 
         self.main_layout = qtw.QVBoxLayout()
         self.setStyleSheet(

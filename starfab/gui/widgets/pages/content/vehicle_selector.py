@@ -17,6 +17,32 @@ FILTER_TAGS = [
     "5a9670c9-d060-4bad-b042-e538f90e24e3",  # 'TagDatabase.AI.Spawning.GameMode.AC'
 ]
 
+FILTER_NAME = [
+    '_PU',
+    '_S42',
+    '_AI',
+    'Test',
+    'TEST',
+    'probe',
+    'Destructable',
+    '_EA_',
+    '_Showdown',
+    '_Destruction',
+    '_Template',
+    '_ToW',
+    '_FW22NFZ',
+    '_BIS',
+    '_CitizenCon',
+    '_ShipShowdown',
+    '_Modifiers',
+    '_Derelict',
+    '_NoInterior',
+    '_Wreck',
+    '_Hijacked',
+    '_CINEMATIC',
+    '_Drug',
+]
+
 
 class VehiclesLoader(DCBLoader):
     def items_to_load(self):
@@ -36,7 +62,6 @@ class VehiclesLoader(DCBLoader):
 
             if not category:
                 continue
-            items.append((category, r))
 
         #     # try:
         #     #     e = next(iter(_ for _ in r.properties['StaticEntityClassData']
@@ -48,6 +73,11 @@ class VehiclesLoader(DCBLoader):
         #     #         items.append((category, r))
         #     if not any(_.name in FILTER_TAGS for _ in r.properties.get("tags", [])):
         #         items.append((category, r))
+            if any(_ in r.name for _ in FILTER_NAME):
+                continue
+            # if any(_.name in FILTER_TAGS for _ in r.properties.get("tags", [])):
+            #     continue
+            items.append((category, r))
 
         return items
 

@@ -62,6 +62,7 @@ def widget_for_chunk(info, obj, chunk, inline=False):
         l.setTextInteractionFlags(qtc.Qt.TextSelectableByMouse)
         layout.addWidget(l)
 
+    widget.setSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred)
     widget.setLayout(layout)
     return widget
 

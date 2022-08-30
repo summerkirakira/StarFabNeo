@@ -4,7 +4,6 @@ import time
 from os import path
 from pathlib import Path
 from functools import partial
-from distutils.util import strtobool
 
 import qtawesome as qta
 from qtpy import uic
@@ -33,7 +32,7 @@ from .log import getLogger
 from .models import StarCitizenManager
 from .resources import RES_PATH
 from .settings import settings
-from .utils import reload_starfab_modules
+from .utils import reload_starfab_modules, parsebool
 
 logger = getLogger(__name__)
 

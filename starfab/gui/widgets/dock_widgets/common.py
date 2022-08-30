@@ -158,6 +158,10 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         self.sc_breadcrumbs.setVisible(False)
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
 
+        tree_header = self.sc_tree.header()
+        tree_header.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        tree_header.customContextMenuRequested.connect(self._show_header_ctx_menu)
+
         self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
         self.sc_tree.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
@@ -225,6 +229,11 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         item = index.internalPointer()
         if item is not None:
             self._handle_item_action(item, self.sc_tree_model, index)
+
+    @qtc.Slot(qtc.QPoint)
+    def _show_header_ctx_menu(self, pos):
+        menu = qtw.QMenu()
+        menu.exec_(self.sc_tree.header().mapToGlobal(pos))
 
     @qtc.Slot(qtc.QPoint)
     def _show_ctx_menu(self, pos):
@@ -304,6 +313,10 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         self.sc_breadcrumbs.setVisible(False)
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
 
+        tree_header = self.sc_tree.header()
+        tree_header.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        tree_header.customContextMenuRequested.connect(self._show_header_ctx_menu)
+
         self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
         self.sc_tree.setUniformRowHeights(True)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
@@ -372,6 +385,22 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         item = index.internalPointer()
         if item is not None:
             self._handle_item_action(item, self.sc_tree_model, index)
+
+    def _handle_header_toggled(self, checked):
+        self.sc_tree.setColumnHidden(self.sender().column, not checked)
+
+    @qtc.Slot(qtc.QPoint)
+    def _show_header_ctx_menu(self, pos):
+        if self.sc_tree_model is None:
+            return
+        menu = qtw.QMenu()
+        for i in range(1, self.sc_tree_model.columnCount(None)):
+            action = menu.addAction(self.sc_tree_model.headerData(i, qtc.Qt.Horizontal, qtc.Qt.DisplayRole))
+            action.column = i
+            action.setCheckable(True)
+            action.setChecked(not self.sc_tree.isColumnHidden(i))
+            action.triggered.connect(self._handle_header_toggled)
+        menu.exec_(self.sc_tree.header().mapToGlobal(pos))
 
     @qtc.Slot(qtc.QPoint)
     def _show_ctx_menu(self, pos):

@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from starfab.gui import qtc, qtw
 
@@ -36,7 +37,7 @@ def icon_for_path(path: str, default=False):
         ext = path.rsplit(".", maxsplit=1)[-1]
         if ext in ZIP_ICON_EXTS:
             path = path.replace(ext, "zip")
-        return _icon_cache.setdefault(ext, icon_provider.icon(qtc.QFileInfo(path)))
+        return _icon_cache.setdefault(ext, icon_provider.icon(qtc.QFileInfo(Path(path).absolute().as_posix())))
     if default:
         return _icon_cache.setdefault(
             ".default", qtw.QApplication.style().standardIcon(qtw.QStyle.SP_FileIcon)
