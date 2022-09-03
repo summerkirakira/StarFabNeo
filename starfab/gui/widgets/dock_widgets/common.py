@@ -1,29 +1,26 @@
-import logging
-import typing
 import operator
+import typing
 from functools import partial
 from pathlib import Path
 
-from qtpy import uic
 import qtawesome as qta
+from qtpy import uic
 
 from starfab import get_starfab
 from starfab.gui import qtc, qtw, qtg
-from starfab.resources import RES_PATH
-from starfab.models.common import PathArchiveTreeSortFilterProxyModel
+from starfab.gui.widgets.chunked_file_viewer import (
+    SUPPORTED_CHUNK_FILE_FORMATS,
+    ChunkedObjView,
+)
 from starfab.gui.widgets.editor import SUPPORTED_EDITOR_FORMATS, Editor
 from starfab.gui.widgets.image_viewer import (
     SUPPORTED_IMG_FORMATS,
     QImageViewer,
     DDSImageViewer,
 )
-from starfab.gui.widgets.chunked_file_viewer import (
-    SUPPORTED_CHUNK_FILE_FORMATS,
-    ChunkedObjView,
-)
-from starfab.gui.widgets.object_container_viewer import ObjectContainerView, SUPPORTED_OBJECT_CONTAINER_FILE_FORMATS
 from starfab.log import getLogger
-
+from starfab.models.common import PathArchiveTreeSortFilterProxyModel
+from starfab.resources import RES_PATH
 
 logger = getLogger(__name__)
 
@@ -117,6 +114,10 @@ class StarFabStaticWidget(qtw.QWidget):
 
     def _handle_item_action(self, item, model, index):
         widget = None
+
+        # refactor to avoid the circular import
+        from starfab.gui.widgets.object_container_viewer import ObjectContainerView, \
+            SUPPORTED_OBJECT_CONTAINER_FILE_FORMATS
 
         if isinstance(item, dict):
             # TODO: this needs be handled much better than "is it a dict" -.-'

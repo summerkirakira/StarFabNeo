@@ -1,13 +1,13 @@
 from pathlib import Path
 
-from qtpy import uic
 from pyvistaqt import QtInteractor
+from qtpy import uic
 
 from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer, ObjectContainerPlotter
-
 from starfab import get_starfab
 from starfab.gui import qtw
 from starfab.gui.widgets.common import CollapsableWidget
+from starfab.gui.widgets.preview3d import LazyCollapsablePreviewWidget
 from starfab.hooks import COLLAPSABLE_OBJECT_CONTAINER_WIDGET
 from starfab.plugins import plugin_manager
 from starfab.resources import RES_PATH
@@ -165,7 +165,17 @@ class ObjectContainerView(qtw.QWidget):
             self.obj_info.addRow(attr, widget_for_attr(attr, attrs[attr]))
 
         try:
-            self.oc_viewer = ObjectContainerViewer(self.object_container)
+            # self.oc_viewer = ObjectContainerViewer(self.object_container)
+            self.oc_viewer = LazyCollapsablePreviewWidget(
+                preview_kwargs={
+                    'plotter_class': ObjectContainerPlotter,
+                    'plotter_kwargs': {
+                        'object_container': self.object_container,
+                        'label_font_size': 24,
+                        'point_max_size': 24,
+                    }
+                }
+            )
             self.obj_content.insertWidget(self.obj_content.count() - 1, self.oc_viewer)
         except ImportError:
             pass  # not available
