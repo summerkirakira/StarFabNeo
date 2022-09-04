@@ -273,7 +273,7 @@ class LazyCollapsablePreviewWidget(CollapsableWidget):
         self.content.setLayout(qtw.QVBoxLayout())
         self._loader = loader
         self.min_size = min_size
-        self._preview_kwargs = preview_kwargs
+        self._preview_kwargs = preview_kwargs or {}
 
         content_layout = self.content.layout()
         content_layout.setSpacing(0)

@@ -1,13 +1,13 @@
 import os
+
 from qtpy.QtCore import Slot, Signal, QObject
 from qtpy.QtWebChannel import QWebChannel
 from qtpy.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
-from . import embedrc
-from starfab.gui import qtc, qtw, qtg
-from starfab.settings import settings
 from scdatatools.utils import parse_bool
-
+from starfab.gui import qtc, qtw
+from starfab.settings import settings
+from . import embedrc
 
 WRAP_MODES = {
     'off': 'off',
@@ -254,7 +254,7 @@ class Editor(QWebEngineView):
 
     def contextMenuEvent(self, event):
         filter_actions = ["Back", "Forward", "Reload", "Save page", "View page source"]
-        menu = self.page().createStandardContextMenu()
+        menu = self.createStandardContextMenu()
         for action in menu.actions():
             if action.text() in filter_actions:
                 menu.removeAction(action)
