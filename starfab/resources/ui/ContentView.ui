@@ -163,13 +163,13 @@
     <widget class="QWidget" name="widget_Content_Right" native="true">
      <property name="minimumSize">
       <size>
-       <width>400</width>
+       <width>500</width>
        <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>400</width>
+       <width>500</width>
        <height>16777215</height>
       </size>
      </property>

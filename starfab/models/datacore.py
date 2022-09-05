@@ -49,6 +49,8 @@ class DCBSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
 class DCBLoader(PathArchiveTreeModelLoader):
     def items_to_load(self):
         # trigger datacore to load here
+        # TODO: there is probably a better place to trigger the ac_manager to load, but meh
+        self.model.archive.attachable_component_manager.load_attachable_components()
         self.model.archive = self.model.archive.datacore
         if 'datacore' in SKIP_MODELS:
             logger.debug(f'Skipping loading the datacore model')
