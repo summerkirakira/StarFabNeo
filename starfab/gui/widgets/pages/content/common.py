@@ -1,9 +1,8 @@
 from scdatatools.forge.utils import geometry_for_record
-
 from starfab.gui import qtc, qtw
-from starfab.models.common import CheckableModelWrapper
 from starfab.gui.widgets.dock_widgets.common import StarFabSearchableTreeWidget
 from starfab.gui.widgets.dock_widgets.datacore_widget import DCBFilterWidget
+from starfab.models.common import CheckableModelWrapper
 
 
 class AlternateRootModel(CheckableModelWrapper):
@@ -102,3 +101,7 @@ class DCBContentSelector(ContentSelector):
             and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None
         ):
             self.content_page.preview_chunkfile(g)
+            try:
+                self.content_page.hardpoint_editor.set_vehicle(item.record)
+            except AttributeError:
+                pass

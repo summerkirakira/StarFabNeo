@@ -6,6 +6,7 @@ from qtpy import uic
 from starfab.gui import qtw
 from starfab.gui.widgets.dock_widgets.audio_widget import AudioTreeWidget
 from starfab.gui.widgets.export_utils import ExportOptionsWidget
+from starfab.gui.widgets.hardpoint_editor import HardpointEditor
 from starfab.hooks import GEOMETRY_PREVIEW_WIDGET
 from starfab.log import getLogger
 from starfab.plugins import plugin_manager
@@ -65,6 +66,9 @@ class ContentView(qtw.QWidget):
             self.content_right_tab_widget.indexOf(self.tab_Jobs), False
         )
         self.groupBox_Content_Local_Files.hide()
+
+        self.hardpoint_editor = HardpointEditor(self.export_options)
+        self.right_content.insertWidget(0, self.hardpoint_editor)
 
         prev_handlers = plugin_manager.hooks(GEOMETRY_PREVIEW_WIDGET)
         if prev_handlers:

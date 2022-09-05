@@ -173,7 +173,7 @@
        <height>16777215</height>
       </size>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <layout class="QVBoxLayout" name="right_content">
       <property name="leftMargin">
        <number>0</number>
       </property>
