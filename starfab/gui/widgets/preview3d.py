@@ -131,13 +131,16 @@ class Preview3D(StarFabStaticWidget):
 
     def _handle_tab_changed(self, index):
         self.clear()
-        self.load_mesh(self.tabs[list(self.tabs.keys())[index]])
+        self.load_tab(index)
         self.reset_view()
 
     def hide_buttons(self, buttons_to_hide: typing.List[str]):
         for _ in buttons_to_hide:
             if btn := getattr(self, f'_{_}_action'):
                 btn.setVisible(False)
+
+    def load_tab(self, index):
+        pass
 
     def set_allow_popout(self, allowed):
         self._pop_out_action.setVisible(allowed)
@@ -266,12 +269,13 @@ class Preview3D(StarFabStaticWidget):
 
 
 class LazyCollapsablePreviewWidget(CollapsableWidget):
-    def __init__(self, loader: typing.Callable = lambda prev: None, label='Preview', min_size=(1024, 768),
-                 preview_kwargs=None, *args, **kwargs):
+    def __init__(self, previewer: Preview3D = Preview3D, loader: typing.Callable = None, label='Preview',
+                 min_size=(1024, 768), preview_kwargs=None, *args, **kwargs):
         super().__init__(f'{label}', expand=False, *args, **kwargs)
         self._loaded = False
+        self._previewer = previewer
         self.content.setLayout(qtw.QVBoxLayout())
-        self._loader = loader
+        self._loader = loader or self.load
         self.min_size = min_size
         self._preview_kwargs = preview_kwargs or {}
 
@@ -279,9 +283,12 @@ class LazyCollapsablePreviewWidget(CollapsableWidget):
         content_layout.setSpacing(0)
         content_layout.setContentsMargins(0, 0, 0, 0)
 
+    def load(self, prev):
+        return
+
     def expand(self):
         if not self._loaded:
-            prev = Preview3D(hide_buttons=['clear'], **self._preview_kwargs)
+            prev = self._previewer(hide_buttons=['clear'], **self._preview_kwargs)
             prev.setMinimumSize(*self.min_size)
             prev.setSizePolicy(
                 qtw.QSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding)
