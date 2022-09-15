@@ -116,6 +116,12 @@ class Preview3D(StarFabStaticWidget):
 
         self.set_tabs(tabs)
 
+    def set_plotter(self, new_plotter: QtInteractor):
+        self.clear()
+        self.preview_widget.layout().replaceWidget(self.plotter, new_plotter)
+        del self.plotter
+        self.plotter = new_plotter
+
     def set_tabs(self, tabs: typing.Dict[str, str] = None):
         for i in range(self.tabbar.count()):
             self.tabbar.removeTab(0)

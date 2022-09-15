@@ -78,7 +78,7 @@ QToolButton {
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page_DataView">
        <layout class="QHBoxLayout" name="horizontalLayout">
@@ -95,6 +95,15 @@ QToolButton {
          <number>0</number>
         </property>
        </layout>
+      </widget>
+      <widget class="QWidget" name="page_LoadoutsView">
+       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+      </widget>
+      <widget class="QWidget" name="page_MapsView">
+       <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+      </widget>
+      <widget class="QWidget" name="page_MobiView">
+       <layout class="QHBoxLayout" name="horizontalLayout_5"/>
       </widget>
       <widget class="QWidget" name="page_ContentView">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -136,7 +145,7 @@ QToolButton {
      <x>0</x>
      <y>0</y>
      <width>1900</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -378,6 +387,22 @@ QToolButton {
    </property>
    <property name="toolTip">
     <string>ToolBox</string>
+   </property>
+  </action>
+  <action name="actionNavView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Nav</string>
+   </property>
+   <property name="toolTip">
+    <string>Nav</string>
+   </property>
+  </action>
+  <action name="actionMobiView">
+   <property name="text">
+    <string>Mobi</string>
    </property>
   </action>
  </widget>

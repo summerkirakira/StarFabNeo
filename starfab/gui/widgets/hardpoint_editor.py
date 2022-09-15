@@ -34,7 +34,7 @@ class HardpointEditor(qtw.QWidget):
         self.scroll.setWidget(self.form_widget)
         layout.addWidget(self.scroll)
 
-        self.fun_mode = qtw.QCheckBox("Fun Mode")
+        self.fun_mode = qtw.QCheckBox("Creative Mode")
         self.fun_mode.stateChanged.connect(self._toggle_fun_mode)
         layout.addWidget(self.fun_mode)
 

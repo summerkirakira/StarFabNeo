@@ -27,7 +27,7 @@ from .gui.dialogs.settings_dialog import SettingsDialog
 from .gui.dialogs.splash_screen import StarFabSplashScreen
 from .gui.utils import icon_for_path
 from .gui.widgets import dock_widgets
-from .gui.widgets.pages.page_DataView import DataView
+from starfab.gui.widgets.pages import *
 from .log import getLogger
 from .models import StarCitizenManager
 from .resources import RES_PATH
@@ -120,6 +120,7 @@ class StarFab(QMainWindow):
         self.splash = None
         self.data_page_btn = None
         self.content_page_btn = None
+        self.nav_page_btn = None
 
         # -------------      actions       -----------------
         # keyboard shortcuts, for QKeySequence see https://doc.qt.io/qtforpython-5/PySide2/QtGui/QKeySequence.html
@@ -139,6 +140,8 @@ class StarFab(QMainWindow):
         self.actionDataView.triggered.connect(self._handle_workspace_action)
         self.actionContentView.setIcon(qta.icon("ph.package"))
         self.actionContentView.triggered.connect(self._handle_workspace_action)
+        self.actionNavView.setIcon(qta.icon("mdi6.map-marker-path"))
+        self.actionNavView.triggered.connect(self._handle_workspace_action)
         self._open_settings = self.actionSettings
         self.actionSettings.setIcon(qta.icon("msc.settings-gear"))
         self._show_console = self.actionConsole
@@ -170,12 +173,16 @@ class StarFab(QMainWindow):
 
         self.actionDataView.triggered.connect(self.handle_workspace)
         self.actionContentView.triggered.connect(self.handle_workspace)
+        self.actionNavView.triggered.connect(self.handle_workspace)
 
         self.page_DataView = DataView(self)
         self.stackedWidgetWorkspace.addWidget(self.page_DataView)
 
         self.page_ContentView = ContentView(self)
         self.stackedWidgetWorkspace.addWidget(self.page_ContentView)
+
+        self.page_NavView = NavView(self)
+        self.stackedWidgetWorkspace.addWidget(self.page_NavView)
 
         self.dock_widgets = {}
         self.setup_dock_widgets()
@@ -230,6 +237,11 @@ class StarFab(QMainWindow):
         self.content_page_btn.setAutoExclusive(True)
         self.content_page_btn.released.connect(self.handle_workspace)
         self.workspace_panel.add_ribbon_widget(self.content_page_btn)
+
+        self.nav_page_btn = RibbonButton(self, self.actionNavView, True)
+        self.nav_page_btn.setAutoExclusive(True)
+        self.nav_page_btn.released.connect(self.handle_workspace)
+        self.workspace_panel.add_ribbon_widget(self.nav_page_btn)
 
         self.options_panel = self.home_tab.add_ribbon_pane("Options")
         self.options_panel.add_ribbon_widget(
@@ -730,17 +742,21 @@ Contributors:
             # self.show_run_dialog()
 
     def _handle_workspace_action(self):
-        if self.sender() == self.actionDataView or self.sender() == self.data_page_btn:
-            self.handle_workspace("data")
-        elif (
-            self.sender() == self.actionContentView
-            or self.sender() == self.content_page_btn
-        ):
-            self.handle_workspace("content")
+        view = self.sender().text().casefold()
+        self.handle_workspace(view)
 
     @Slot()
     def handle_workspace(self, view=None, *args, **kwargs):
-        # close all just for the recycle effect
+        self.workspace_btns = [self.data_page_btn,
+                               self.content_page_btn,
+                               self.nav_page_btn]
+
+        def _clear_checked(self):
+            for btn in self.workspace_btns:
+                btn.setChecked(False)
+
+        _clear_checked(self)
+
         if view is None:
             return
 
@@ -748,14 +764,13 @@ Contributors:
             self.stackedWidgetWorkspace.setCurrentWidget(self.page_OpenView)
 
         if self.sc is None:
-            self.data_page_btn.setChecked(False)
-            self.content_page_btn.setChecked(False)
-
+            _clear_checked(self)
         elif view == "data":
             self.data_page_btn.setChecked(True)
-            self.content_page_btn.setChecked(False)
             self.stackedWidgetWorkspace.setCurrentWidget(self.page_DataView)
         elif view == "content":
-            self.data_page_btn.setChecked(False)
             self.content_page_btn.setChecked(True)
             self.stackedWidgetWorkspace.setCurrentWidget(self.page_ContentView)
+        elif view == "nav":
+            self.nav_page_btn.setChecked(True)
+            self.stackedWidgetWorkspace.setCurrentWidget(self.page_NavView)
