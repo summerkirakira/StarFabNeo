@@ -117,7 +117,6 @@ class HardpointEditor(qtw.QWidget):
                 default_text = opt.disp_name
         cb.setCurrentText(default_text)
         cb.currentTextChanged.connect(partial(self._handle_hp_changed, hp_name))
-        cb.model().sort(0, qtc.Qt.DescendingOrder)
         return cb
 
     def _get_fun_options(self, hp_name, hp):
@@ -127,9 +126,9 @@ class HardpointEditor(qtw.QWidget):
             if isinstance(types, dict):
                 types = [types]
             for ac_type in types:
-                hp_options.update(self.starfab.sc.attachable_component_manager.filter(
+                hp_options |= self.starfab.sc.attachable_component_manager.filter(
                     size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
-                ))
+                )
         return hp_options
 
     def _get_constrained_options(self, hp_name, hp):
@@ -140,9 +139,9 @@ class HardpointEditor(qtw.QWidget):
                 if isinstance(types, dict):
                     types = [types]
                 for ac_type in types:
-                    hp_options.update(self.starfab.sc.attachable_component_manager.filter(
+                    hp_options |= self.starfab.sc.attachable_component_manager.filter(
                         size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
-                    ))
+                    )
             except KeyError:
                 pass
         return hp_options
