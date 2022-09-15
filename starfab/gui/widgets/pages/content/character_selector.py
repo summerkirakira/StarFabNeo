@@ -19,5 +19,5 @@ class CharacterSelector(EntitySelector):
                 self.content_page is not None
                 and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None
         ):
-            f = {k: v for k, v in g.items() if k in ['female', 'male']}
+            f = {k: v for k, v in g.items() if k.casefold() in ['female', 'male']}
             self.content_page.preview_chunkfile(f or g)

@@ -20,5 +20,5 @@ class WeaponSelector(EntitySelector):
                 self.content_page is not None
                 and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None
         ):
-            f = {k: v for k, v in g.items() if k in ['', 'tableDisplay']}
+            f = {k: v for k, v in g.items() if k.casefold() in ['', 'tabledisplay']}
             self.content_page.preview_chunkfile(f or g)

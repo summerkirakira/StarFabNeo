@@ -93,6 +93,7 @@ class ContentView(qtw.QWidget):
 
     def preview_chunkfile(self, chunkfile_or_tabs, name=None):
         if self.preview is not None:
+            self.hardpoint_editor.clear()
             self.preview.clear()
             if isinstance(chunkfile_or_tabs, dict):
                 self.preview.set_tabs(chunkfile_or_tabs)
