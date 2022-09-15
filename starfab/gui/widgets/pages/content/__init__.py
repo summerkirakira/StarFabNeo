@@ -93,11 +93,12 @@ class ContentView(qtw.QWidget):
 
     def preview_chunkfile(self, chunkfile_or_tabs, name=None):
         if self.preview is not None:
+            self.preview.clear()
             if isinstance(chunkfile_or_tabs, dict):
                 self.preview.set_tabs(chunkfile_or_tabs)
             else:
-                self.preview.clear()
                 self.preview.load_mesh(chunkfile_or_tabs, name=name)
+            self.preview.reset_view()
 
     def handle_extract(self):
         selector = self.toolBox.currentWidget()

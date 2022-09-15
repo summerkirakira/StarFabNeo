@@ -101,7 +101,3 @@ class DCBContentSelector(ContentSelector):
             and (g := geometry_for_record(item.record, self.starfab.sc.p4k)) is not None
         ):
             self.content_page.preview_chunkfile(g)
-            try:
-                self.content_page.hardpoint_editor.set_vehicle(item.record)
-            except AttributeError:
-                pass

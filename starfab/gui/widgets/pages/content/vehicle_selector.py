@@ -1,3 +1,4 @@
+from scdatatools.forge.utils import geometry_for_record
 from scdatatools.sc.blueprints.generators.datacore_entity import (
     blueprint_from_datacore_entity,
 )
@@ -139,3 +140,14 @@ class VehicleSelector(DCBContentSelector):
         header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
         self.sc_tree.hideColumn(1)
+
+    def _handle_item_action(self, item, model, index):
+        if (
+                self.content_page is not None
+                and (g := geometry_for_record(item.record, self.starfab.sc.p4k, base=True)) is not None
+        ):
+            self.content_page.preview_chunkfile(g)
+            try:
+                self.content_page.hardpoint_editor.set_vehicle(item.record)
+            except AttributeError:
+                pass

@@ -9,6 +9,8 @@ from starfab import get_starfab
 from starfab.gui import qtw, qtc
 from starfab.gui.widgets.pages.content.export_log import BlueprintExportLog, ExtractionItem
 
+OPTION_EMPTY_LABEL = '--------'
+
 
 class HardpointEditor(qtw.QWidget):
     def __init__(self, export_options, parent=None):
@@ -68,11 +70,11 @@ class HardpointEditor(qtw.QWidget):
             self.form_layout.removeRow(0)
 
     def _handle_hp_changed(self, hp, value):
-        self.blueprint.update_hardpoint(hp, self.hardpoint_options[hp][value].object)
+        obj = None if value == OPTION_EMPTY_LABEL else self.hardpoint_options[hp][value].object
+        self.blueprint.update_hardpoint(hp, obj)
 
     def _get_bp(self, sc, record, monitor):
         self.blueprint.monitor = monitor
-        self.blueprint._process()
         return self.blueprint
 
     def _handle_export(self):
@@ -103,13 +105,17 @@ class HardpointEditor(qtw.QWidget):
             )
 
     def _build_combobox(self, hp_name, hp_options):
+        hp_default = self.vehicle.default_loadout.get(hp_name, '')
+        default_text = OPTION_EMPTY_LABEL
         cb = qtw.QComboBox()
-        for opt in hp_options:
-            ac_params = opt.components['SAttachableComponentParams']
-            disp_name = self.starfab.sc.gettext(ac_params.display_name)
-            cb.addItem(disp_name)
-            cb.setItemData(cb.count(), self.starfab.sc.gettext(ac_params.description), qtc.Qt.ToolTipRole)
-            self.hardpoint_options[hp_name][disp_name] = opt
+        cb.addItem(OPTION_EMPTY_LABEL)
+        for opt in sorted(hp_options, key=lambda o: o.disp_name, reverse=True):
+            cb.addItem(opt.disp_name)
+            cb.setItemData(cb.count(), opt.description, qtc.Qt.ToolTipRole)
+            self.hardpoint_options[hp_name][opt.disp_name] = opt
+            if opt.name == hp_default:
+                default_text = opt.disp_name
+        cb.setCurrentText(default_text)
         cb.currentTextChanged.connect(partial(self._handle_hp_changed, hp_name))
         cb.model().sort(0, qtc.Qt.DescendingOrder)
         return cb
@@ -129,27 +135,38 @@ class HardpointEditor(qtw.QWidget):
     def _get_constrained_options(self, hp_name, hp):
         hp_options = set()
         for size in range(int(hp['ItemPort']['@minsize']), int(hp['ItemPort']['@maxsize']) + 1):
-            types = hp['ItemPort']['Types']['Type']
-            if isinstance(types, dict):
-                types = [types]
-            for ac_type in types:
-                hp_options.update(self.starfab.sc.attachable_component_manager.filter(
-                    size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
-                ))
+            try:
+                types = hp['ItemPort']['Types']['Type']
+                if isinstance(types, dict):
+                    types = [types]
+                for ac_type in types:
+                    hp_options.update(self.starfab.sc.attachable_component_manager.filter(
+                        size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
+                    ))
+            except KeyError:
+                pass
         return hp_options
 
     def build_options(self):
         self.clear()
+
         self.hardpoint_options = {
             hp_name: {} for hp_name in self.vehicle.editable_hardpoints.keys()
         }
+
         for hp_name, hp in self.vehicle.editable_hardpoints.items():
             if 'ItemPort' not in hp:
                 continue
             if self.fun_mode.isChecked():
-                hp_options = self._get_fun_options(hp_name, hp)
+                filtered_options = self._get_fun_options(hp_name, hp)
             else:
-                hp_options = self._get_constrained_options(hp_name, hp)
+                filtered_options = self._get_constrained_options(hp_name, hp)
+            hp_options = []
+            for o in filtered_options:
+                ac_params = o.components['SAttachableComponentParams']
+                o.disp_name = self.starfab.sc.gettext(ac_params.display_name)
+                o.description = self.starfab.sc.gettext(ac_params.description)
+                hp_options.append(o)
             self.form_layout.addRow(hp_name, self._build_combobox(hp_name, hp_options))
         self.toggle_controls()
 
