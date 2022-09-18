@@ -43,7 +43,8 @@ class PreviewPopOut(qtw.QDialog):
 
 class Preview3D(StarFabStaticWidget):
     def __init__(self, title='', resize_grip=True, allow_popout=True, hide_buttons: typing.List[str] = None,
-                 tabs: typing.Dict[str, str] = None, plotter_class=QtInteractor, plotter_kwargs=None, parent=None):
+                 tabs: typing.Dict[str, str] = None, plotter=None, plotter_class=QtInteractor, plotter_kwargs=None,
+                 parent=None):
         super().__init__(parent)
 
         self.layout = qtw.QVBoxLayout(self)
@@ -64,9 +65,10 @@ class Preview3D(StarFabStaticWidget):
         self.toolbar.setOrientation(qtc.Qt.Vertical)
         preview_layout.addWidget(self.toolbar)
 
-        plotter_kwargs = plotter_kwargs or {}
-        plotter_kwargs.setdefault('parent', self)
-        self.plotter = plotter_class(**plotter_kwargs)
+        self.plotter_class = plotter_class
+        self.plotter_kwargs = plotter_kwargs or {}
+        self.plotter_kwargs.setdefault('parent', self)
+        self.plotter = plotter or self.plotter_class(**self.plotter_kwargs)
         self.cam_orient_widget = vtkCameraOrientationWidget()
         self.cam_orient_widget.SetParentRenderer(self.plotter.renderer)
 
@@ -268,7 +270,7 @@ class Preview3D(StarFabStaticWidget):
     def clear(self, tabs=False):
         for actor in list(self.plotter.renderer.actors.keys()):
             self.plotter.remove_actor(actor)
-        # self.plotter.clear()  #  this doesnt do what we'd expect, so just clear all the actors
+        # self.plotter.clear()   # this doesnt do what we'd expect, so just clear all the actors
         if tabs:
             self.set_tabs(None)
         self.reset_view()

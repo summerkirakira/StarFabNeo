@@ -1,3 +1,4 @@
+import logging
 from functools import partial
 from pathlib import Path
 
@@ -9,16 +10,18 @@ from starfab import get_starfab
 from starfab.gui import qtw, qtc
 from starfab.gui.widgets.pages.content.export_log import BlueprintExportLog, ExtractionItem
 
+logger = logging.getLogger(__name__)
 OPTION_EMPTY_LABEL = '--------'
 
 
 class HardpointEditor(qtw.QWidget):
-    def __init__(self, export_options, parent=None):
+    def __init__(self, export_options, preview=None, parent=None):
         super().__init__(parent=parent)
         self.setSizePolicy(qtw.QSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding))
         self.starfab = get_starfab()
         self.export_options = export_options
         self.setFixedWidth(500)
+        self.preview = preview
 
         layout = qtw.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -32,6 +35,7 @@ class HardpointEditor(qtw.QWidget):
         self.scroll.setHorizontalScrollBarPolicy(qtc.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.form_widget)
+        self.setMinimumHeight(400)
         layout.addWidget(self.scroll)
 
         self.fun_mode = qtw.QCheckBox("Creative Mode")
@@ -65,6 +69,14 @@ class HardpointEditor(qtw.QWidget):
         self.blueprint = blueprint_from_datacore_entity(self.starfab.sc, vehicle.object)
         self.build_options()
 
+        if self.preview is not None:
+            try:
+                for hp_name, hardpoint in self.blueprint.hardpoints.items():
+                    if hp_geom := hardpoint.get('geometry'):
+                        self.preview.load_hardpoint(hp_name, [g for g in hp_geom], data_root=self.starfab.sc.p4k)
+            except AttributeError:
+                pass
+
     def clear(self):
         while self.form_layout.rowCount() > 0:
             self.form_layout.removeRow(0)
@@ -72,6 +84,15 @@ class HardpointEditor(qtw.QWidget):
     def _handle_hp_changed(self, hp, value):
         obj = None if value == OPTION_EMPTY_LABEL else self.hardpoint_options[hp][value].object
         self.blueprint.update_hardpoint(hp, obj)
+        if self.preview is not None:
+            try:
+                self.preview.load_hardpoint(
+                    hp, [g for g in self.blueprint.hardpoints[hp].get('geometry', [])], data_root=self.starfab.sc.p4k
+                )
+            except AttributeError:
+                pass
+            except Exception as e:
+                logger.exception(f'Failed to load hardpoint in preview: {e}', exc_info=e)
 
     def _get_bp(self, sc, record, monitor):
         self.blueprint.monitor = monitor
@@ -163,7 +184,10 @@ class HardpointEditor(qtw.QWidget):
             hp_options = []
             for o in filtered_options:
                 ac_params = o.components['SAttachableComponentParams']
-                o.disp_name = self.starfab.sc.gettext(ac_params.display_name)
+                if (man := ac_params.manufacturer) is None:
+                    continue
+                o.disp_name = f'{self.starfab.sc.gettext(man.code)} ' \
+                              f'{self.starfab.sc.gettext(ac_params.display_name)}'
                 o.description = self.starfab.sc.gettext(ac_params.description)
                 hp_options.append(o)
             self.form_layout.addRow(hp_name, self._build_combobox(hp_name, hp_options))

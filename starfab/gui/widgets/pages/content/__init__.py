@@ -52,7 +52,7 @@ class ContentView(qtw.QWidget):
         clear_selections_btn.clicked.connect(self.clear_assets_selections)
         self.tab_Assets.layout().addWidget(clear_selections_btn)
 
-        self.content_right_tab_widget.hide()
+        # self.content_right_tab_widget.hide()
         self.export_options = ExportOptionsWidget(exclude=['extract_model_assets'], parent=self)
         self.options_layout.insertWidget(0, self.export_options)
 
@@ -77,6 +77,7 @@ class ContentView(qtw.QWidget):
                 allow_popout=False, parent=self
             )
             self.preview_widget_layout.addWidget(self.preview)
+            self.hardpoint_editor.preview = self.preview
         else:
             self.preview = None
             self.splitter.setSizes((1, 0))
