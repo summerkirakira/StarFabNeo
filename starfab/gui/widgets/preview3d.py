@@ -104,7 +104,7 @@ class Preview3D(StarFabStaticWidget):
         self._pop_in_action = self.toolbar.addAction(qta.icon('ph.arrows-in'), 'Pop-in', self.pop_in)
         self._pop_in_action.setVisible(False)
 
-        self._clear_action = self.toolbar.addAction(qta.icon('ph.x-circle'), 'Clear', partial(self.clear, tabs=True))
+        self._clear_action = self.toolbar.addAction(qta.icon('ph.x-circle'), 'Clear', partial(self._clear, tabs=True))
 
         self.set_allow_popout(allow_popout)
         self.hide_buttons(hide_buttons or [])
@@ -267,10 +267,8 @@ class Preview3D(StarFabStaticWidget):
         self._close()
         return super().close()
 
-    def clear(self, tabs=False):
-        for actor in list(self.plotter.renderer.actors.keys()):
-            self.plotter.remove_actor(actor)
-        # self.plotter.clear()   # this doesnt do what we'd expect, so just clear all the actors
+    def _clear(self, tabs=False):
+        self.plotter.clear()
         if tabs:
             self.set_tabs(None)
         self.reset_view()
