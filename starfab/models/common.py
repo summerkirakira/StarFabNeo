@@ -512,9 +512,7 @@ class CheckableModelWrapper(PathArchiveTreeModel):
     def setData(self, index, value, role=qtc.Qt.EditRole):
         if role == qtc.Qt.CheckStateRole and index.column() == self.checkbox_column:
             item = index.internalPointer()
-            self._sync_checked(
-                item, qtc.Qt.Checked if value else qtc.Qt.Unchecked, index
-            )
+            self._sync_checked(item, value, index)
             self._update_parent(item.parent)
         return True
 
