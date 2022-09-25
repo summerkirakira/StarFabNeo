@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from pyvistaqt import QtInteractor
 from qtpy import uic
 
 from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer, ObjectContainerPlotter
@@ -37,34 +36,34 @@ def widget_for_attr(name, value):
     return widget
 
 
-class ObjectContainerViewer(qtw.QWidget):
-    def __init__(self, object_container, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.object_container = object_container
-        self.plotter = None
-
-        layout = qtw.QHBoxLayout(self)
-        show_btn = qtw.QPushButton(f'View Object Container')
-        show_btn.clicked.connect(self._show_plotter)
-        layout.addWidget(show_btn)
-
-    def deleteLater(self) -> None:
-        if self.plotter is not None:
-            self.plotter.plotter.clear()
-            self.plotter.plotter.close()
-        super().deleteLater()
-
-    def _show_plotter(self):
-        layout = self.layout()
-        btn = layout.takeAt(0)  # remove the button
-        btn.widget().deleteLater()
-        del btn
-
-        self.setMinimumHeight(480)
-        self.plotter = ObjectContainerPlotter(
-            self.object_container, plotter=QtInteractor(), label_font_size=24, point_max_size=24
-        )
-        layout.addWidget(self.plotter.plotter)
+# class ObjectContainerViewer(qtw.QWidget):
+#     def __init__(self, object_container, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.object_container = object_container
+#         self.plotter = None
+#
+#         layout = qtw.QHBoxLayout(self)
+#         show_btn = qtw.QPushButton(f'View Object Container')
+#         show_btn.clicked.connect(self._show_plotter)
+#         layout.addWidget(show_btn)
+#
+#     def deleteLater(self) -> None:
+#         if self.plotter is not None:
+#             self.plotter.plotter.clear()
+#             self.plotter.plotter.close()
+#         super().deleteLater()
+#
+#     def _show_plotter(self):
+#         layout = self.layout()
+#         btn = layout.takeAt(0)  # remove the button
+#         btn.widget().deleteLater()
+#         del btn
+#
+#         self.setMinimumHeight(480)
+#         self.plotter = ObjectContainerPlotter(
+#             self.object_container, plotter=QtInteractor(), label_font_size=24, point_max_size=24
+#         )
+#         layout.addWidget(self.plotter.plotter)
 
 
 class LazyObjectContainerWidget(CollapsableWidget):
