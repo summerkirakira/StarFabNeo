@@ -57,8 +57,8 @@ class RibbonPane(QWidget):
 class RibbonSeparator(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
-        self.setMinimumHeight(gui_scale() * 80)
-        self.setMaximumHeight(gui_scale() * 80)
+        self.setMinimumHeight(int(gui_scale() * 80))
+        self.setMaximumHeight(int(gui_scale() * 80))
         self.setMinimumWidth(1)
         self.setMaximumWidth(1)
         self.setLayout(QHBoxLayout())

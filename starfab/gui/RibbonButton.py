@@ -19,10 +19,10 @@ class RibbonButton(QToolButton):
             self._actionOwner.changed.connect(self.update_button_status_from_action)
 
         if is_large:
-            self.setMaximumWidth(80 * sc)
-            self.setMinimumWidth(50 * sc)
-            self.setMinimumHeight(75 * sc)
-            self.setMaximumHeight(80 * sc)
+            self.setMaximumWidth(int(80 * sc))
+            self.setMinimumWidth(int(50 * sc))
+            self.setMinimumHeight(int(75 * sc))
+            self.setMaximumHeight(int(80 * sc))
             # self.setStyleSheet(get_stylesheet("ribbonButton"))
             self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
             self.setIconSize(QSize(32 * sc, 32 * sc))
