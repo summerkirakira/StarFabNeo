@@ -1,16 +1,17 @@
 import os
-import time
 import shutil
-from pathlib import Path
+import time
 from functools import partial
+from pathlib import Path
 
 import qtawesome as qta
-
-from qtpy.QtCore import Signal, Slot
 from qtpy import QtMultimedia
+from qtpy.QtCore import Signal, Slot
 
 from starfab.gui import qtc, qtw, qtg
+from starfab.gui.utils import ScrollMessageBox, seconds_to_str
 from starfab.gui.widgets.dock_widgets.common import StarFabSearchableTreeWidget
+from starfab.log import getLogger
 from starfab.models.audio import (
     SCAUDIOVIEWW_COLUMNS,
     AudioTreeSortFilterProxyModel,
@@ -18,12 +19,9 @@ from starfab.models.audio import (
     AudioTreeLoader,
     AudioTreeItem,
 )
-from starfab.utils import show_file_in_filemanager
-from starfab.gui.utils import ScrollMessageBox, seconds_to_str
-from starfab.resources import RES_PATH
 from starfab.models.common import AudioConverter
-from starfab.log import getLogger
-
+from starfab.resources import RES_PATH
+from starfab.utils import show_file_in_filemanager
 
 logger = getLogger(__name__)
 
@@ -150,7 +148,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         else:
             self.sc_breadcrumbs.setText(f"{self._currently_playing.name}{wem_txt}")
 
-        if state == QtMultimedia.QMediaPlayer.State.PlayingState:
+        if state == QtMultimedia.QMediaPlayer.PlaybackState.PlayingState:
             self.playButton.hide()
             self.pauseButton.show()
             if self._currently_playing is not None:
@@ -162,7 +160,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self.pauseButton.hide()
 
         if (
-            state == QtMultimedia.QMediaPlayer.State.StoppedState
+            state == QtMultimedia.QMediaPlayer.PlaybackState.StoppedState
             and self._playlist
             and self._auto_play
         ):
@@ -193,7 +191,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         #     logger.error(f'Failed to open new audio buffer')
 
         if self._audio_tmp is not None:
-            self._media_player.setMedia(QtMultimedia.QMediaContent())
+            self._media_player.setSource(qtc.QUrl())
             qtc.QThreadPool.globalInstance().start(_AudioCleanup(self._audio_tmp))
             self._audio_tmp = None
 
@@ -240,7 +238,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             and self._currently_playing.wems[self._currently_playing_wem_id] == wem_id
         ):
             self._audio_tmp = ogg_path
-            self._media_player.setMedia(
+            self._media_player.setSource(
                 qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute()))
             )
             wem_item = self.wem_list.item(self._currently_playing_wem_id)
