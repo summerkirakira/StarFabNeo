@@ -1,6 +1,6 @@
-import sys
 import importlib
 import subprocess
+import sys
 from distutils.util import strtobool
 
 from scdatatools.engine.textures.converter import (
@@ -8,8 +8,7 @@ from scdatatools.engine.textures.converter import (
     ConverterUtility,
     ConversionError,
 )
-
-from starfab.gui import qtw, qtc
+from starfab.gui import qtw
 from starfab.settings import get_texconv, get_compressonatorcli
 
 
@@ -19,6 +18,13 @@ def parsebool(val: any):
     elif isinstance(val, str):
         return strtobool(val)
     return bool(val)
+
+
+def open_color_dialog():
+    color = qtw.QColorDialog.getColor()
+    if color.isValid():
+        # print(color.red(), color.blue(), color.green())
+        return color.name()
 
 
 def reload_starfab_modules(module=""):

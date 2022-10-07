@@ -197,10 +197,10 @@ QGroupBox {
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 7px;
-    top: 2px;
+    left: 9px;
+    top: -2px;
     spacing: 6px;
-    margin: 0 2px 0 2px;
+    margin: 0px 0px 0px 0px;
 }
 
 /* QMenuBar ---------------------------------------------------------------
@@ -578,10 +578,10 @@ QTabBar::tab:selected:disabled {
 
 /* Border */
 QTabWidget::pane {
-    border: 1px solid $editorGroup_border;
+    border: 0px solid $editorGroup_border;
 }
 QTabBar {
-    border: 1px solid $tab_border;
+    border: 0px solid $tab_border;
 }
 QTabBar::tab {
     border: 1px solid $tab_border;
@@ -622,7 +622,7 @@ https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qframe
 
 --------------------------------------------------------------------------- */
 QFrame {
-    border: 1px solid $editorGroup_border;
+    border: 0px solid $editorGroup_border;
     padding: 1px;
 }
 

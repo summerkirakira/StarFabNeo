@@ -1,5 +1,6 @@
 import typing
 from functools import partial
+from typing import Optional
 
 import qtawesome as qta
 from pyvistaqt import QtInteractor
@@ -51,6 +52,7 @@ class Preview3D(StarFabStaticWidget):
 
         self.title = title
         self.preview_widget = qtw.QWidget(self)
+        self.last_camera_position: Optional = None
 
         self.tabs = {}
         self.tabbar = qtw.QTabBar()
@@ -69,6 +71,7 @@ class Preview3D(StarFabStaticWidget):
         self.plotter_kwargs = plotter_kwargs or {}
         self.plotter_kwargs.setdefault('parent', self)
         self.plotter = plotter or self.plotter_class(**self.plotter_kwargs)
+        self.plotter.track_click_position(side='left', callback=self._handle_clicked)
         self.cam_orient_widget = vtkCameraOrientationWidget()
         self.cam_orient_widget.SetParentRenderer(self.plotter.renderer)
 
@@ -117,6 +120,27 @@ class Preview3D(StarFabStaticWidget):
         self._old_pos = None
 
         self.set_tabs(tabs)
+
+    def save_camera_position(self):
+        """Save camera position to saved camera menu for recall."""
+        if self.last_camera_position is None:
+            # pylint: disable=attribute-defined-outside-init
+            self.last_camera_position = self.plotter.camera_position
+
+    def load_camera_position(self):
+        if self.last_camera_position is not None:
+            # pylint: disable=attribute-defined-outside-init
+            self.plotter.camera_position = self.last_camera_position
+            self.last_camera_position = None
+
+    def _handle_clicked(self, pos):
+        try:
+            if not self.plotter.renderer.actors['_mesh_picking_selection']:
+                self.load_camera_position()
+        except KeyError:
+            if self.last_camera_position:
+                self.plotter.set_focus([0, 0, 0])
+                self.last_camera_position = None
 
     def set_plotter(self, new_plotter: QtInteractor):
         self.clear()
