@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>507</width>
+    <height>748</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <property name="leftMargin">
+    <number>3</number>
+   </property>
+   <property name="topMargin">
+    <number>6</number>
+   </property>
+   <property name="rightMargin">
+    <number>3</number>
+   </property>
+   <property name="bottomMargin">
+    <number>3</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Preview Display</string>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
+      </property>
+      <property name="bottomMargin">
+       <number>3</number>
+      </property>
+      <item>
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="stackedWidgetPage1">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <widget class="QScrollArea" name="scrollArea">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>474</width>
+               <height>836</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_16">
+              <item>
+               <widget class="QGroupBox" name="groupBox_8">
+                <property name="title">
+                 <string>Colors</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout">
+                 <item row="2" column="1">
+                  <widget class="QComboBox" name="comboBox">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="6" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_gc">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="1">
+                  <widget class="QComboBox" name="comboBox_9">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_wc">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_5">
+                   <property name="text">
+                    <string>Edge Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QComboBox" name="comboBox_8">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="3" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_ec">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_bc">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_pc">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>Primary Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="label_6">
+                   <property name="text">
+                    <string>Background Style</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="comboBox_5">
+                   <item>
+                    <property name="text">
+                     <string>Solid</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gradient</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QPushButton" name="btn_color_pick_cc">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="comboBox_3">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_2">
+                   <property name="text">
+                    <string>Components Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="0">
+                  <widget class="QLabel" name="label_8">
+                   <property name="text">
+                    <string>*Gradient Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>Weapons Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QComboBox" name="comboBox_2">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QComboBox" name="comboBox_4">
+                   <item>
+                    <property name="text">
+                     <string>Dark</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Clay</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Custom Color</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="label_7">
+                   <property name="text">
+                    <string>Background Color</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_9">
+                <property name="title">
+                 <string>Mesh</string>
+                </property>
+                <layout class="QFormLayout" name="formLayout_3">
+                 <item row="0" column="0" colspan="2">
+                  <layout class="QGridLayout" name="gridLayout_3">
+                   <item row="0" column="1">
+                    <widget class="QCheckBox" name="checkBox_4">
+                     <property name="text">
+                      <string>Split Sharp Edges</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QCheckBox" name="checkBox">
+                     <property name="text">
+                      <string>Wireframe</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="checkBox_2">
+                     <property name="text">
+                      <string>Show Edges</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_15">
+                   <property name="text">
+                    <string>Opacity</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSlider" name="horizontalSlider_7">
+                   <property name="maximum">
+                    <number>99</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>99</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="label_4">
+                   <property name="text">
+                    <string>Line Width</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QSlider" name="horizontalSlider_8">
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>5</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>1</number>
+                   </property>
+                   <property name="value">
+                    <number>1</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_2">
+                <property name="title">
+                 <string>Physics Based Rendering</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <layout class="QFormLayout" name="formLayout">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_9">
+                   <property name="text">
+                    <string>Metallic</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSlider" name="horizontalSlider">
+                   <property name="maximum">
+                    <number>100</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>100</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_10">
+                   <property name="text">
+                    <string>Roughness</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSlider" name="horizontalSlider_2">
+                   <property name="maximum">
+                    <number>100</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>100</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_7">
+                <property name="title">
+                 <string>Lighting</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <layout class="QFormLayout" name="formLayout_2">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_11">
+                   <property name="text">
+                    <string>Ambient</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSlider" name="horizontalSlider_6">
+                   <property name="maximum">
+                    <number>100</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>0</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_12">
+                   <property name="text">
+                    <string>Diffuse</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSlider" name="horizontalSlider_5">
+                   <property name="maximum">
+                    <number>100</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>100</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="label_13">
+                   <property name="text">
+                    <string>Specular</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QSlider" name="horizontalSlider_4">
+                   <property name="maximum">
+                    <number>100</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>10</number>
+                   </property>
+                   <property name="value">
+                    <number>0</number>
+                   </property>
+                   <property name="sliderPosition">
+                    <number>0</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_14">
+                   <property name="text">
+                    <string>Specular Power</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QSlider" name="horizontalSlider_3">
+                   <property name="maximum">
+                    <number>128</number>
+                   </property>
+                   <property name="pageStep">
+                    <number>8</number>
+                   </property>
+                   <property name="value">
+                    <number>100</number>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="tickPosition">
+                    <enum>QSlider::TicksBelow</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_3">
+                <property name="title">
+                 <string>Filter Lists</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <item>
+                  <widget class="QPushButton" name="btn_root_excluded_nodes">
+                   <property name="text">
+                    <string>Root Mesh Excluded Nodes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_root_node_del">
+                   <property name="text">
+                    <string>Root Node Deletes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_root_mtl_del">
+                   <property name="text">
+                    <string>Root Material Deletes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_sub_node_del">
+                   <property name="text">
+                    <string>Sub Node Deletes</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_sub_mtl_del">
+                   <property name="text">
+                    <string>Sub Material Deletes</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="stackedWidgetPage2">
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QScrollArea" name="scrollArea_2">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents_2">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>473</width>
+               <height>665</height>
+              </rect>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::RestoreDefaults</set>
+     </property>
+     <property name="centerButtons">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
