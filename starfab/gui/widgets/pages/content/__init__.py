@@ -18,6 +18,7 @@ from .prefab_selector import PrefabSelector
 from .soc_selector import SOCSelector
 from .vehicle_selector import VehicleSelector
 from .weapon_selector import WeaponSelector
+from .preview_options import PreviewOptions
 
 logger = getLogger(__name__)
 
@@ -52,24 +53,18 @@ class ContentView(qtw.QWidget):
         clear_selections_btn.clicked.connect(self.clear_assets_selections)
         self.tab_Assets.layout().addWidget(clear_selections_btn)
 
-        # self.content_right_tab_widget.hide()
         self.export_options = ExportOptionsWidget(exclude=['extract_model_assets'], parent=self)
-        self.options_layout.insertWidget(0, self.export_options)
+        self.export_options.hide()
+        #self.options_layout.insertWidget(0, self.export_options)
 
         self.audio_tree = AudioTreeWidget(starfab=self.starfab, parent=self)
         self.tab_Audio.layout().addWidget(self.audio_tree)
 
-        # TODO: temporarily hide things that arent fleshed out yet
-        self.content_left_tab_widget.setTabVisible(
-            self.content_left_tab_widget.indexOf(self.tab_Images), False
-        )
-        self.content_right_tab_widget.setTabVisible(
-            self.content_right_tab_widget.indexOf(self.tab_Jobs), False
-        )
-        self.groupBox_Content_Local_Files.hide()
+        self.hardpoint_editor = HardpointEditor(self)
+        self.content_tab_hardpoint_editor.insertWidget(0, self.hardpoint_editor)
 
-        self.hardpoint_editor = HardpointEditor(self.export_options)
-        self.right_content.insertWidget(0, self.hardpoint_editor)
+        self.preview_options = PreviewOptions(self)
+        self.content_tab_preview_options.insertWidget(0, self.preview_options)
 
         prev_handlers = plugin_manager.hooks(GEOMETRY_PREVIEW_WIDGET)
         if prev_handlers:

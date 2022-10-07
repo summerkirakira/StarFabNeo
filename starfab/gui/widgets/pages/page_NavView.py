@@ -1,24 +1,29 @@
+from qtpy import uic
+
 from scdatatools.sc.object_container import ObjectContainerPlotter
 from starfab.gui import qtw
 from starfab.gui.widgets.preview3d import Preview3D
+from starfab.resources import RES_PATH
 
 
 class NavView(qtw.QWidget):
     def __init__(self, starfab):
         super().__init__(parent=None)
         self.starfab = starfab
+        uic.loadUi(str(RES_PATH / "ui" / "NavView.ui"), self)  # Load the ui into self
+
         self.starfab.sc_manager.datacore_model.loaded.connect(
             self._handle_datacore_loaded
         )
         self.starfab.sc_manager.datacore_model.unloading.connect(
             self._handle_datacore_unloading
         )
-        self.layout = qtw.QVBoxLayout(self)
+
         self.starmap = None
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:
-            self.layout.takeAt(0)
+            self.preview_widget_layout.takeAt(0)
             del self.starmap
             self.starmap = None
 
@@ -39,4 +44,4 @@ class NavView(qtw.QWidget):
                 'point_max_size': 24,
             }
         )
-        self.layout.addWidget(self.starmap)
+        self.preview_widget_layout.addWidget(self.starmap)

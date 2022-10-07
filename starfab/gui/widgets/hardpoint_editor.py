@@ -28,7 +28,7 @@ class HardpointEditor(qtw.QWidget):
 
         self.scroll = qtw.QScrollArea()
         self.form_widget = qtw.QWidget()
-        self.form_widget.setFixedWidth(480)
+        self.form_widget.setMinimumWidth(400)
         self.form_layout = qtw.QFormLayout(self.form_widget)
         self.scroll.setVerticalScrollBarPolicy(qtc.Qt.ScrollBarAsNeeded)
         self.scroll.setFixedWidth(500)

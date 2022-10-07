@@ -43,8 +43,8 @@
       </property>
       <property name="minimumSize">
        <size>
-        <width>500</width>
-        <height>400</height>
+        <width>400</width>
+        <height>0</height>
        </size>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -107,8 +107,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>494</width>
-                <height>814</height>
+                <width>394</width>
+                <height>805</height>
                </rect>
               </property>
               <property name="sizePolicy">
@@ -144,7 +144,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>494</width>
-                <height>814</height>
+                <height>805</height>
                </rect>
               </property>
               <attribute name="label">
