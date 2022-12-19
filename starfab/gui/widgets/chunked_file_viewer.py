@@ -3,16 +3,14 @@ import json
 from qtpy import uic
 
 from scdatatools.engine.chunkfile import chunks, load_chunk_file, GeometryChunkFile
-
 from starfab import get_starfab
-from starfab.gui import qtc, qtw, qtg
-from starfab.resources import RES_PATH
-from starfab.models.common import ContentItem
-from starfab.gui.widgets.editor import Editor
+from starfab.gui import qtc, qtw
 from starfab.gui.widgets.common import CollapsableWidget
-from starfab.plugins import plugin_manager
+from starfab.gui.widgets.editor import Editor
 from starfab.hooks import COLLAPSABLE_GEOMETRY_PREVIEW_WIDGET
-
+from starfab.models.common import ContentItem
+from starfab.plugins import plugin_manager
+from starfab.resources import RES_PATH
 
 SUPPORTED_CHUNK_FILE_FORMATS = [
     ".cga",
@@ -24,6 +22,8 @@ SUPPORTED_CHUNK_FILE_FORMATS = [
     ".dba",
     ".skin",
     ".skinm",
+    ".pla",
+    ".ale",
 ]
 
 

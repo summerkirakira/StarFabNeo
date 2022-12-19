@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from qtpy.QtCore import Slot, Signal, QObject
 from qtpy.QtWebChannel import QWebChannel
@@ -274,13 +275,14 @@ class Editor(QWebEngineView):
         self.ace.save.emit(self.editor_item.path.name)
 
     def _on_download_requested(self, download):
-        old_path = download.path()
-        suffix = qtc.QFileInfo(old_path).suffix()
+        old_path = Path(download.downloadDirectory()) / download.downloadFileName()
         path, _ = qtw.QFileDialog.getSaveFileName(
-            self, "Save File", old_path, "*." + suffix
+            self, "Save File", old_path.as_posix(), ("*." + old_path.suffix) if old_path.suffix else "*"
         )
         if path:
-            download.setPath(path)
+            path = Path(path)
+            download.setDownloadDirectory(path.parent.as_posix())
+            download.setDownloadFileName(path.name)
             download.accept()
         else:
             download.cancel()

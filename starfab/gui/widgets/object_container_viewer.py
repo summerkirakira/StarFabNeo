@@ -124,7 +124,7 @@ class ObjectContainerView(qtw.QWidget):
             self.name = Path(info_or_path_or_container)
         elif isinstance(info_or_path_or_container, (ObjectContainer, ObjectContainerInstance)):
             self.object_container = info_or_path_or_container
-            self.path = Path(self.object_container.socpak.filename)
+            self.path = Path(self.object_container.socpak.filename) if self.object_container.socpak is not None else Path()
             self.name = self.object_container.name
         else:
             self.info = info_or_path_or_container
