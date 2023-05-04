@@ -74,8 +74,8 @@ class HardpointEditor(qtw.QWidget):
                 for hp_name, hardpoint in self.blueprint.hardpoints.items():
                     if hp_geom := hardpoint.get('geometry'):
                         self.preview.load_hardpoint(hp_name, [g for g in hp_geom], data_root=self.starfab.sc.p4k)
-            except AttributeError:
-                pass
+            except Exception as e:
+                logger.debug(f'Execption loading hardpoint: {e}', exc_info=e)
 
     def clear(self):
         while self.form_layout.rowCount() > 0:
@@ -143,18 +143,6 @@ class HardpointEditor(qtw.QWidget):
     def _get_fun_options(self, hp_name, hp):
         hp_options = set()
         for size in range(1, 13):
-            types = hp['ItemPort']['Types']['Type']
-            if isinstance(types, dict):
-                types = [types]
-            for ac_type in types:
-                hp_options |= self.starfab.sc.attachable_component_manager.filter(
-                    size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
-                )
-        return hp_options
-
-    def _get_constrained_options(self, hp_name, hp):
-        hp_options = set()
-        for size in range(int(hp['ItemPort']['@minsize']), int(hp['ItemPort']['@maxsize']) + 1):
             try:
                 types = hp['ItemPort']['Types']['Type']
                 if isinstance(types, dict):
@@ -163,8 +151,27 @@ class HardpointEditor(qtw.QWidget):
                     hp_options |= self.starfab.sc.attachable_component_manager.filter(
                         size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
                     )
-            except KeyError:
-                pass
+            except Exception as e:
+                logger.debug(f'Exeception building fun options {e}')
+        return hp_options
+
+    def _get_constrained_options(self, hp_name, hp):
+        hp_options = set()
+        try:
+            for size in range(int(hp['ItemPort']['@minsize']), int(hp['ItemPort']['@maxsize']) + 1):
+                try:
+                    types = hp['ItemPort']['Types']['Type']
+                    if isinstance(types, dict):
+                        types = [types]
+                    for ac_type in types:
+                        hp_options |= self.starfab.sc.attachable_component_manager.filter(
+                            size=size, type=ac_type['@type'], sub_types=ac_type.get('@subtypes', '').split(',')
+                        )
+                except Exception as e:
+                    logger.debug(f'Exception building constrained options {e}')
+        except Exception as e:
+            logger.debug(f"{hp['ItemPort']=}")
+            logger.debug(f'Exception building constrained options {e}')
         return hp_options
 
     def build_options(self):

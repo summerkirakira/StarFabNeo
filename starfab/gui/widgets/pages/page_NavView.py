@@ -30,7 +30,11 @@ class NavView(qtw.QWidget):
     def _handle_datacore_loaded(self):
         megamap_pu = self.starfab.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
         pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
-        pu_oc = self.starfab.sc.oc_manager.load_socpak(pu_socpak)
+        try:
+            pu_oc = self.starfab.sc.oc_manager.load_socpak(pu_socpak)
+        except:
+            return
+
         # filter out the skybox and grab the root orbiting container
         root_oc = next(iter(
             v for v in pu_oc.children.values()
