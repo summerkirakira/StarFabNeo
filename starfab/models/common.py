@@ -209,7 +209,7 @@ class PathArchiveTreeItem:
 
     @cached_property
     def icon(self):
-        return icon_for_path(self.name) or icon_provider.icon(icon_provider.Folder)
+        return icon_for_path(self.name) or icon_provider.icon(icon_provider.IconType.Folder)
 
     def has_children(self):
         return bool(self.children)
