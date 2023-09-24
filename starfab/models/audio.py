@@ -102,8 +102,10 @@ class AudioTreeItem(PathArchiveTreeItem, ContentItem):
     @cached_property
     def icon(self):
         if self.children:
-            return icon_provider.icon(icon_provider.Folder)
-        return icon_provider.icon(icon_provider.File)
+            return qtg.QIcon(":icon_folder")
+            # return icon_provider.icon(icon_provider.Folder)
+        # return icon_provider.icon(icon_provider.File)
+        return qtg.QIcon(":icon_file")
 
     @property
     def wems(self):

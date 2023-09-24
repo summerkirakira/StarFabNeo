@@ -1,6 +1,6 @@
 from qtpy import uic
 
-from scdatatools.sc.object_container import ObjectContainerPlotter
+from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
 from starfab.gui import qtw
 from starfab.gui.widgets.preview3d import Preview3D
 from starfab.resources import RES_PATH

@@ -158,7 +158,10 @@ class HardpointEditor(qtw.QWidget):
     def _get_constrained_options(self, hp_name, hp):
         hp_options = set()
         try:
-            for size in range(int(hp['ItemPort']['@minsize']), int(hp['ItemPort']['@maxsize']) + 1):
+            ip = hp['ItemPort']
+            min_size = int(ip['@minsize'] if 'minsize' in ip else ip['@minSize'])
+            max_size = int(ip['@maxsize'] if 'maxsize' in ip else ip['@maxSize'])
+            for size in range(min_size, max_size + 1):
                 try:
                     types = hp['ItemPort']['Types']['Type']
                     if isinstance(types, dict):

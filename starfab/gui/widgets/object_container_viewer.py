@@ -2,7 +2,8 @@ from pathlib import Path
 
 from qtpy import uic
 
-from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer, ObjectContainerPlotter
+from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer
+from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
 from starfab import get_starfab
 from starfab.gui import qtw
 from starfab.gui.widgets.common import CollapsableWidget
