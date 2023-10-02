@@ -187,6 +187,7 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         header = self.sc_tree.header()
         header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        self._sync_tree_header()
 
     def _handle_item_action(self, item, model, index):
         if os.environ.get("STARFAB_RELOAD_MODULES"):

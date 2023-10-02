@@ -209,7 +209,7 @@ class PathArchiveTreeItem:
 
     @cached_property
     def icon(self):
-        return icon_for_path(self.name) or icon_provider.icon(icon_provider.Folder)
+        return icon_for_path(self.name) or icon_provider.icon(icon_provider.IconType.Folder)
 
     def has_children(self):
         return bool(self.children)
@@ -495,31 +495,31 @@ class CheckableModelWrapper(PathArchiveTreeModel):
         if item == self.root_item:
             return
 
-        state = qtc.Qt.Unchecked
+        state = qtc.Qt.CheckState.Unchecked
         all = True
         for child in item.children:
-            if (cstate := self._checked.get(child, qtc.Qt.Unchecked)) != qtc.Qt.Checked:
+            if (cstate := self._checked.get(child, qtc.Qt.CheckState.Unchecked)) != qtc.Qt.CheckState.Checked:
                 all = False
-            if cstate > qtc.Qt.Unchecked:
-                state = qtc.Qt.PartiallyChecked
+            if cstate in [qtc.Qt.CheckState.PartiallyChecked, qtc.Qt.CheckState.Checked]:
+                state = qtc.Qt.CheckState.PartiallyChecked
         if all:
-            state = qtc.Qt.Checked
+            state = qtc.Qt.CheckState.Checked
         self._checked[item] = state
         index = self.createIndex(item.parent.children.index(item), 0, item)
-        self.dataChanged.emit(index, index, [qtc.Qt.EditRole])
+        self.dataChanged.emit(index, index, [qtc.Qt.ItemDataRole.EditRole])
         self._update_parent(item.parent)
 
-    def setData(self, index, value, role=qtc.Qt.EditRole):
-        if role == qtc.Qt.CheckStateRole and index.column() == self.checkbox_column:
+    def setData(self, index, value, role=qtc.Qt.ItemDataRole.EditRole):
+        if role == qtc.Qt.ItemDataRole.CheckStateRole and index.column() == self.checkbox_column:
             item = index.internalPointer()
             self._sync_checked(item, value, index)
             self._update_parent(item.parent)
         return True
 
     def data(self, index: qtc.QModelIndex, role: int):
-        if role == qtc.Qt.CheckStateRole:
+        if role == qtc.Qt.ItemDataRole.CheckStateRole:
             item = index.internalPointer()
-            return self._checked.get(item, qtc.Qt.Unchecked)
+            return self._checked.get(item, qtc.Qt.CheckState.Unchecked)
         return super().data(index, role)
 
 

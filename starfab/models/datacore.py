@@ -83,8 +83,8 @@ class DCBItem(PathArchiveTreeItem, ContentItem):
     @cached_property
     def icon(self):
         if self.children:
-            return icon_provider.icon(icon_provider.Folder)
-        return icon_provider.icon(icon_provider.File)
+            return icon_provider.icon(icon_provider.IconType.Folder)
+        return icon_provider.icon(icon_provider.IconType.File)
 
     @cached_property
     def guid(self):

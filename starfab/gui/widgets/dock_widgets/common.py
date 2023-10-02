@@ -1,9 +1,8 @@
 import operator
+import qtawesome as qta
 import typing
 from functools import partial
 from pathlib import Path
-
-import qtawesome as qta
 from qtpy import uic
 
 from starfab import get_starfab
@@ -21,6 +20,8 @@ from starfab.gui.widgets.image_viewer import (
 from starfab.log import getLogger
 from starfab.models.common import PathArchiveTreeSortFilterProxyModel
 from starfab.resources import RES_PATH
+from starfab.settings import settings
+from starfab.utils import parsebool
 
 logger = getLogger(__name__)
 
@@ -345,6 +346,18 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
             self.proxy_model = PathArchiveTreeSortFilterProxyModel(parent=self)
         self.sc_tree.setModel(self.proxy_model)
 
+    def _sync_tree_header(self):
+        settings.beginGroup(f'{self.__class__.__name__}/sc_tree/show_header')
+        try:
+            for col in settings.childKeys():
+                try:
+                    self.sc_tree.setColumnHidden(int(col), parsebool(settings.value(col)))
+                except Exception as e:
+                    logger.exception(f'Bad key in settings for header preferences', exc_info=e)
+                    settings.remove(col)
+        finally:
+            settings.endGroup()
+
     def _filters_changed(self):
         fl = self.filter_widgets.layout()
         self.proxy_model.setAdditionFilters(
@@ -388,7 +401,9 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
             self._handle_item_action(item, self.sc_tree_model, index)
 
     def _handle_header_toggled(self, checked):
-        self.sc_tree.setColumnHidden(self.sender().column, not checked)
+        col = self.sender().column
+        self.sc_tree.setColumnHidden(col, not checked)
+        settings.setValue(f'{self.__class__.__name__}/sc_tree/show_header/{col}', not checked)
 
     @qtc.Slot(qtc.QPoint)
     def _show_header_ctx_menu(self, pos):

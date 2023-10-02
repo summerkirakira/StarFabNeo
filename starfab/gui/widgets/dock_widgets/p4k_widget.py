@@ -1,19 +1,17 @@
 import os
-import shutil
-from pathlib import Path
-from functools import partial
-
 import sentry_sdk
+import shutil
+from functools import partial
+from pathlib import Path
 
 from starfab.gui import qtc, qtw, qtg
-
-from starfab.models.common import AudioConverter
-from starfab.gui.utils import ScrollMessageBox
 from starfab.gui.dialogs.export_dialog import P4KExportDialog
+from starfab.gui.utils import ScrollMessageBox
 from starfab.gui.widgets.dock_widgets.common import StarFabSearchableTreeWidget
+from starfab.log import getLogger
+from starfab.models.common import AudioConverter
 from starfab.models.p4k import P4KSortFilterProxyModelArchive
 from starfab.utils import show_file_in_filemanager
-from starfab.log import getLogger
 
 logger = getLogger(__name__)
 P4KWIDGET_COLUMNS = ["Name", "Size", "Kind", "Date Modified"]
@@ -137,3 +135,4 @@ class P4KView(StarFabSearchableTreeWidget):
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
         self.sc_tree.hideColumn(4)
+        self._sync_tree_header()

@@ -67,3 +67,4 @@ class TagDatabaseView(StarFabSearchableTreeWidget):
             header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
             header.setStretchLastSection(False)
             header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+            self._sync_tree_header()

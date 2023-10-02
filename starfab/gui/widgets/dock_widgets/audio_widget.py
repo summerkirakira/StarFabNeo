@@ -1,10 +1,9 @@
 import os
+import qtawesome as qta
 import shutil
 import time
 from functools import partial
 from pathlib import Path
-
-import qtawesome as qta
 from qtpy import QtMultimedia
 from qtpy.QtCore import Signal, Slot
 
@@ -177,7 +176,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self.sc_tree.scrollTo(tree_item)
 
     def _handle_media_status_changed(self, status):
-        print(f'media status changed {status = }')
+        # print(f'media status changed {status = }')
         if status == QtMultimedia.QMediaPlayer.LoadedMedia and self._should_play:
             self._media_player.play()
             self._should_play = False
@@ -206,13 +205,13 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self._audio_tmp = None
 
         try:
-            # conv = AudioConverter(item.wems[wem_index])
-            # conv.signals.finished.connect(self._handle_audio_conversion)
-            # qtc.QThreadPool.globalInstance().start(conv)
-            # self._audio_tmp = self.starfab.sc.wwise.convert_wem(item.wems[wem_index], return_file=True)
             self._currently_playing = item
             self._currently_playing_wem_id = wem_index
-            # self._media_player.setMedia(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
+            conv = AudioConverter(item.wems[wem_index])
+            conv.signals.finished.connect(self._handle_audio_conversion)
+            qtc.QThreadPool.globalInstance().start(conv)
+            # self._audio_tmp = self.starfab.sc.wwise.convert_wem(item.wems[wem_index], return_file=True)
+            # self._media_player.setSource(qtc.QUrl.fromLocalFile(str(self._audio_tmp.absolute())))
         except Exception as e:
             ScrollMessageBox.critical(
                 self, "Audio", f"Cannot play {item.atl_name}: {repr(e)}"
@@ -247,6 +246,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             and self._currently_playing_wem_id is not None
             and self._currently_playing.wems[self._currently_playing_wem_id] == wem_id
         ):
+            logger.debug(f'Playing converted audio file {ogg_path}')
             self._audio_tmp = ogg_path
             self._should_play = True
             self._media_player.setSource(
@@ -254,7 +254,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             )
             wem_item = self.wem_list.item(self._currently_playing_wem_id)
             self.wem_list.scrollToItem(wem_item)
-            # self._media_player.play()
+            self._media_player.play()
         elif ogg_path:
             # we must have started playing a new song, unlink this file
             os.unlink(ogg_path)
@@ -350,6 +350,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self.proxy_model.sort(0, qtc.Qt.SortOrder.AscendingOrder)
             header = self.sc_tree.header()
             header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
+            self._sync_tree_header()
 
     def _handle_item_action(self, item, model, index):
         self.stop()

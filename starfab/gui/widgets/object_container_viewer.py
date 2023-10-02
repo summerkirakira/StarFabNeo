@@ -1,12 +1,14 @@
 from pathlib import Path
-
 from qtpy import uic
 
+from scdatatools.forge import dftypes
+from scdatatools.forge.dco import DataCoreRecordObject
 from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer
 from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
 from starfab import get_starfab
 from starfab.gui import qtw
 from starfab.gui.widgets.common import CollapsableWidget
+from starfab.gui.widgets.dcbrecord import DCBLazyCollapsableObjWidget
 from starfab.gui.widgets.preview3d import LazyCollapsablePreviewWidget
 from starfab.hooks import COLLAPSABLE_OBJECT_CONTAINER_WIDGET
 from starfab.plugins import plugin_manager
@@ -27,6 +29,22 @@ def widget_for_attr(name, value):
         layout = qtw.QFormLayout()
         for i, v in enumerate(value):
             layout.addRow(str(i), widget_for_attr(i, v))
+    elif isinstance(
+            value,
+            (
+                    dftypes.StructureInstance,
+                    dftypes.WeakPointer,
+                    dftypes.ClassReference,
+                    dftypes.Record,
+                    dftypes.StrongPointer,
+                    DataCoreObject,
+            ),
+    ):
+        if isinstance(value, DataCoreObject):
+            value = value.object
+        layout = qtw.QVBoxLayout()
+        c = DCBLazyCollapsableObjWidget(name, value)
+        layout.addWidget(c)
     else:
         layout = qtw.QVBoxLayout()
         l = qtw.QLineEdit(str(value))
@@ -82,14 +100,16 @@ class LazyObjectContainerWidget(CollapsableWidget):
 
 
 class LazyContainerChildrenWidget(CollapsableWidget):
-    def __init__(self, object_container, *args, **kwargs):
-        super().__init__(f"Children", expand=False, layout=qtw.QVBoxLayout, *args, **kwargs)
+    def __init__(self, object_container, label='Children', children_attr='children', *args, **kwargs):
+        super().__init__(str(label), expand=False, layout=qtw.QVBoxLayout, *args, **kwargs)
         self.object_container = object_container
+        self.children_attr = children_attr
         self._loaded = False
 
     def expand(self):
         if not self._loaded:
-            for child_label, child in sorted(self.object_container.children.items(), key=lambda v: v[0]):
+            children = getattr(self.object_container, self.children_attr).items()
+            for child_label, child in sorted(children, key=lambda v: v[1].label.lower()):
                 child_widget = LazyObjectContainerWidget(child=child)
                 self.content.layout().addWidget(child_widget)
             self._loaded = True
@@ -125,7 +145,8 @@ class ObjectContainerView(qtw.QWidget):
             self.name = Path(info_or_path_or_container)
         elif isinstance(info_or_path_or_container, (ObjectContainer, ObjectContainerInstance)):
             self.object_container = info_or_path_or_container
-            self.path = Path(self.object_container.socpak.filename) if self.object_container.socpak is not None else Path()
+            self.path = Path(
+                self.object_container.socpak.filename) if self.object_container.socpak is not None else Path()
             self.name = self.object_container.name
         else:
             self.info = info_or_path_or_container
@@ -180,9 +201,24 @@ class ObjectContainerView(qtw.QWidget):
         except ImportError:
             pass  # not available
 
-        self.children_widget = LazyContainerChildrenWidget(self.object_container,
-                                                           parent=self.obj_content_widget)
-        self.obj_content.insertWidget(self.obj_content.count() - 1, self.children_widget)
+        if isinstance(self.object_container, ObjectContainerInstance):
+            self.inserted_children_widget = LazyContainerChildrenWidget(self.object_container,
+                                                                        label='Inserted Children',
+                                                                        children_attr='inserted_children',
+                                                                        parent=self.obj_content_widget)
+            self.obj_content.insertWidget(self.obj_content.count() - 1, self.inserted_children_widget)
+            self.children_widget = LazyContainerChildrenWidget(self.object_container,
+                                                                         label='Children',
+                                                                         children_attr='container_children',
+                                                                         parent=self.obj_content_widget)
+            self.obj_content.insertWidget(self.obj_content.count() - 1, self.children_widget)
+            self.inserted_children_widget.show()
+        else:
+            self.children_widget = LazyContainerChildrenWidget(self.object_container,
+                                                               label='Children',
+                                                               children_attr='children',
+                                                               parent=self.obj_content_widget)
+            self.obj_content.insertWidget(self.obj_content.count() - 1, self.children_widget)
 
         self.extra_widgets = []
 
