@@ -139,7 +139,7 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             self._highlight_wem(self._currently_playing_wem_id, False)
 
         playlist_index, wem_index = self._playlist_index
-        if len(self._currently_playing.wems) > 1:
+        if self._currently_playing and len(self._currently_playing.wems) > 1:
             wem_txt = f" [{self._currently_playing_wem_id + 1}/{len(self._currently_playing.wems)}]"
         else:
             wem_txt = ""
