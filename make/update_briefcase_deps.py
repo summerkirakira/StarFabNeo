@@ -10,8 +10,8 @@ PLAT_BASH = {
 }
 
 PROJ_DIR = Path(__file__).parent.parent
-DIST_DIR = (PROJ_DIR / 'dist').absolute()
-DIST_DIR.mkdir(exist_ok=True)
+BUILD_DIR = (PROJ_DIR / 'build').absolute()
+BUILD_DIR.mkdir(exist_ok=True)
 
 INCLUDED_PLUGINS = [
 ]
@@ -35,12 +35,12 @@ def run():
     reqs.extend(INCLUDED_PLUGINS)
     reqs = '\n'.join(r for r in reqs if not any(e in r for e in PLAT_EXCLUDES.get(platform, [])))
 
-    with open(DIST_DIR / 'requirements.txt', 'w') as r:
+    with open(BUILD_DIR / 'requirements.txt', 'w') as r:
         r.write(reqs)
 
     if platform == 'win32':
         print('Fetching latest texconv')
-        CONTRIB_DIR = (DIST_DIR.parent / 'starfab' / 'contrib')
+        CONTRIB_DIR = (BUILD_DIR.parent / 'starfab' / 'contrib')
         urllib.request.urlretrieve('https://github.com/Microsoft/DirectXTex/releases/latest/download/texconv.exe',
                                    str(CONTRIB_DIR / 'texconv.exe'))
 

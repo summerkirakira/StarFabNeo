@@ -32,7 +32,11 @@ class _AudioCleanup(qtc.QRunnable):
 
     def run(self):
         time.sleep(0.5)  # makes sure it's unloaded from media_player
-        Path(self.ogg_path).unlink(missing_ok=True)
+        try:
+            if self.ogg_path is not None:
+                Path(self.ogg_path).unlink(missing_ok=True)
+        except Exception as e:
+            logger.exception(f'Failed to cleanup audio "{self.ogg_path}"')
 
 
 class AudioTreeWidget(StarFabSearchableTreeWidget):
@@ -143,13 +147,14 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
             wem_txt = f" [{self._currently_playing_wem_id + 1}/{len(self._currently_playing.wems)}]"
         else:
             wem_txt = ""
-        if self._playlist:
-            self.sc_breadcrumbs.setText(
-                f"{playlist_index + 1}/{len(self._playlist)} - "
-                f"{self._currently_playing.name}{wem_txt}"
-            )
-        else:
-            self.sc_breadcrumbs.setText(f"{self._currently_playing.name}{wem_txt}")
+        if self._currently_playing is not None:
+            if self._playlist:
+                self.sc_breadcrumbs.setText(
+                    f"{playlist_index + 1}/{len(self._playlist)} - "
+                    f"{self._currently_playing.name}{wem_txt}"
+                )
+            else:
+                self.sc_breadcrumbs.setText(f"{self._currently_playing.name}{wem_txt}")
 
         if state == QtMultimedia.QMediaPlayer.PlaybackState.PlayingState:
             self.playButton.hide()

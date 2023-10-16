@@ -68,8 +68,7 @@ class ContentView(qtw.QWidget):
         )
         self.groupBox_Content_Local_Files.hide()
 
-        self.hardpoint_editor = HardpointEditor(self.export_options)
-        self.right_content.insertWidget(0, self.hardpoint_editor)
+        self.hardpoint_editor = None
 
         prev_handlers = plugin_manager.hooks(GEOMETRY_PREVIEW_WIDGET)
         if prev_handlers:
@@ -77,7 +76,9 @@ class ContentView(qtw.QWidget):
                 allow_popout=False, parent=self
             )
             self.preview_widget_layout.addWidget(self.preview)
+            self.hardpoint_editor = HardpointEditor(self.export_options)
             self.hardpoint_editor.preview = self.preview
+            self.right_content.insertWidget(0, self.hardpoint_editor)
         else:
             self.preview = None
             self.splitter.setSizes((1, 0))

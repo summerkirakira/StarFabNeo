@@ -17,6 +17,7 @@ def run():
     # this must go here
     import starfab
     version = starfab.__version__
+    print(f'Syncing StarFab version to {version}')
     tag = check_output('git tag --points-at HEAD', shell=True, encoding='utf-8').strip()
 
     with pyproject_file.open('r') as p:
