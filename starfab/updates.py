@@ -31,7 +31,8 @@ def check_for_update(url=API_URL) -> (bool, str, str):
         latest_version = version.parse(latest['tag_name'])
 
         return latest_version > current_version, latest_version, latest.get('_links', {}).get('self', ''), latest
-    except (requests.HTTPError, IndexError):
+    except Exception as e:
+        logger.warning(f'Unable to check for updates: {e}')
         pass
     return False, current_version, '', {}
 
