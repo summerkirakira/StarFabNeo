@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+pushd $DIR/.. &> /dev/null || exit
+
+OLD_PATH=$PATH
+VENV_DIR="build/briefcase_env"
+
+deactive &> /dev/null  # just in case
+
+if ! [ -d "$VENV_DIR" ]; then
+    # setup build venv
+    echo "Creating briefcase virtualenv"
+    mkdir -p $VENV_DIR &> /dev/null
+    poetry run python -m venv $VENV_DIR
+
+    . ${VENV_DIR}/Scripts/activate
+    export PATH="$PATH:$OLD_PATH"
+    which python
+    python -m pip install -U pip briefcase==0.3.7 &> /dev/null
+    which briefcase
+fi
+
+deactive &> /dev/null
+. ${VENV_DIR}/Scripts/activate
+export PATH="$PATH:$OLD_PATH"
+briefcase $@
