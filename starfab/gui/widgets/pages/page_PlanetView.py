@@ -1,15 +1,17 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QComboBox, QPushButton
+from PySide6.QtWidgets import QComboBox, QPushButton, QPlainTextEdit
 from qtpy import uic
 from scdatatools import StarCitizen
 from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
+
 from starfab.gui import qtw
 from starfab.gui.widgets.preview3d import Preview3D
 from starfab.log import getLogger
 from starfab.models.datacore import DCBModel
+from starfab.models.planet import Planet, RenderSettings, EcoSystem
 from starfab.resources import RES_PATH
 from pathlib import Path
 
@@ -18,22 +20,15 @@ logger = getLogger(__name__)
 
 
 class PlanetView(qtw.QWidget):
-    def __init__(self, starfab):
+    def __init__(self, sc):
         super().__init__(parent=None)
-        self.starfab = starfab
 
         self.renderButton: QPushButton = None
         self.planetComboBox: QComboBox = None
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
+        self.hlslTextBox: QPlainTextEdit = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
-
-        self.starfab.sc_manager.datacore_model.loaded.connect(
-            self._handle_datacore_loaded
-        )
-        self.starfab.sc_manager.datacore_model.unloading.connect(
-            self._handle_datacore_unloading
-        )
 
         self.starmap = None
 
@@ -54,7 +49,21 @@ class PlanetView(qtw.QWidget):
             ("Earth Format (-180/180deg) Unshifted", "EarthUnShifted")
         ]))
 
+        if isinstance(sc, StarCitizen):
+            self.sc = sc
+            self._handle_datacore_loaded()
+        else:
+            self.sc = sc.sc_manager
+            self.sc.datacore_model.loaded.connect(self._hack_before_load)
+            self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
+
         self.renderButton.clicked.connect(self.clicky)
+
+    def _hack_before_load(self):
+        # Hacky method to support faster dev testing and launching directly in-app
+        self.sc = self.sc.sc
+        EcoSystem.read_eco_headers(self.sc)
+        self._handle_datacore_loaded()
 
     @staticmethod
     def create_model(records):
@@ -71,7 +80,12 @@ class PlanetView(qtw.QWidget):
         return model
 
     def clicky(self):
-        print("Clicky!")
+        selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
+        shader = self.hlslTextBox.toPlainText()
+        print(selected_obj)
+        selected_obj.load_data()
+        print("Done loading planet data")
+        selected_obj.render(RenderSettings(True, 1, "NASA", shader))
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:
@@ -80,14 +94,14 @@ class PlanetView(qtw.QWidget):
 
     def _handle_datacore_loaded(self):
         logger.info("DataCore loaded")
-        megamap_pu = self.starfab.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
+        megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
         pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
         try:
-            pu_oc = self.starfab.sc.oc_manager.load_socpak(pu_socpak)
-            bodies: list[ObjectContainerInstance] = self._search_for_bodies(pu_oc)
+            pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
+            bodies: list[Planet] = self._search_for_bodies(pu_oc)
 
             self.planetComboBox.setModel(self.create_model([
-                (b.entity_name, b) for b in bodies
+                (b.oc.entity_name, b) for b in bodies
             ]))
 
         except Exception as ex:
@@ -96,14 +110,15 @@ class PlanetView(qtw.QWidget):
 
     @staticmethod
     def _search_for_bodies(socpak: ObjectContainer, search_depth_after_first_body: int = 1):
-        results = []
+        results: list[Planet] = []
 
         def _inner_search(entry: ObjectContainerInstance, planet_depth: int, max_depth: int):
             if planet_depth > max_depth:
                 return
             for subchild in entry.children.values():
-                if PlanetView.has_planet_data(subchild):
-                    results.append(subchild)
+                planet = Planet.try_create(subchild)
+                if planet:
+                    results.append(planet)
                     _inner_search(subchild, planet_depth + 1, max_depth)
                 else:
                     # Only increment the next depth when we've hit a planet already
@@ -116,16 +131,4 @@ class PlanetView(qtw.QWidget):
 
         return results
 
-    @staticmethod
-    def has_planet_data(oc: ObjectContainerInstance):
-        if (not oc.container) or (not oc.container.has_additional):
-            return False
-        if oc.container.additional_data:
-            chunkfile: ChunkFile
-            for chunkfile in oc.container.additional_data:
-                chunk: Chunk
-                for c_id, chunk in chunkfile.chunks.items():
-                    if isinstance(chunk, JSONChunk):
-                        return True
-        return False
 

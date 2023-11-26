@@ -122,6 +122,58 @@
            <item row="3" column="1">
             <widget class="QComboBox" name="coordinateSystemComboBox"/>
            </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="hlslLabel">
+             <property name="text">
+              <string>HLSL</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPlainTextEdit" name="hlslTextBox">
+             <property name="plainText">
+              <string>Texture2D&lt;uint4&gt; bedrock : register(t0);
+Texture2D&lt;uint4&gt; surface : register(t1);
+
+Texture2D&lt;uint4&gt; planet_climate : register(t2);
+Texture2D&lt;uint&gt; planet_offsets : register(t3);
+Texture2D&lt;min16uint&gt; planet_heightmap : register(t4);
+
+//StructuredBuffer&lt;ClimateData&gt; planetClimate : register(t2);
+//ConstantBuffer&lt;ClimateData&gt; ecosystemClimate : register(t3);
+
+RWTexture2D&lt;uint4&gt; destination : register(u0);
+
+[numthreads(8,8,1)]
+void main(uint3 tid : SV_DispatchThreadID)
+{
+	uint width;
+	uint height;
+	destination.GetDimensions(width, height);
+
+	uint clim_w, clim_h;
+	planet_climate.GetDimensions(clim_w, clim_h);
+	uint2 clim_sz = uint2(clim_w, clim_h);
+
+	float2 normalized_position = tid.xy / float2(width, height);
+
+	uint4 local_climate = planet_climate[normalized_position * clim_sz];
+	local_climate = uint4(local_climate.xy / 2, local_climate.z / 16, 0);
+
+	uint4 surface_color = surface[local_climate.yx];
+
+
+	uint4 read = uint4(0, 0, 0, 255);
+	//read.xy = planetClimate[index].climate_th;
+	//read.z = 0;
+
+	read.xyz = surface_color.xyz;
+
+	destination[tid.xy] = read;
+}</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -142,7 +194,7 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_17" stretch="">
+      <layout class="QVBoxLayout" name="verticalLayout_17">
        <property name="leftMargin">
         <number>0</number>
        </property>
