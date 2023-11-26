@@ -1,3 +1,5 @@
+import io
+
 from PIL import ImageQt
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel, QPixmap
@@ -21,6 +23,8 @@ class PlanetView(qtw.QWidget):
     def __init__(self, sc):
         super().__init__(parent=None)
 
+        self.loadButton: QPushButton = None
+        self.saveButton: QPushButton = None
         self.renderButton: QPushButton = None
         self.planetComboBox: QComboBox = None
         self.renderResolutionComboBox: QComboBox = None
@@ -56,7 +60,11 @@ class PlanetView(qtw.QWidget):
             self.sc.datacore_model.loaded.connect(self._hack_before_load)
             self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
-        self.renderButton.clicked.connect(self.clicky)
+        self.loadButton.clicked.connect(self._load_shader)
+        self.saveButton.clicked.connect(self._save_shader)
+        self.renderButton.clicked.connect(self._do_render)
+
+        self._load_shader()
 
     def _hack_before_load(self):
         # Hacky method to support faster dev testing and launching directly in-app
@@ -78,7 +86,18 @@ class PlanetView(qtw.QWidget):
 
         return model
 
-    def clicky(self):
+    def shader_path(self) -> Path:
+        return Path(__file__).parent / '../../../planets/shader.hlsl'
+
+    def _load_shader(self):
+        with io.open(self.shader_path(), "r") as shader:
+            self.hlslTextBox.setPlainText(shader.read())
+
+    def _save_shader(self):
+        with io.open(self.shader_path(), "w") as shader:
+            shader.write(self.hlslTextBox.toPlainText())
+
+    def _do_render(self):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
         shader = self.hlslTextBox.toPlainText()
         print(selected_obj)
