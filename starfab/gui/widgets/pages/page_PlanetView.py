@@ -1,16 +1,14 @@
+from PIL import ImageQt
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QComboBox, QPushButton, QPlainTextEdit
+from PySide6.QtGui import QStandardItem, QStandardItemModel, QPixmap
+from PySide6.QtWidgets import QComboBox, QPushButton, QPlainTextEdit, QGraphicsView, QGraphicsScene
 from qtpy import uic
 from scdatatools import StarCitizen
-from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
-from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
 
 from starfab.gui import qtw
-from starfab.gui.widgets.preview3d import Preview3D
+from starfab.gui.widgets.image_viewer import QImageViewer
 from starfab.log import getLogger
-from starfab.models.datacore import DCBModel
 from starfab.models.planet import Planet, RenderSettings, EcoSystem
 from starfab.resources import RES_PATH
 from pathlib import Path
@@ -28,6 +26,7 @@ class PlanetView(qtw.QWidget):
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
         self.hlslTextBox: QPlainTextEdit = None
+        self.renderOutput: QImageViewer = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
 
         self.starmap = None
@@ -85,7 +84,11 @@ class PlanetView(qtw.QWidget):
         print(selected_obj)
         selected_obj.load_data()
         print("Done loading planet data")
-        selected_obj.render(RenderSettings(True, 1, "NASA", shader))
+
+        # TODO: Deal with buffer directly
+        img = selected_obj.render(RenderSettings(True, 1, "NASA", shader))
+        qimg = ImageQt.ImageQt(img)
+        self.renderOutput.setImage(qimg)
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:

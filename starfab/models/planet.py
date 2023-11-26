@@ -362,22 +362,16 @@ class Planet:
 
         compute.dispatch(destination_texture.width // 8, destination_texture.height // 8, 1)
         destination_texture.copy_to(readback_buffer)
-
-        image = Image.frombuffer('RGBA', (destination_texture.width,
-                                          destination_texture.height), readback_buffer.readback())
-        image.show()
-        return
+        return self.readback()
 
     def readback(self):
         destination: Texture2D = self.gpu_resources['destination']
         readback: Buffer = self.gpu_resources['readback']
         destination.copy_to(readback)
 
-        print(f"{destination.width}, {destination.height}")
-
-        image = Image.frombuffer('RGBA', (destination.width,
-                                          destination.height), readback.readback())
-        image.show()
+        return Image.frombuffer('RGBA',
+                                (destination.width, destination.height),
+                                readback.readback())
 
     @staticmethod
     def try_create(oc: ObjectContainerInstance):

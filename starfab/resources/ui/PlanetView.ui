@@ -93,43 +93,33 @@
             <widget class="QComboBox" name="planetComboBox"/>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="gpuLabel">
-             <property name="text">
-              <string>GPU Renderer</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QCheckBox" name="gpuCheckBox"/>
-           </item>
-           <item row="2" column="0">
             <widget class="QLabel" name="renderResolutionLabel">
              <property name="text">
               <string>Render Resolution</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="1" column="1">
             <widget class="QComboBox" name="renderResolutionComboBox"/>
            </item>
-           <item row="3" column="0">
+           <item row="2" column="0">
             <widget class="QLabel" name="coordinateSystemLabel">
              <property name="text">
               <string>Coordinate System</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
+           <item row="2" column="1">
             <widget class="QComboBox" name="coordinateSystemComboBox"/>
            </item>
-           <item row="4" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="hlslLabel">
              <property name="text">
               <string>HLSL</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="3" column="1">
             <widget class="QPlainTextEdit" name="hlslTextBox">
              <property name="plainText">
               <string>Texture2D&lt;uint4&gt; bedrock : register(t0);
@@ -207,12 +197,22 @@ void main(uint3 tid : SV_DispatchThreadID)
        <property name="bottomMargin">
         <number>3</number>
        </property>
+       <item>
+        <widget class="QImageViewer" name="renderOutput" native="true"/>
+       </item>
       </layout>
      </widget>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QImageViewer</class>
+   <extends>QGraphicsView</extends>
+   <header>starfab.gui.widgets.image_viewer</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
