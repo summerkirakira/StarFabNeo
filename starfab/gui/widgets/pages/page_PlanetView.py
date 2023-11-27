@@ -29,6 +29,7 @@ class PlanetView(qtw.QWidget):
         self.planetComboBox: QComboBox = None
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
+        self.sampleModeComboBox: QComboBox = None
         self.hlslTextBox: QPlainTextEdit = None
         self.renderOutput: QImageViewer = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
@@ -50,6 +51,12 @@ class PlanetView(qtw.QWidget):
             ("NASA Format (0/360deg) - Community Standard", "NASA"),
             ("Earth Format (-180/180deg) Shifted", "EarthShifted"),
             ("Earth Format (-180/180deg) Unshifted", "EarthUnShifted")
+        ]))
+
+        self.sampleModeComboBox.setModel(self.create_model([
+            ("Nearest Neighbor", 0),
+            ("Bi-Linear", 1),
+            ("Bi-Cubic", 2),
         ]))
 
         if isinstance(sc, StarCitizen):
@@ -97,17 +104,23 @@ class PlanetView(qtw.QWidget):
         with io.open(self.shader_path(), "w") as shader:
             shader.write(self.hlslTextBox.toPlainText())
 
+    def get_settings(self):
+        scale = self.renderResolutionComboBox.currentData(role=Qt.UserRole)
+        coordinates = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
+        interpolation = self.sampleModeComboBox.currentData(role=Qt.UserRole)
+        shader = self.hlslTextBox.toPlainText()
+        return RenderSettings(True, scale, coordinates, shader, interpolation)
+
     def _do_render(self):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
-        shader = self.hlslTextBox.toPlainText()
         print(selected_obj)
         selected_obj.load_data()
         print("Done loading planet data")
 
         # TODO: Deal with buffer directly
-        img = selected_obj.render(RenderSettings(True, 1, "NASA", shader))
+        img = selected_obj.render(self.get_settings())
         qimg = ImageQt.ImageQt(img)
-        self.renderOutput.setImage(qimg)
+        self.renderOutput.setImage(qimg, fit=False)
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:

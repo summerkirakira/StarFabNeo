@@ -11,9 +11,9 @@ from typing import Callable, Union
 
 import compushady
 from PIL import Image
-from compushady import Texture2D, Buffer, HEAP_UPLOAD, Compute, HEAP_READBACK, Resource, HEAP_DEFAULT
+from compushady import Texture2D, Texture3D, Buffer, HEAP_UPLOAD, Compute, HEAP_READBACK, Resource, HEAP_DEFAULT
 from compushady.backends.vulkan import Device
-from compushady.formats import R8G8B8A8_UINT, R16_UINT, R8_UINT
+from compushady.formats import R8G8B8A8_UINT, R16_UINT, R8_UINT, R16_FLOAT, R8G8B8A8_UNORM_SRGB, R8G8B8A8_SINT
 from compushady.shaders import hlsl
 from scdatatools import StarCitizen
 from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk
@@ -25,11 +25,13 @@ from starfab.utils import image_converter
 
 
 class RenderSettings:
-    def __init__(self, gpu: bool, resolution: int, coordinate_mode: str, hlsl: str):
+    def __init__(self, gpu: bool, resolution: int, coordinate_mode: str, hlsl: str,
+                 interpolation: int):
         self.gpu = gpu
         self.resolution = resolution
         self.coordinate_mode = coordinate_mode
         self.hlsl = hlsl
+        self.interpolation = interpolation
 
 
 class LocalClimateData:
@@ -104,6 +106,39 @@ class LUTData:
         self.brush_obj: Brush = None
 
 
+class RenderJobSettings:
+    PACK_STRING: str = "5f3i2f"
+    PACK_LENGTH: int = struct.calcsize(PACK_STRING)
+
+    def __init__(self):
+        self.offset_x: float = 0
+        self.offset_y: float = 0
+
+        self.size_x: float = 1
+        self.size_y: float = 1
+
+        self.planet_radius: float = 0
+        self.interpolation: int = 0
+        self.render_scale_x: int = 0
+        self.render_scale_y: int = 0
+
+        self.local_humidity_influence: float = 0
+        self.local_temperature_influence: float = 0
+
+    def pack(self) -> bytes:
+        return struct.pack(RenderJobSettings.PACK_STRING,
+                           self.offset_x, self.offset_y, self.size_x, self.size_y,
+                           self.planet_radius, self.interpolation,
+                           self.render_scale_x, self.render_scale_y,
+                           self.local_humidity_influence, self.local_temperature_influence)
+
+    def update_buffer(self, buffer_gpu: Buffer):
+        data = self.pack()
+        buffer = Buffer(RenderJobSettings.PACK_LENGTH, HEAP_UPLOAD)
+        buffer.upload(data)
+        buffer.copy_to(buffer_gpu)
+
+
 class EcoSystem:
     _cache = {}
     _tex_root = Path("Data/Textures/planets/terrain")
@@ -133,7 +168,7 @@ class EcoSystem:
         self.elevation_path: str = eco_data["Textures"]["elevationTexture"]
 
         self.climate_data: list[list[LocalClimateData]] = None
-        self.climate_texture: Image = None
+        self.climate_image: Image = None
         self.normal_texture: Image = None
         self.elevation_bytes: bytearray = None
         self.elevation_size: int = 0
@@ -156,13 +191,8 @@ class EcoSystem:
         climate_texture = Image.open(io.BytesIO(_read_texture(self.tex_path)))
         normal_texture = Image.open(io.BytesIO(_read_texture(self.norm_path)))
 
-        self.climate_texture = climate_texture
+        self.climate_image = climate_texture
         self.normal_texture = normal_texture
-
-        # Addressed as [x][y]
-        self.climate_data = [[LocalClimateData(x, y)
-                              for y in range(climate_texture.height)]
-                             for x in range(climate_texture.width)]
 
         elevation_path = (EcoSystem._tex_root / self.elevation_path).as_posix().lower()
         elevation_info: P4KInfo = EcoSystem._sc.p4k.NameToInfoLower[elevation_path]
@@ -184,7 +214,7 @@ class Planet:
         self.humidity_influence = None
         self.temperature_influence = None
 
-        self.climate_texture: Image = None
+        self.climate_data: bytearray = None
         self.offset_data: bytearray = None
         self.heightmap_data: bytearray = None
 
@@ -211,7 +241,7 @@ class Planet:
 
         ecosystem_ids = self.planet_data["data"]["General"]["uniqueEcoSystemsGUIDs"]
         self.ecosystems = [EcoSystem.find_in_cache_(e)
-                           for e in ecosystem_ids[0:1]
+                           for e in ecosystem_ids
                            if e != "00000000-0000-0000-0000-000000000000"]
 
         eco: EcoSystem
@@ -220,12 +250,11 @@ class Planet:
 
         # R = Temp, G = Humidity, B = Biome ID, A = Unused
         splat_raw = self.planet_data["data"]["splatMap"]
-        self.climate_texture = Image.frombuffer('RGBA',
-                                                (self.tile_count, self.tile_count),
-                                                bytearray(splat_raw))
+        self.climate_data = bytearray(splat_raw)
 
         offsets_raw = self.planet_data["data"]["randomOffset"]
         self.offset_data = bytearray(offsets_raw)
+        print(f"Offset Length: {len(self.offset_data)}")
 
         hm_path = self.planet_data["data"]["General"]["tSphere"]["sHMWorld"]
         hm_path_posix = ("data" / Path(hm_path)).as_posix().lower()
@@ -291,7 +320,7 @@ class Planet:
     def _construct_gpu_resources(self):
         def _buffer_from_lut_color(fn_color: Callable[[LUTData], list[int]]) -> Resource:
             texture = Texture2D(128, 128, R8G8B8A8_UINT)
-            buffer = Buffer(texture.size, HEAP_UPLOAD)
+            staging = Buffer(texture.size, HEAP_UPLOAD)
             data = [0 for _ in range(128 * 128 * 4)]
             for y in range(128):
                 for x in range(128):
@@ -302,63 +331,90 @@ class Planet:
                     data[index + 2] = color[2]
                     data[index + 3] = color[3]
             # TODO: Can we write directly into the buffer as we generate?
-            buffer.upload(bytes(data))
-            buffer.copy_to(texture)
+            staging.upload(bytes(data))
+            staging.copy_to(texture)
             return texture
-
-        def _buffer_for_climate(climate: list[list[LocalClimateData]]) -> Resource:
-            buffer_bytes = LocalClimateData.create_packed_bytes(climate)
-            print(f"Allocating climate: {len(buffer_bytes)}")
-            gpu_buffer = Buffer(len(buffer_bytes), HEAP_DEFAULT, stride=16)
-            local_buffer = Buffer(len(buffer_bytes), HEAP_UPLOAD)
-            local_buffer.upload(buffer_bytes)
-            local_buffer.copy_to(gpu_buffer)
-            return gpu_buffer
 
         def _buffer_for_image(image: Image) -> Resource:
             data = image.tobytes('raw', 'RGBA')
             texture = Texture2D(image.width, image.height, R8G8B8A8_UINT)
-            buffer = Buffer(len(data), HEAP_UPLOAD)
-            buffer.upload(data)
-            buffer.copy_to(texture)
+            staging = Buffer(len(data), HEAP_UPLOAD)
+            staging.upload(data)
+            staging.copy_to(texture)
             return texture
 
         def _buffer_for_bytes(data: bytearray, bytes_per_pixel: int, format: int) -> Resource:
             dim = int(math.sqrt(len(data) / bytes_per_pixel))
             img = Texture2D(dim, dim, format)
-            buffer = Buffer(len(data), HEAP_UPLOAD)
-            buffer.upload(data)
-            buffer.copy_to(img)
+            staging = Buffer(len(data), HEAP_UPLOAD)
+            staging.upload(data)
+            staging.copy_to(img)
             return img
+
+        def _ecosystem_texture(fn_texture: Callable[[EcoSystem], Image.Image], format: int) -> Texture3D:
+            textures: list[Image] = [fn_texture(e) for e in self.ecosystems]
+            result_tex = Texture3D(textures[0].width, textures[0].height, len(textures), format)
+            staging = Buffer(result_tex.size, HEAP_UPLOAD)
+            framesize = int(result_tex.size / len(textures))
+            for i, eco_texture in enumerate(textures):
+                eco_bytes = eco_texture.tobytes('raw', 'RGBA')
+                staging.upload(eco_bytes, i * framesize)
+            staging.copy_to(result_tex)
+            return result_tex
 
         self.gpu_resources['bedrock'] = _buffer_from_lut_color(lambda x: x.bedrockColor)
         self.gpu_resources['surface'] = _buffer_from_lut_color(lambda x: x.surfaceColor)
-        self.gpu_resources['planet_climate'] = _buffer_for_image(self.climate_texture)
+        self.gpu_resources['planet_climate'] = _buffer_for_bytes(self.climate_data, 4, R8G8B8A8_UINT)
         self.gpu_resources['planet_offsets'] = _buffer_for_bytes(self.offset_data, 1, R8_UINT)
         self.gpu_resources['planet_heightmap'] = _buffer_for_bytes(self.heightmap_data, 2, R16_UINT)
-        # self.gpu_resources['ecosystems'] = _buffer_for_climate(self.ecosystems[0].climate_data)
+
+        self.gpu_resources['ecosystems'] = _ecosystem_texture(lambda x: x.climate_image, R8G8B8A8_UINT)
         # self.gpu_resources['splat'] = _buffer_for_image(self.climate_texture)
 
-        eco_size = len(self.ecosystems[0].climate_data)
-        destination_texture = Texture2D(eco_size * 2, eco_size, R8G8B8A8_UINT)
+        self.gpu_resources['settings'] = Buffer(RenderJobSettings.PACK_LENGTH)
+
+        width = self.gpu_resources['planet_climate'].width
+        height = self.gpu_resources['planet_climate'].height
+
+        destination_texture = Texture2D(width * 2, height, R8G8B8A8_UINT)
 
         self.gpu_resources['destination'] = destination_texture
         self.gpu_resources['readback'] = Buffer(destination_texture.size, HEAP_READBACK)
 
-        print(f"Dest: ({destination_texture.width}, {destination_texture.height})")
-
     def render(self, settings: RenderSettings):
         r = self.gpu_resources
         samplers = [
-            r['bedrock'], r['surface'], r['planet_climate'], r['planet_offsets'], r['planet_heightmap']
+            r['bedrock'], r['surface'],
+            r['planet_climate'], r['planet_offsets'], r['planet_heightmap'],
+            r['ecosystems']
         ]
+
+        job_s = RenderJobSettings()
+
+        if settings.coordinate_mode == "NASA":
+            job_s.offset_x = 0.5
+        elif settings.coordinate_mode == "EarthShifted":
+            job_s.offset_x = 0.5
+        elif settings.coordinate_mode == "EarchUnshifted":
+            job_s.offset_x = 0
+
+        job_s.interpolation = settings.interpolation
+        job_s.render_scale_x = settings.resolution * 2
+        job_s.render_scale_y = settings.resolution
+        job_s.planet_radius = self.radius_m
+        job_s.local_humidity_influence = self.humidity_influence
+        job_s.local_temperature_influence = self.temperature_influence
 
         destination_texture = self.gpu_resources['destination']
         readback_buffer = self.gpu_resources['readback']
+        settings_buffer = self.gpu_resources['settings']
+
+        job_s.update_buffer(settings_buffer)
 
         compute = Compute(hlsl.compile(settings.hlsl),
                           srv=samplers,
-                          uav=[destination_texture])
+                          uav=[destination_texture],
+                          cbv=[settings_buffer])
 
         compute.dispatch(destination_texture.width // 8, destination_texture.height // 8, 1)
         destination_texture.copy_to(readback_buffer)

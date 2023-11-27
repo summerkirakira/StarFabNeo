@@ -113,10 +113,11 @@ class QImageViewer(qtw.QGraphicsView):
                 self.scale(factor, factor)
                 self._zoom = 0
 
-    def setImage(self, image):
+    def setImage(self, image, fit: bool = True):
         """Set the scene's current image pixmap to the input QImage or QPixmap.
         Raises a RuntimeError if the input image has type other than QImage or QPixmap.
         :type image: QImage | QPixmap
+        :type fit: bool
         """
         self._zoom = 0
         if isinstance(image, qtg.QPixmap):
@@ -135,7 +136,8 @@ class QImageViewer(qtw.QGraphicsView):
             self._empty = True
             self.setDragMode(qtw.QGraphicsView.NoDrag)
             self.image.setPixmap(qtg.QPixmap())
-        self.fitInView()
+        if fit:
+            self.fitInView()
 
     def wheelEvent(self, event):
         if self.hasImage():
