@@ -1,17 +1,21 @@
 import io
+from typing import Union
 
-from PIL import ImageQt
+from PIL import ImageQt, Image
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QStandardItem, QStandardItemModel, QPixmap
-from PySide6.QtWidgets import QComboBox, QPushButton, QPlainTextEdit, QGraphicsView, QGraphicsScene
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QComboBox, QPushButton
 from qtpy import uic
 from scdatatools import StarCitizen
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
-from starfab.gui import qtw
+from starfab.gui import qtw, qtc
 from starfab.gui.widgets.image_viewer import QImageViewer
 from starfab.log import getLogger
-from starfab.models.planet import Planet, RenderSettings, EcoSystem
+from starfab.planets.planet import Planet
+from starfab.planets.data import RenderSettings
+from starfab.planets.ecosystem import EcoSystem
+from starfab.planets.planet_renderer import PlanetRenderer, RenderResult
 from starfab.resources import RES_PATH
 from pathlib import Path
 
@@ -30,11 +34,16 @@ class PlanetView(qtw.QWidget):
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
         self.sampleModeComboBox: QComboBox = None
-        self.hlslTextBox: QPlainTextEdit = None
+        self.outputResolutionComboBox: QComboBox = None
+        self.displayModeComboBox: QComboBox = None
+        self.displayLayerComboBox: QComboBox = None
         self.renderOutput: QImageViewer = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
 
         self.starmap = None
+
+        self.renderer = PlanetRenderer((4096, 2048))
+        self.last_render: Union[None, RenderResult] = None
 
         self.renderResolutionComboBox.setModel(self.create_model([
             ("1px per tile", 1),
@@ -58,6 +67,27 @@ class PlanetView(qtw.QWidget):
             ("Bi-Linear", 1),
             ("Bi-Cubic", 2),
         ]))
+        self.sampleModeComboBox.setCurrentIndex(1)
+
+        self.outputResolutionComboBox.setModel(self.create_model([
+            ("2MP  -  2,048  x 1,024", (2048, 1024)),
+            ("8MP  -  4,096  x 2,048", (4096, 2048)),
+            ("32MP -  8,192  x 4,096", (8192, 4096)),
+            ("128MP - 16,384 x 8,192", (16384, 8192))
+        ]))
+        self.outputResolutionComboBox.currentIndexChanged.connect(self._display_resolution_changed)
+
+        self.displayModeComboBox.setModel(self.create_model([
+            ("Pixel-Perfect", qtc.Qt.FastTransformation),
+            ("Smooth", qtc.Qt.SmoothTransformation)
+        ]))
+        self.displayModeComboBox.currentIndexChanged.connect(self._display_mode_changed)
+
+        self.displayLayerComboBox.setModel(self.create_model([
+            ("Surface", "surface"),
+            ("Heightmap", "heightmap")
+        ]))
+        self.displayLayerComboBox.currentIndexChanged.connect(self._display_layer_changed)
 
         if isinstance(sc, StarCitizen):
             self.sc = sc
@@ -67,11 +97,25 @@ class PlanetView(qtw.QWidget):
             self.sc.datacore_model.loaded.connect(self._hack_before_load)
             self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
-        self.loadButton.clicked.connect(self._load_shader)
-        self.saveButton.clicked.connect(self._save_shader)
         self.renderButton.clicked.connect(self._do_render)
 
-        self._load_shader()
+    def _display_resolution_changed(self):
+        new_resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
+        self.renderer.set_resolution(new_resolution)
+
+    def _display_mode_changed(self):
+        new_transform = self.displayModeComboBox.currentData(role=Qt.UserRole)
+        self.renderOutput.image.setTransformationMode(new_transform)
+
+    def _display_layer_changed(self):
+        layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
+        if layer == "surface":
+            self._update_image(self.last_render.tex_color)
+        elif layer == "heightmap":
+            self._update_image(self.last_render.tex_heightmap)
+
+    def _update_image(self, image: Image):
+        self.renderOutput.setImage(ImageQt.ImageQt(image), fit=False)
 
     def _hack_before_load(self):
         # Hacky method to support faster dev testing and launching directly in-app
@@ -96,20 +140,17 @@ class PlanetView(qtw.QWidget):
     def shader_path(self) -> Path:
         return Path(__file__).parent / '../../../planets/shader.hlsl'
 
-    def _load_shader(self):
+    def _get_shader(self):
         with io.open(self.shader_path(), "r") as shader:
-            self.hlslTextBox.setPlainText(shader.read())
-
-    def _save_shader(self):
-        with io.open(self.shader_path(), "w") as shader:
-            shader.write(self.hlslTextBox.toPlainText())
+            return shader.read()
 
     def get_settings(self):
         scale = self.renderResolutionComboBox.currentData(role=Qt.UserRole)
         coordinates = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
         interpolation = self.sampleModeComboBox.currentData(role=Qt.UserRole)
-        shader = self.hlslTextBox.toPlainText()
-        return RenderSettings(True, scale, coordinates, shader, interpolation)
+        resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
+        shader = self._get_shader()
+        return RenderSettings(True, scale, coordinates, shader, interpolation, resolution)
 
     def _do_render(self):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
@@ -117,10 +158,16 @@ class PlanetView(qtw.QWidget):
         selected_obj.load_data()
         print("Done loading planet data")
 
+        self.renderer.set_planet(selected_obj)
+        self.renderer.set_settings(self.get_settings())
+
         # TODO: Deal with buffer directly
-        img = selected_obj.render(self.get_settings())
-        qimg = ImageQt.ImageQt(img)
-        self.renderOutput.setImage(qimg, fit=False)
+        try:
+            # img = selected_obj.render(self.get_settings())
+            self.last_render = self.renderer.render()
+            self._display_layer_changed()
+        except Exception as ex:
+            logger.exception(ex)
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:

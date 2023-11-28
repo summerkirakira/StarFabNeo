@@ -1,4 +1,7 @@
 #define PI radians(180)
+#define MODE_NN 0
+#define MODE_BI_LINEAR 1
+#define MODE_BI_CUBIC 2
 
 struct RenderJobSettings
 {
@@ -7,8 +10,14 @@ struct RenderJobSettings
     float planet_radius;
     int interpolation;
     int2 render_scale;
+
     float local_humidity_influence;
     float local_temperature_influence;
+    float global_terrain_height_influence;
+    float ecosystem_terrain_height_influence;
+
+    float ocean_depth;
+    uint3 ocean_color;
 };
 
 struct LocalizedWarping
@@ -34,17 +43,27 @@ Texture2D<uint4> bedrock : register(t0);
 Texture2D<uint4> surface : register(t1);
 Texture2D<uint4> planet_climate : register(t2);
 Texture2D<uint> planet_offsets : register(t3);
-Texture2D<min16uint> planet_heightmap : register(t4);
+Texture2D<uint> planet_heightmap : register(t4);
 Texture3D<uint4> ecosystem_climates: register(t5);
-
-RWTexture2D<uint4> destination : register(u0);
+Texture3D<uint> ecosystem_heightmaps: register(t6);
 
 ConstantBuffer<RenderJobSettings> jobSettings : register(b0);
+
+RWTexture2D<uint4> output_color : register(u0);
+RWTexture2D<uint4> output_heightmap: register(u1);
 
 uint4 lerp2d(uint4 ul, uint4 ur, uint4 bl, uint4 br, float2 value)
 {
     float4 topRow = lerp(ul, ur, value.x);
     float4 bottomRow = lerp(bl, br, value.x);
+
+    return lerp(topRow, bottomRow, value.y);
+}
+
+uint lerp2d(uint ul, uint ur, uint bl, uint br, float2 value)
+{
+    float topRow = lerp(ul, ur, value.x);
+    float bottomRow = lerp(bl, br, value.x);
 
     return lerp(topRow, bottomRow, value.y);
 }
@@ -58,12 +77,18 @@ uint4 interpolate_cubic(float4 v0, float4 v1, float4 v2, float4 v3, float fracti
     return (fraction * ((fraction * ((fraction * p) + q)) + r)) + v1;
 }
 
-uint4 take_sample_nn(Texture2D<uint4> texture, float2 position, int2 dimensions)
+uint interpolate_cubic_uint(float v0, float v1, float v2, float v3, float fraction)
 {
-    return texture[position % dimensions];
+    float p = (v3 - v2) - (v0 - v1);
+    float q = (v0 - v1) - p;
+    float r = v2 - v0;
+
+    return (fraction * ((fraction * ((fraction * p) + q)) + r)) + v1;
 }
 
-uint take_sample_nn(Texture2D<uint> texture, float2 position, int2 dimensions)
+/* Texture2D<uint4> implementations */
+
+uint4 take_sample_nn(Texture2D<uint4> texture, float2 position, int2 dimensions)
 {
     return texture[position % dimensions];
 }
@@ -95,6 +120,78 @@ uint4 take_sample_bicubic(Texture2D<uint4> texture, float2 position, int2 dimens
     return interpolate_cubic(samples[0], samples[1], samples[2], samples[3], offset.y);
 }
 
+uint4 take_sample(Texture2D<uint4> texture, float2 position, int2 dimensions, int mode)
+{
+    if(mode == MODE_NN) {
+        return take_sample_nn(texture, position, dimensions);
+    } else if (mode == MODE_BI_LINEAR) {
+        return take_sample_bilinear(texture, position, dimensions);
+    } else if (mode == MODE_BI_CUBIC) {
+        return take_sample_bicubic(texture, position, dimensions);
+    } else {
+        return uint4(0, 0, 0, 0);
+    }
+}
+
+/* Texture2D<uint> implementations */
+
+uint take_sample_nn(Texture2D<uint> texture, float2 position, int2 dimensions)
+{
+    return texture[position % dimensions];
+}
+
+uint take_sample_bilinear(Texture2D<uint> texture, float2 position, int2 dimensions)
+{
+    float2 offset = position - floor(position);
+    uint tl = take_sample_nn(texture, position, dimensions);
+    uint tr = take_sample_nn(texture, position + int2(1, 0), dimensions);
+    uint bl = take_sample_nn(texture, position + int2(0, 1), dimensions);
+    uint br = take_sample_nn(texture, position + int2(1, 1), dimensions);
+    return lerp2d(tl, tr, bl, br, offset);
+}
+
+uint take_sample_bicubic(Texture2D<uint> texture, float2 position, int2 dimensions)
+{
+    float2 offset = position - floor(position);
+    uint samples[4];
+
+    for (int i = 0; i < 4; ++i)
+    {
+        float ll = take_sample_nn(texture, position + int2(-1, i - 1), dimensions);
+        float ml = take_sample_nn(texture, position + int2( 0, i - 1), dimensions);
+        float mr = take_sample_nn(texture, position + int2( 1, i - 1), dimensions);
+        float rr = take_sample_nn(texture, position + int2( 2, i - 1), dimensions);
+        samples[i] = interpolate_cubic_uint(ll, ml, mr, rr, offset.x);
+    }
+
+    return interpolate_cubic_uint(samples[0], samples[1], samples[2], samples[3], offset.y);
+}
+
+uint take_sample(Texture2D<uint> texture, float2 position, int2 dimensions, int mode)
+{
+    if(mode == 0) {
+        return take_sample_nn(texture, position, dimensions);
+    } else if (mode == 1) {
+        return take_sample_bilinear(texture, position, dimensions);
+    } else if (mode == 2) {
+        return take_sample_bicubic(texture, position, dimensions);
+    } else {
+        return uint(0);
+    }
+}
+
+/* Texture3D<uint> implementations */
+
+uint take_sample_nn_3d(Texture3D<uint> texture, float2 position, int2 dimensions, int layer)
+{
+    uint3 read_pos;
+    read_pos.xy = uint2(position % dimensions);
+    read_pos.z = layer;
+    return texture[read_pos];
+}
+
+/* Texture3D<uint4> implementations */
+
 uint4 take_sample_nn_3d(Texture3D<uint4> texture, float2 position, int2 dimensions, int layer)
 {
     uint3 read_pos;
@@ -118,19 +215,6 @@ int4 take_sample_bicubic_3d(Texture3D<uint4> texture, float2 position, int2 dime
     }
 
     return interpolate_cubic(samples[0], samples[1], samples[2], samples[3], offset.y);
-}
-
-uint4 take_sample_uint(Texture2D<uint4> texture, float2 position, int2 dimensions, int mode)
-{
-    if(mode == 0) {
-        return take_sample_nn(texture, position, dimensions);
-    } else if (mode == 1) {
-        return take_sample_bilinear(texture, position, dimensions);
-    } else if (mode == 2) {
-        return take_sample_bicubic(texture, position, dimensions);
-    } else {
-        return uint4(0, 0, 0, 0);
-    }
 }
 
 float circumference_at_distance_from_equator(float vertical_distance_meters)
@@ -183,11 +267,13 @@ LocalizedWarping get_local_image_warping(float2 position_meters, float2 patch_si
     return result;
 }
 
-ProjectedTerrainInfluence calculate_projected_tiles(float2 position, int2 dimensions, float2 projected_size, float2 terrain_size)
+ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, float2 projected_size, float2 terrain_size)
 {
-    uint off_w, off_h;
-    planet_offsets.GetDimensions(off_w, off_h);
-    uint2 off_sz = uint2(off_w, off_h);
+    uint2 out_sz; output_color.GetDimensions(out_sz.x, out_sz.y);
+    uint2 clim_sz; planet_climate.GetDimensions(clim_sz.x, clim_sz.y);
+    uint2 off_sz; planet_offsets.GetDimensions(off_sz.x, off_sz.y);
+    uint2 hm_sz; planet_heightmap.GetDimensions(hm_sz.x, hm_sz.y);
+    uint3 eco_sz; ecosystem_climates.GetDimensions(eco_sz.x, eco_sz.y, eco_sz.z);
 
     ProjectedTerrainInfluence result = {
         float2(0, 0),   //float2 temp_humidity
@@ -198,49 +284,45 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 position, int2 dimens
         uint3(0,0,0)    //uint3 override;
     };
 
-    float2 pos_meters = pixels_to_meters(position, dimensions);
+    // NOTE: These pixel dimensions are relative to the climate image
+    float2 position_px = normal_position * clim_sz;
+    float2 position_m = pixels_to_meters(position_px, clim_sz);
 
-    LocalizedWarping projection_warping = get_local_image_warping(pos_meters, projected_size);
-    LocalizedWarping physical_warping = get_local_image_warping(pos_meters, terrain_size);
+    LocalizedWarping projection_warping = get_local_image_warping(position_m, projected_size);
+    LocalizedWarping physical_warping = get_local_image_warping(position_m, terrain_size);
 
     //upper_bound will be the lower number here because image is 0,0 top-left
-    float upper_bound = position.y - (projection_warping.vertical_delta * dimensions.y);
-    float lower_bound = position.y + (projection_warping.vertical_delta * dimensions.y);
+    float upper_bound = position_px.y - (projection_warping.vertical_delta * clim_sz.y);
+    float lower_bound = position_px.y + (projection_warping.vertical_delta * clim_sz.y);
 
     //No wrapping for Y-axis
-    float search_y_start = clamp(floor(upper_bound), 0, dimensions.y - 1);
-    float search_y_end   = clamp(ceil(lower_bound), 0, dimensions.y - 1);
+    float search_y_start = clamp(floor(upper_bound), 0, clim_sz.y - 1);
+    float search_y_end   = clamp(ceil(lower_bound), 0, clim_sz.y - 1);
 
     int terrain_step = 1;
-    int pole_distance = dimensions.y / 16;
+    int pole_distance = clim_sz.y / 16;
 
     //TODO Vary terrain step from 1 at pole_distance to TileCount at the pole
-    if (position.y < pole_distance / 2 || position.y >= dimensions.y - pole_distance / 2) {
+    if (position_px.y < pole_distance / 2 || position_px.y >= clim_sz.y - pole_distance / 2) {
         terrain_step = 8;
-    }else if(position.y < pole_distance || position.y >= dimensions.y - pole_distance) {
+    }else if(position_px.y < pole_distance || position_px.y >= clim_sz.y - pole_distance) {
         terrain_step = 4;
-    }
-
-    if (round(position.x - 0.5f) == 40 && round(position.y - 0.5f) == 40) {
-        result.is_override = true;
-        result.override = uint3(0, 255, 0);
-        return result;
     }
 
     //Search vertically all cells that our projection overlaps with
     for(float search_y_px = search_y_start; search_y_px <= search_y_end; search_y_px += 1.0f)
     {
         //Turn this cells position back into meters, and calculate local distortion size for this row specifically
-        float2 search_meters = pixels_to_meters(float2(0, search_y_px), dimensions);
+        float2 search_meters = pixels_to_meters(float2(0, search_y_px), clim_sz);
         float search_circumference = circumference_at_distance_from_equator(search_meters.y);
-        float half_projected_width_px = (projected_size.x / 2 / search_circumference) * dimensions.y;
+        float half_projected_width_px = (projected_size.x / 2 / search_circumference) * clim_sz.y;
 
         //Break if the circumference at this pixel is less than a single projection, ie: directly at poles
         if(search_circumference < projected_size.x)
             continue;
 
-        float row_left_bound = position.x - half_projected_width_px;
-        float row_right_bound = position.x + half_projected_width_px;
+        float row_left_bound = position_px.x - half_projected_width_px;
+        float row_right_bound = position_px.x + half_projected_width_px;
         float search_x_start = floor(row_left_bound);
         float search_x_end = ceil(row_right_bound);
 
@@ -251,36 +333,39 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 position, int2 dimens
 
             //We can use NN here since we are just looking for the ecosystem data
             uint2 search_pos = uint2(search_x_px, search_y_px);
+            float2 search_pos_normal = search_pos / float2(clim_sz);
 
-            uint4 global_climate = take_sample_uint(planet_climate, search_pos, dimensions, 0);
-            uint ecosystem_id = uint(global_climate.z / 16);
+            // Only needed to extract the ecosystem ID at the location we are testing
+            // This lets us determine which texture we blend with the ground, projecting from this grid position
+            uint4 local_climate_data = take_sample(planet_climate, search_pos, clim_sz, 0);
+            uint ecosystem_id = uint(local_climate_data.z / 16);
 
             // TODO: Use global random offset data
-            float offset = take_sample_nn(planet_offsets, float2(search_pos) / dimensions * off_sz, off_sz) / 256.0f;
+            float offset = take_sample_nn(planet_offsets, search_pos_normal * off_sz, off_sz) / 256.0f;
             float2 terrain_center = float2(search_x_px, search_y_px) + offset;
 
             //Now finally calculate the local distortion at the center of the terrain
-            float2 terrain_center_m = pixels_to_meters(terrain_center, dimensions.y);
+            float2 terrain_center_m = pixels_to_meters(terrain_center, clim_sz.y);
             float terrain_circumference = circumference_at_distance_from_equator(terrain_center_m.y);
-            float half_terrain_width_projected_px = (projected_size.x / 2 / terrain_circumference) * dimensions.y;
-            float half_terrain_width_physical_px = (terrain_size.x / 2 / terrain_circumference) * dimensions.y;
+            float half_terrain_width_projected_px = (projected_size.x / 2 / terrain_circumference) * clim_sz.y;
+            float half_terrain_width_physical_px = (terrain_size.x / 2 / terrain_circumference) * clim_sz.y;
 
             float terrain_left_edge = terrain_center.x - half_terrain_width_projected_px;
             float terrain_right_edge = terrain_center.x + half_terrain_width_projected_px;
-            float terrain_top_edge = terrain_center.y - (projection_warping.vertical_delta * dimensions.y);
-            float terrain_bottom_edge = terrain_center.y + (projection_warping.vertical_delta * dimensions.y);
+            float terrain_top_edge = terrain_center.y - (projection_warping.vertical_delta * clim_sz.y);
+            float terrain_bottom_edge = terrain_center.y + (projection_warping.vertical_delta * clim_sz.y);
 
             //Reject pixels outside of the terrains projected pixel borders
-            if (position.x < terrain_left_edge || position.x > terrain_right_edge)
+            if (position_px.x < terrain_left_edge || position_px.x > terrain_right_edge)
                 continue;
-            if (position.y < terrain_top_edge || position.y > terrain_bottom_edge)
+            if (position_px.y < terrain_top_edge || position_px.y > terrain_bottom_edge)
                 continue;
 
             //Finally calculate UV coordinates and return result
-            float terrain_u = ((position.x - terrain_center.x) / half_terrain_width_physical_px / 2) + 0.5f;
-            float terrain_v = ((position.y - terrain_center.y) / (physical_warping.vertical_delta * dimensions.y * 2)) + 0.5f;
-            float patch_u = ((position.x - terrain_left_edge) / (half_terrain_width_projected_px * 2));
-            float patch_v = ((position.y - terrain_top_edge) / (projection_warping.vertical_delta * dimensions.y * 2));
+            float terrain_u = ((position_px.x - terrain_center.x) / half_terrain_width_physical_px / 2) + 0.5f;
+            float terrain_v = ((position_px.y - terrain_center.y) / (physical_warping.vertical_delta * clim_sz.y * 2)) + 0.5f;
+            float patch_u = ((position_px.x - terrain_left_edge) / (half_terrain_width_projected_px * 2));
+            float patch_v = ((position_px.y - terrain_top_edge) / (projection_warping.vertical_delta * clim_sz.y * 2));
 
             if (terrain_u < 0) terrain_u += 1;
             if (terrain_v < 0) terrain_v += 1;
@@ -299,19 +384,21 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 position, int2 dimens
             float center_distance = sqrt(delta.x * delta.x + delta.y * delta.y) * 1;
             float local_mask_value = (float)(center_distance > 0.5f ? 0 : cos(center_distance * PI));
 
-            uint2 size = uint2(1024, 1024);
-            int4 local_eco_data = take_sample_nn_3d(ecosystem_climates, terrain_uv * size, size, ecosystem_id);
+            int4 local_eco_data = take_sample_nn_3d(ecosystem_climates, terrain_uv * eco_sz.xy, eco_sz.xy, ecosystem_id);
             float4 local_eco_normalized = (local_eco_data - 127) / 127.0f;
             // TODO: Heightmaps
+            float local_eco_height = take_sample_nn_3d(ecosystem_heightmaps, terrain_uv * eco_sz.xy, eco_sz.xy, ecosystem_id);
+	        local_eco_height = (local_eco_height - 32767) / 32767.0f;
 
             if (false && (round(search_x_px % 20) == 0 && round(search_y_px % 20) == 0)) {
                 result.is_override = true;
                 //result.override = uint3(255 * terrain_uv.x, 255 * terrain_uv.y, 0) * local_mask_value;
-                result.override = uint3(planet_offsets[search_pos], 0, 0);
+                result.override = uint3(offset * 256, 0, 0);
                 return result;
             }
 
-            result.temp_humidity += local_eco_normalized * local_mask_value;
+            result.temp_humidity += local_eco_normalized.xy * local_mask_value;
+            result.elevation += local_eco_height * local_mask_value;
             result.mask_total += local_mask_value;
             result.num_influences += 1;
         }
@@ -324,62 +411,65 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 position, int2 dimens
 [numthreads(8,8,1)]
 void main(uint3 tid : SV_DispatchThreadID)
 {
-	uint width;
-	uint height;
-	destination.GetDimensions(width, height);
-	uint2 out_sz = uint2(width, height);
+    uint2 out_sz; output_color.GetDimensions(out_sz.x, out_sz.y);
+    uint2 clim_sz; planet_climate.GetDimensions(clim_sz.x, clim_sz.y);
+    uint2 off_sz; planet_offsets.GetDimensions(off_sz.x, off_sz.y);
+    uint2 hm_sz; planet_heightmap.GetDimensions(hm_sz.x, hm_sz.y);
 
-	uint clim_w, clim_h;
-	planet_climate.GetDimensions(clim_w, clim_h);
-	uint2 clim_sz = uint2(clim_w, clim_h);
-
-    uint off_w, off_h;
-    planet_offsets.GetDimensions(off_w, off_h);
-    uint2 off_sz = uint2(off_w, off_h);
-
-	float2 normalized_position = tid.xy / float2(out_sz) / jobSettings.render_scale;
-	normalized_position.xy += jobSettings.offset;
-	normalized_position.y += 0.5f;
-	normalized_position = normalized_position % 1;
-
-    uint4 local_nn = take_sample_uint(planet_climate, normalized_position * clim_sz, clim_sz, 0);
-    uint local_ecosystem = local_nn.z / 16;
-    uint global_offset = take_sample_nn(planet_offsets, normalized_position * off_sz, off_sz);
-
-	uint4 local_climate = take_sample_uint(planet_climate, normalized_position * clim_sz, clim_sz, jobSettings.interpolation);
-	uint4 read = uint4(0, 0, 0, 255);
-	// uint4 local_climate = planet_climate[normalized_position * clim_sz];
-
-	local_climate = uint4(local_climate.xy, 0, 0);
-    float terrain_scaling = 1.5f;
+    float terrain_scaling = 1;
     float2 projected_size = float2(6000, 6000) * terrain_scaling;
     float2 physical_size = float2(4000, 4000) * terrain_scaling;
     float2 local_influence = float2(jobSettings.local_humidity_influence, jobSettings.local_temperature_influence);
 
-    ProjectedTerrainInfluence eco_influence = calculate_projected_tiles(normalized_position * out_sz, out_sz, projected_size, physical_size);
+    // Calculate normalized position in the world (ie: 0,0 = top-left, 1,1 = bottom-right)
+	float2 normalized_position = tid.xy / float2(clim_sz) / jobSettings.render_scale;
+	normalized_position.xy += jobSettings.offset;
+	//normalized_position.y += 0.25f;
+	normalized_position = normalized_position % 1;
+
+    // Sample global data
+	uint4 global_climate = take_sample(planet_climate, normalized_position * clim_sz, clim_sz, jobSettings.interpolation);
+	float global_height = take_sample(planet_heightmap, normalized_position * hm_sz, hm_sz, jobSettings.interpolation);
+	uint global_offset = take_sample_nn(planet_offsets, normalized_position * off_sz, off_sz);
+
+	global_height = (global_height - 32767) / 32767.0f;
+    global_climate = uint4(global_climate.xy / 2, 0, 0);
+
+    // Calculate influence of all neighboring terrain
+    ProjectedTerrainInfluence eco_influence = calculate_projected_tiles(normalized_position, projected_size, physical_size);
+
+	uint4 out_color = uint4(0, 0, 0, 255);
+	float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
 
     if (eco_influence.is_override) {
-        read.xyz = eco_influence.override;
+        out_color.xyz = eco_influence.override;
     } else {
         if(eco_influence.mask_total > 0) {
             eco_influence.temp_humidity /= eco_influence.mask_total;
-            local_climate.yx += eco_influence.temp_humidity * local_influence;
-
+            global_climate.yx += eco_influence.temp_humidity * local_influence;
+            out_height += eco_influence.elevation * jobSettings.ecosystem_terrain_height_influence;
         }
 
-        uint4 surface_color = take_sample_uint(surface, local_climate.yx / 2, int2(128, 128), jobSettings.interpolation);
+        uint4 surface_color = take_sample(surface, global_climate.yx, int2(128, 128), jobSettings.interpolation);
 
-        read.xyz = surface_color.xyz;
+        out_color.xyz = surface_color.xyz;
     }
 
-	// Grid rendering
-	int2 cell_position = tid.xy % jobSettings.render_scale;
+    if (out_height < jobSettings.ocean_depth) {
+        out_color.xyz = jobSettings.ocean_color.xyz;
+    }
+
+    // Squash out_height from meter range to normalized +/- 1.0 range
+    out_height /= (jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence);
+
+	// DEBUG: Grid rendering
+	int2 cell_position = int2(normalized_position * out_sz * jobSettings.render_scale) % jobSettings.render_scale;
 	if(false && (cell_position.x == 0 || cell_position.y == 0))
 	{
-	    read.x = 255;
-	    read.y = 0;
-	    read.z = 0;
+	    out_color.xyz = uint3(255, 0, 0);
 	}
 
-	destination[tid.xy] = read;
+	output_color[tid.xy] = out_color;
+	//output_heightmap[tid.xy] = uint4(global_height & 0xFF, (global_height & 0xFF00) >> 8, 0, 255);
+	output_heightmap[tid.xy] = uint4(out_height * 127 + 127, 0, 0, 255);
 }

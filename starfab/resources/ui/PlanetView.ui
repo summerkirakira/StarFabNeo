@@ -112,20 +112,7 @@
            <item row="2" column="1">
             <widget class="QComboBox" name="coordinateSystemComboBox"/>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="hlslLabel">
-             <property name="text">
-              <string>HLSL</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QPlainTextEdit" name="hlslTextBox">
-             <property name="plainText">
-              <string/>
-             </property>
-            </widget>
-           </item>
+
            <item row="3" column="0">
             <widget class="QLabel" name="sampleModeLabel">
              <property name="text">
@@ -136,21 +123,41 @@
            <item row="3" column="1">
             <widget class="QComboBox" name="sampleModeComboBox"/>
            </item>
+
+           <item row="4" column="0">
+            <widget class="QLabel" name="outputResolutionLabel">
+             <property name="text">
+              <string>Output Resolution</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QComboBox" name="outputResolutionComboBox"/>
+           </item>
+
+           <item row="5" column="0">
+            <widget class="QLabel" name="displayModeLabel">
+             <property name="text">
+              <string>Display Mode</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QComboBox" name="displayModeComboBox"/>
+           </item>
+
+           <item row="6" column="0">
+            <widget class="QLabel" name="displayLayerLabel">
+             <property name="text">
+              <string>Display Layer</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QComboBox" name="displayLayerComboBox"/>
+           </item>
+
           </layout>
-         </item>
-         <item>
-          <widget class="QPushButton" name="loadButton">
-           <property name="text">
-            <string>Load</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="saveButton">
-           <property name="text">
-            <string>Save</string>
-           </property>
-          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="renderButton">
