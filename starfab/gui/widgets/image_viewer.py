@@ -17,7 +17,6 @@ SUPPORTED_IMG_FORMATS = set(Image.EXTENSION.keys())
 SUPPORTED_IMG_FORMATS.update(['.' + bytes(_).decode('utf-8') for _ in qtg.QImageReader.supportedImageFormats()])
 DDS_CONV_FORMAT = "png"
 
-
 class QImageViewer(qtw.QGraphicsView):
     """PyQt image viewer widget for a QPixmap in a QGraphicsView scene with mouse zooming and panning.
     Displays a QImage or QPixmap (QImage is internally converted to a QPixmap).
@@ -59,7 +58,7 @@ class QImageViewer(qtw.QGraphicsView):
         self.act_save_as.triggered.connect(self._handle_save_as)
 
         # Store a local handle to the scene's current image pixmap.
-        self.image = qtw.QGraphicsPixmapItem()
+        self.image: qtw.QGraphicsPixmapItem = qtw.QGraphicsPixmapItem()
         self.scene.addItem(self.image)
 
         # Scroll bar behaviour.

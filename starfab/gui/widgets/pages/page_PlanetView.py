@@ -11,6 +11,7 @@ from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInst
 
 from starfab.gui import qtw, qtc
 from starfab.gui.widgets.image_viewer import QImageViewer
+from starfab.gui.widgets.planet_viewer import QPlanetViewer
 from starfab.log import getLogger
 from starfab.planets.planet import Planet
 from starfab.planets.data import RenderSettings
@@ -37,8 +38,9 @@ class PlanetView(qtw.QWidget):
         self.outputResolutionComboBox: QComboBox = None
         self.displayModeComboBox: QComboBox = None
         self.displayLayerComboBox: QComboBox = None
-        self.renderOutput: QImageViewer = None
+        self.renderOutput: QPlanetViewer = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
+        print(self.renderOutput)
 
         self.starmap = None
 
@@ -115,7 +117,8 @@ class PlanetView(qtw.QWidget):
             self._update_image(self.last_render.tex_heightmap)
 
     def _update_image(self, image: Image):
-        self.renderOutput.setImage(ImageQt.ImageQt(image), fit=False)
+        # self.renderOutput.setImage(ImageQt.ImageQt(image), fit=False)
+        pass
 
     def _hack_before_load(self):
         # Hacky method to support faster dev testing and launching directly in-app
@@ -166,6 +169,7 @@ class PlanetView(qtw.QWidget):
             # img = selected_obj.render(self.get_settings())
             self.last_render = self.renderer.render()
             self._display_layer_changed()
+            self.renderOutput.update_render(self.last_render)
         except Exception as ex:
             logger.exception(ex)
 

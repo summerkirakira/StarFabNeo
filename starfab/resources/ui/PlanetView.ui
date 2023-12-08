@@ -112,7 +112,6 @@
            <item row="2" column="1">
             <widget class="QComboBox" name="coordinateSystemComboBox"/>
            </item>
-
            <item row="3" column="0">
             <widget class="QLabel" name="sampleModeLabel">
              <property name="text">
@@ -123,7 +122,6 @@
            <item row="3" column="1">
             <widget class="QComboBox" name="sampleModeComboBox"/>
            </item>
-
            <item row="4" column="0">
             <widget class="QLabel" name="outputResolutionLabel">
              <property name="text">
@@ -134,7 +132,6 @@
            <item row="4" column="1">
             <widget class="QComboBox" name="outputResolutionComboBox"/>
            </item>
-
            <item row="5" column="0">
             <widget class="QLabel" name="displayModeLabel">
              <property name="text">
@@ -145,7 +142,6 @@
            <item row="5" column="1">
             <widget class="QComboBox" name="displayModeComboBox"/>
            </item>
-
            <item row="6" column="0">
             <widget class="QLabel" name="displayLayerLabel">
              <property name="text">
@@ -156,8 +152,67 @@
            <item row="6" column="1">
             <widget class="QComboBox" name="displayLayerComboBox"/>
            </item>
-
+           <item row="7" column="0">
+            <widget class="QLabel" name="enableGridLabel">
+             <property name="text">
+              <string>Enable Grid</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QCheckBox" name="enableGridCheckBox">
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="enableCrosshairLabel">
+             <property name="text">
+              <string>Enable Crosshair</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QCheckBox" name="enableCrosshairCheckBox">
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QFrame" name="frame">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>250</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QLabel" name="lbl_planetDetails">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lbl_currentStatus">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="renderButton">
@@ -191,7 +246,7 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QImageViewer" name="renderOutput" native="true"/>
+        <widget class="QPlanetViewer" name="renderOutput"/>
        </item>
       </layout>
      </widget>
@@ -201,9 +256,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QImageViewer</class>
-   <extends>QWidget</extends>
-   <header>starfab.gui.widgets.image_viewer</header>
+   <class>QPlanetViewer</class>
+   <extends>QGraphicsView</extends>
+   <header>starfab.gui.widgets.planet_viewer</header>
   </customwidget>
  </customwidgets>
  <resources/>
