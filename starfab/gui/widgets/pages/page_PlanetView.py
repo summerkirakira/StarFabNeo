@@ -2,9 +2,9 @@ import io
 from typing import Union
 
 from PIL import ImageQt, Image
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QComboBox, QPushButton
+from PySide6.QtWidgets import QComboBox, QPushButton, QLabel, QCheckBox
 from qtpy import uic
 from scdatatools import StarCitizen
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
@@ -18,6 +18,7 @@ from starfab.planets.data import RenderSettings
 from starfab.planets.ecosystem import EcoSystem
 from starfab.planets.planet_renderer import PlanetRenderer, RenderResult
 from starfab.resources import RES_PATH
+from starfab.settings import settings
 from pathlib import Path
 
 
@@ -28,9 +29,8 @@ class PlanetView(qtw.QWidget):
     def __init__(self, sc):
         super().__init__(parent=None)
 
-        self.loadButton: QPushButton = None
-        self.saveButton: QPushButton = None
         self.renderButton: QPushButton = None
+        self.exportButton: QPushButton = None
         self.planetComboBox: QComboBox = None
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
@@ -39,12 +39,15 @@ class PlanetView(qtw.QWidget):
         self.displayModeComboBox: QComboBox = None
         self.displayLayerComboBox: QComboBox = None
         self.renderOutput: QPlanetViewer = None
+        self.enableGridCheckBox: QCheckBox = None
+        self.enableCrosshairCheckBox: QCheckBox = None
+        self.lbl_planetDetails: QLabel = None
+        self.lbl_currentStatus: QLabel = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
-        print(self.renderOutput)
 
         self.starmap = None
 
-        self.renderer = PlanetRenderer((4096, 2048))
+        self.renderer = PlanetRenderer((2048, 1024))
         self.last_render: Union[None, RenderResult] = None
 
         self.renderResolutionComboBox.setModel(self.create_model([
@@ -57,12 +60,14 @@ class PlanetView(qtw.QWidget):
             ("64px per tile", 64),
             ("128px per tile", 128)
         ]))
+        self.renderResolutionComboBox.currentIndexChanged.connect(self._render_scale_changed)
 
         self.coordinateSystemComboBox.setModel(self.create_model([
             ("NASA Format (0/360deg) - Community Standard", "NASA"),
             ("Earth Format (-180/180deg) Shifted", "EarthShifted"),
             ("Earth Format (-180/180deg) Unshifted", "EarthUnShifted")
         ]))
+        self.coordinateSystemComboBox.currentIndexChanged.connect(self._display_coordinate_system_changed)
 
         self.sampleModeComboBox.setModel(self.create_model([
             ("Nearest Neighbor", 0),
@@ -100,21 +105,42 @@ class PlanetView(qtw.QWidget):
             self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
         self.renderButton.clicked.connect(self._do_render)
+        self.exportButton.clicked.connect(self._do_export)
+        self.exportButton.setEnabled(False)
+        self.renderOutput.mouse_moved.connect(self._do_mouse_moved)
+        self.enableGridCheckBox.stateChanged.connect(self.renderOutput.set_grid_enabled)
+        self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.set_crosshair_enabled)
+
+        self.renderer.set_settings(self.get_settings())
+
+    def _render_scale_changed(self):
+        new_scale = self.renderResolutionComboBox.currentData(role=Qt.UserRole)
+        self.renderer.settings.resolution = new_scale
+        self._update_planet_viewer()
 
     def _display_resolution_changed(self):
         new_resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
         self.renderer.set_resolution(new_resolution)
+        self._update_planet_viewer()
 
     def _display_mode_changed(self):
         new_transform = self.displayModeComboBox.currentData(role=Qt.UserRole)
         self.renderOutput.image.setTransformationMode(new_transform)
 
+    def _display_coordinate_system_changed(self):
+        new_coordinate_mode = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
+        self.renderer.settings.coordinate_mode = new_coordinate_mode
+        self._update_planet_viewer()
+
+    def _update_planet_viewer(self):
+        planet_bounds = self.renderer.get_outer_bounds()
+        render_bounds = self.renderOutput.get_render_coords()
+        self.renderOutput.update_bounds(planet_bounds,
+                                        self.renderer.get_bounds_for_render(render_bounds.topLeft()))
+
     def _display_layer_changed(self):
         layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
-        if layer == "surface":
-            self._update_image(self.last_render.tex_color)
-        elif layer == "heightmap":
-            self._update_image(self.last_render.tex_heightmap)
+        self.renderOutput.update_visible_layer(layer)
 
     def _update_image(self, image: Image):
         # self.renderOutput.setImage(ImageQt.ImageQt(image), fit=False)
@@ -141,7 +167,7 @@ class PlanetView(qtw.QWidget):
         return model
 
     def shader_path(self) -> Path:
-        return Path(__file__).parent / '../../../planets/shader.hlsl'
+        return Path(__file__) / '../../../../planets/shader.hlsl'
 
     def _get_shader(self):
         with io.open(self.shader_path(), "r") as shader:
@@ -157,21 +183,47 @@ class PlanetView(qtw.QWidget):
 
     def _do_render(self):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
-        print(selected_obj)
         selected_obj.load_data()
-        print("Done loading planet data")
 
         self.renderer.set_planet(selected_obj)
         self.renderer.set_settings(self.get_settings())
 
         # TODO: Deal with buffer directly
         try:
-            # img = selected_obj.render(self.get_settings())
-            self.last_render = self.renderer.render()
+            layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
+            render_bounds = self.renderOutput.get_render_coords()
+            self.last_render = self.renderer.render(render_bounds.topLeft())
             self._display_layer_changed()
-            self.renderOutput.update_render(self.last_render)
+            self.renderOutput.update_render(self.last_render, layer)
+            self.exportButton.setEnabled(True)
         except Exception as ex:
             logger.exception(ex)
+
+    def _do_export(self):
+        prev_dir = settings.value("exportDirectory")
+        title = "Save Render to..."
+        edir = qtw.QFileDialog.getSaveFileName(self, title,
+                                               dir=f"{self.renderer.planet.oc.entity_name}.png",
+                                               filter="PNG Image (*.png)")
+        filename, filter = edir
+        if filename:
+            self.last_render.tex_color.save(filename, format="png")
+
+    def _do_mouse_moved(self, new_position: QPointF):
+        # TODO: Do coordinate conversion inside of planet_viewer
+        lon = new_position.x()
+        lat = new_position.y()
+        self.lbl_currentStatus.setText(f"Mouse Position:\n"
+                                       f"\tLat: {self.coord_to_dms(lat)}\n"
+                                       f"\tLon: {self.coord_to_dms(lon)}")
+
+    @staticmethod
+    def coord_to_dms(coord):
+        degrees = int(coord)
+        minutes_float = (coord - degrees) * 60
+        minutes = int(minutes_float)
+        seconds = (minutes_float - minutes) * 60
+        return f"{degrees}° {minutes}' {seconds:.2f}"
 
     def _handle_datacore_unloading(self):
         if self.starmap is not None:

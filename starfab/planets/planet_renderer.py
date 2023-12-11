@@ -3,6 +3,7 @@ import math
 from typing import Union, Callable, Tuple, cast
 
 from PIL import Image
+from PySide6.QtCore import QRectF, QPointF, QSizeF, QSize
 from compushady import Texture2D, Compute, Resource, HEAP_UPLOAD, Buffer, Texture3D, HEAP_READBACK
 from compushady.formats import R8G8B8A8_UINT, R8_UINT, R16_UINT
 from compushady.shaders import hlsl
@@ -13,10 +14,19 @@ from starfab.planets.ecosystem import EcoSystem
 
 
 class RenderResult:
-    def __init__(self, settings: RenderJobSettings, tex_color: Image, tex_heightmap: Image):
+    def __init__(self,
+                 settings: RenderJobSettings,
+                 tex_color: Image.Image,
+                 tex_heightmap: Image.Image,
+                 splat_dimensions: Tuple[float, float],
+                 coordinate_bounds_planet: QRectF,
+                 coordinate_bounds: QRectF):
         self.settings = settings
-        self.tex_color = tex_color
-        self.tex_heightmap = tex_heightmap
+        self.tex_color: Image.Image = tex_color
+        self.tex_heightmap: Image.Image = tex_heightmap
+        self.splat_resolution = splat_dimensions
+        self.coordinate_bounds = coordinate_bounds
+        self.coordinate_bounds_planet = coordinate_bounds_planet
 
 
 class PlanetRenderer:
@@ -25,7 +35,7 @@ class PlanetRenderer:
         self.planet: Union[None, Planet] = None
         self.settings: Union[None, RenderSettings] = None
         self.gpu_resources: dict[str, Resource] = {}
-        self.render_resolution: Tuple[int, int] = buffer_resolution
+        self.render_resolution: QSize() = QSize(*buffer_resolution)
 
         self._create_gpu_output_resources()
 
@@ -42,22 +52,50 @@ class PlanetRenderer:
 
     def set_resolution(self, new_dimensions: Tuple[int, int]):
         self._cleanup_gpu_output_resources()
-        self.render_resolution = new_dimensions
+        self.render_resolution = QSizeF(*new_dimensions)
         self._create_gpu_output_resources()
 
-    def render(self) -> RenderResult:
+    def get_outer_bounds(self) -> QRectF:
+        base_coordinate: QPointF = QPointF(0, -90)
+        if self.settings.coordinate_mode != "NASA":
+            base_coordinate.setX(-180)
+
+        return QRectF(base_coordinate, QSize(360, 180))
+
+    def get_bounds_for_render(self, render_coords: QPointF) -> QRectF:
+        width_norm = self.render_resolution.width() / self.settings.resolution / self.planet.tile_count / 2
+        height_norm = self.render_resolution.height() / self.settings.resolution / self.planet.tile_count
+        render_size_degrees: QSizeF = QSizeF(width_norm * 360, height_norm * 180)
+
+        return QRectF(render_coords, render_size_degrees)
+
+    def get_normalized_from_coordinates(self, coordinates: QPointF) -> QPointF:
+        bounds = self.get_outer_bounds()
+        return QPointF((coordinates.x() - bounds.x()) / bounds.width(),
+                       (coordinates.y() - bounds.y()) / bounds.height())
+
+    def render(self, render_coords: QPointF) -> RenderResult:
         job_s = RenderJobSettings()
 
         if not self.planet:
             raise Exception("Planet not set yet!")
 
+        # offset_x/y are be normalized between 0-1
+        norm_coords = self.get_normalized_from_coordinates(render_coords)
+        job_s.offset_x = norm_coords.x()
+        job_s.offset_y = norm_coords.y()
+
+        # In NASA Mode we are shifting only our sampling offset
+        # so that [0,0] render coordinates equals [0deg, 360deg] world coordinates
         if self.settings.coordinate_mode == "NASA":
-            job_s.offset_x = 0.5
+            job_s.offset_x += 0.5
+        # In EarthShifted Mode we are
         elif self.settings.coordinate_mode == "EarthShifted":
-            job_s.offset_x = 0.5
-        elif self.settings.coordinate_mode == "EarchUnshifted":
+            job_s.offset_x += 0.5
+        elif self.settings.coordinate_mode == "EarthUnShifted":
             job_s.offset_x = 0
 
+        job_s.offset_x = job_s.offset_x % 1.0
         job_s.interpolation = self.settings.interpolation
         job_s.render_scale_x = self.settings.resolution * 2
         job_s.render_scale_y = self.settings.resolution
@@ -69,7 +107,7 @@ class PlanetRenderer:
 
         computer = self._get_computer()
 
-        computer.dispatch(self.render_resolution[0] // 8, self.render_resolution[1] // 8, 1)
+        computer.dispatch(self.render_resolution.width() // 8, self.render_resolution.height() // 8, 1)
         # TODO: Keep this around and render multiple tiles with the same Compute obj
 
         out_color: Image = self._read_frame("output_color")
@@ -77,7 +115,11 @@ class PlanetRenderer:
 
         del computer
 
-        return RenderResult(job_s, out_color, out_heightmap)
+        planet_bouds = self.get_outer_bounds()
+        render_bounds = self.get_bounds_for_render(render_coords)
+
+        return RenderResult(job_s, out_color, out_heightmap, self.render_resolution,
+                            planet_bouds, render_bounds)
 
     def _read_frame(self, resource_name: str) -> Image:
         readback: Buffer = cast(Buffer, self.gpu_resources['readback'])
@@ -199,7 +241,8 @@ class PlanetRenderer:
         # TODO: Support variable size output buffers. For now just render to fixed size and stitch
         #       Also wasting a bit of space having the heightmap 32BPP when we only need 16
         #       but this makes things a lot easier to work with elsewhere :^)
-        (out_w, out_h) = self.render_resolution
+        out_w = self.render_resolution.width()
+        out_h = self.render_resolution.height()
         output_color_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
         output_heightmap_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
 

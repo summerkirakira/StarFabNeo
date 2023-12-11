@@ -52,8 +52,6 @@ class Planet:
                 ocean_mat_chunks = ChunkFile(ocean_mat_info)
                 for chunk in ocean_mat_chunks.chunks:
                     if isinstance(chunk, CryXMLBChunk):
-                        print("XML Chunk!")
-                        print(chunk.dict())
                         diffuse_path = chunk.dict()["Material"]
                         print(diffuse_path)
         except Exception as ex:
