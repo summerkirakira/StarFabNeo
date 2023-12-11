@@ -133,6 +133,9 @@ class PlanetView(qtw.QWidget):
         self._update_planet_viewer()
 
     def _update_planet_viewer(self):
+        if not self.renderer.planet:
+            return
+
         planet_bounds = self.renderer.get_outer_bounds()
         render_bounds = self.renderOutput.get_render_coords()
         self.renderOutput.update_bounds(planet_bounds,

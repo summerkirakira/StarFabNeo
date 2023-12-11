@@ -77,7 +77,8 @@ class QPlanetViewer(qtw.QGraphicsView):
             self.setMouseTracking(True)
             self.image.setCursor(Qt.CrossCursor)
             self.render_window.setCursor(Qt.SizeAllCursor)
-            self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+            self.fitInView(self._render_perimeter, Qt.KeepAspectRatio)
+            self.ensureVisible(QRectF(0, 0, 100, 100))
             self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
         except Exception as ex:
             print(ex)

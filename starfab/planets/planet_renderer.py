@@ -32,8 +32,8 @@ class RenderResult:
 class PlanetRenderer:
 
     def __init__(self, buffer_resolution: Tuple[int, int]):
-        self.planet: Union[None, Planet] = None
-        self.settings: Union[None, RenderSettings] = None
+        self.planet: None | Planet = None
+        self.settings: None | RenderSettings = None
         self.gpu_resources: dict[str, Resource] = {}
         self.render_resolution: QSize() = QSize(*buffer_resolution)
 
@@ -52,7 +52,7 @@ class PlanetRenderer:
 
     def set_resolution(self, new_dimensions: Tuple[int, int]):
         self._cleanup_gpu_output_resources()
-        self.render_resolution = QSizeF(*new_dimensions)
+        self.render_resolution = QSize(*new_dimensions)
         self._create_gpu_output_resources()
 
     def get_outer_bounds(self) -> QRectF:
