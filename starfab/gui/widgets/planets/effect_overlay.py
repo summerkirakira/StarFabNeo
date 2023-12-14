@@ -21,8 +21,6 @@ class EffectOverlay(QGraphicsPathItem):
         self._bounds_path.addRect(self._bounds)
         self.setPath(self._bounds_path)
         self.invalidate()
-        print(new_bounds)
-        print(self._bounds_path.boundingRect())
 
     def invalidate(self):
         self.update(self._bounds)
@@ -38,5 +36,5 @@ class EffectOverlay(QGraphicsPathItem):
             self._overlay_effect = None
         self.invalidate()
 
-    def effect_instance(self) -> Union[None, QGraphicsEffect]:
+    def get_effect_instance(self) -> Union[None, QGraphicsEffect]:
         return self._overlay_effect

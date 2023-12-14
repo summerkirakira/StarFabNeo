@@ -2,7 +2,7 @@ from typing import cast
 
 import PySide6
 from PIL.ImageQt import ImageQt
-from PySide6.QtCore import QPointF, QRectF, Signal
+from PySide6.QtCore import QPointF, QRectF, Signal, QItemSelection
 from PySide6.QtGui import QPainterPath, QColor, QPen, Qt, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QGraphicsPathItem
 
@@ -11,6 +11,8 @@ from starfab.gui.widgets.planets.crosshair_overlay import CrosshairOverlay
 from starfab.gui.widgets.planets.grid_overlay import GridOverlay
 
 from starfab.gui.widgets.planets.effect_overlay import EffectOverlay
+from starfab.gui.widgets.planets.waypoint_overlay import WaypointOverlay
+from starfab.planets.planet import WaypointData
 from starfab.planets.planet_renderer import RenderResult
 
 
@@ -27,6 +29,8 @@ class QPlanetViewer(qtw.QGraphicsView):
             self._render_perimeter: QRectF = QRectF()
             self._crosshair_position: QPointF = QPointF()
             self._render_result: None | RenderResult = None
+            self._waypoints: list[WaypointData] = []
+            self._selected_waypoint: None | WaypointData = None
 
             self._empty = True
             self._zoom = 0
@@ -53,20 +57,29 @@ class QPlanetViewer(qtw.QGraphicsView):
             self.image: qtw.QGraphicsPixmapItem = qtw.QGraphicsPixmapItem()
             self.scene.addItem(self.image)
 
+            # Layer 1: Coordinate grid
             self.lyr_grid: EffectOverlay = EffectOverlay(
                 lambda: GridOverlay(self._major_grid_pen, self._minor_grid_pen,
                                     self._scale_factor, self._outer_perimeter))
             self.lyr_grid.setZValue(1000)
             self.scene.addItem(self.lyr_grid)
 
+            # Layer 2: Crosshair overlay
             self.lyr_crosshair: EffectOverlay = EffectOverlay(
                 lambda: CrosshairOverlay(self._crosshair_pen, self._outer_perimeter))
             self.lyr_crosshair.setZValue(2000)
             self.scene.addItem(self.lyr_crosshair)
 
+            # Layer 3: Waypoint overlay
+            self.lyr_waypoints: EffectOverlay = EffectOverlay(
+                lambda: WaypointOverlay(self._waypoints, self._selected_waypoint))
+            self.lyr_waypoints.setZValue(3000)
+            self.scene.addItem(self.lyr_waypoints)
+
+            # Layer 4: Draggable active render window
             self.lyr_render: EffectOverlay = EffectOverlay(lambda: None)
             self.lyr_render.setPen(QPen(QColor(0, 255, 0, 255), 20))
-            self.lyr_render.setZValue(3000)
+            self.lyr_render.setZValue(4000)
             self.scene.addItem(self.lyr_render)
 
             self.update_bounds(QRectF(0, -90, 360, 180), QRectF(0, -90, 360, 180))
@@ -76,6 +89,7 @@ class QPlanetViewer(qtw.QGraphicsView):
 
             self.lyr_grid.set_enabled(True)
             self.lyr_crosshair.set_enabled(True)
+            self.lyr_waypoints.set_enabled(True)
             self.lyr_render.set_enabled(True)
 
             self.setMouseTracking(True)
@@ -104,6 +118,7 @@ class QPlanetViewer(qtw.QGraphicsView):
 
         self.lyr_grid.update_bounds(self._outer_perimeter)
         self.lyr_crosshair.update_bounds(self._outer_perimeter)
+        self.lyr_waypoints.update_bounds(self._outer_perimeter)
         self.lyr_render.update_bounds(self._render_perimeter)
         self.scene.update()
         self.update()
@@ -114,6 +129,19 @@ class QPlanetViewer(qtw.QGraphicsView):
 
     def get_crosshair_coords(self) -> QPointF:
         return self._crosshair_position
+
+    def set_waypoints(self, new_wapoints: list[WaypointData]):
+        self._waypoints = new_wapoints
+        effect: WaypointOverlay = cast(WaypointOverlay, self.lyr_waypoints.get_effect_instance())
+        if effect:
+            effect.update_waypoints(self._waypoints)
+
+    def set_selected_waypoint(self, waypoint: None | WaypointData):
+        self._selected_waypoint = waypoint
+        print(f"New WP: {waypoint}")
+        effect: WaypointOverlay = cast(WaypointOverlay, self.lyr_waypoints.get_effect_instance())
+        if effect:
+            effect.select_waypoint(self._selected_waypoint)
 
     def mousePressEvent(self, event: PySide6.QtGui.QMouseEvent) -> None:
         image_space_pos = self.mapToScene(event.pos())
@@ -151,7 +179,7 @@ class QPlanetViewer(qtw.QGraphicsView):
         self._crosshair_position = global_coordinates
         self.crosshair_moved.emit(self._crosshair_position)
 
-        crosshair_overlay: CrosshairOverlay = cast(CrosshairOverlay, self.lyr_crosshair.effect_instance())
+        crosshair_overlay: CrosshairOverlay = cast(CrosshairOverlay, self.lyr_crosshair.get_effect_instance())
         if crosshair_overlay:
             crosshair_overlay.update_mouse_position(image_space_pos)
             self.lyr_crosshair.invalidate()

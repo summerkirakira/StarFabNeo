@@ -1,5 +1,8 @@
+import math
 import struct
+from math import atan2, sqrt
 from pathlib import Path
+from typing import Tuple
 
 from PySide6.QtCore import QPointF
 from compushady import Compute
@@ -12,9 +15,9 @@ from starfab.planets.ecosystem import EcoSystem
 
 
 class WaypointData:
-    def __init__(self, point: QPointF, container: ObjectContainer):
-        self.point = point
-        self.container = container
+    def __init__(self, point: QPointF, container: ObjectContainerInstance):
+        self.point: QPointF = point
+        self.container: ObjectContainerInstance = container
 
 
 class Planet:
@@ -45,11 +48,20 @@ class Planet:
         if self.oc.name.endswith("stanton4.socpak"):
             self.load_waypoints()
 
+    @staticmethod
+    def position_to_coordinates(x: float, y: float, z: float) -> Tuple[QPointF, float]:
+        xy_len = sqrt(x * x + y * y)
+        lat = atan2(-z, xy_len) * (180 / math.pi)
+        lon = atan2(-x, y) * (180 / math.pi)
+        alt = sqrt(x * x + y * y + z * z)
+        # +90 if offsetting for NASA coords, gives us 0-360deg output range
+        return QPointF((lon + 90 + 360) % 360, lat), alt
+
     def load_waypoints(self):
-        print(f"==={self.oc.name}===")
         for child_name in self.oc.children:
             child_soc = self.oc.children[child_name]
-            print(f"{child_name} => {child_soc} {child_soc.name}/{child_soc.display_name}/{child_soc.entity_name}")
+            coords = self.position_to_coordinates(child_soc.position.x, child_soc.position.y, child_soc.position.z)
+            self.waypoints.append(WaypointData(coords[0], child_soc))
 
     def load_data(self) -> object:
         if self.planet_data:

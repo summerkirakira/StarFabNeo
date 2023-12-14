@@ -1,8 +1,8 @@
 import io
-from typing import Union
+from typing import Union, cast
 
 from PIL import Image
-from PySide6.QtCore import Qt, QPointF, QRectF
+from PySide6.QtCore import Qt, QPointF, QRectF, QItemSelectionModel, QItemSelection
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QComboBox, QPushButton, QLabel, QCheckBox, QListView
 from qtpy import uic
@@ -11,6 +11,7 @@ from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInst
 
 from starfab.gui import qtw, qtc
 from starfab.gui.widgets.planets.planet_viewer import QPlanetViewer
+from starfab.gui.widgets.planets.waypoint_overlay import WaypointOverlay
 from starfab.log import getLogger
 from starfab.planets.planet import Planet
 from starfab.planets.data import RenderSettings
@@ -105,6 +106,7 @@ class PlanetView(qtw.QWidget):
             self.sc.datacore_model.loaded.connect(self._hack_before_load)
             self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
+        self.planetComboBox.currentIndexChanged.connect(self._planet_changed)
         self.renderButton.clicked.connect(self._do_render)
         self.exportButton.clicked.connect(self._do_export)
         self.exportButton.setEnabled(False)
@@ -114,6 +116,11 @@ class PlanetView(qtw.QWidget):
         self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.lyr_crosshair.set_enabled)
 
         self.renderer.set_settings(self.get_settings())
+        self._planet_changed()
+
+    def _planet_changed(self):
+        # TODO: Pre-load ecosystem data here w/ progressbar
+        self._update_waypoints()
 
     def _render_scale_changed(self):
         new_scale = self.renderResolutionComboBox.currentData(role=Qt.UserRole)
@@ -142,6 +149,22 @@ class PlanetView(qtw.QWidget):
         render_bounds = self.renderOutput.get_render_coords()
         self.renderOutput.update_bounds(planet_bounds,
                                         self.renderer.get_bounds_for_render(render_bounds.topLeft()))
+
+    def _update_waypoints(self):
+        planet: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
+        waypoint_records = [(wp.container.entity_name, wp) for wp in planet.waypoints]
+        waypoint_model = self.create_model(waypoint_records)
+        waypoint_selection = QItemSelectionModel(waypoint_model)
+        waypoint_selection.selectionChanged.connect(self._waypoint_changed)
+        self.listWaypoints.setModel(waypoint_model)
+        self.listWaypoints.setSelectionModel(waypoint_selection)
+        self.renderOutput.set_waypoints(planet.waypoints)
+
+    def _waypoint_changed(self, selected: QItemSelection, removed: QItemSelection):
+        if selected.size() == 0:
+            return
+        waypoint = selected.indexes()[0].data(role=Qt.UserRole)
+        self.renderOutput.set_selected_waypoint(waypoint)
 
     def _display_layer_changed(self):
         layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
