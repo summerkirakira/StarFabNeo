@@ -180,6 +180,30 @@
              </property>
             </widget>
            </item>
+           <item row="10" column="1">
+            <widget class="QListView" name="listView"/>
+           </item>
+           <item row="10" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Waypoints</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="enableWaypointsLabel">
+             <property name="text">
+              <string>Enable Waypoints</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QCheckBox" name="enableWaypointsCheckBox">
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -265,7 +289,7 @@
   <customwidget>
    <class>QPlanetViewer</class>
    <extends>QGraphicsView</extends>
-   <header>starfab.gui.widgets.planet_viewer</header>
+   <header>starfab.gui.widgets.planets.planet_viewer</header>
   </customwidget>
  </customwidgets>
  <resources/>

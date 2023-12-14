@@ -1,17 +1,16 @@
 import io
 from typing import Union
 
-from PIL import ImageQt, Image
-from PySide6.QtCore import Qt, QPointF
+from PIL import Image
+from PySide6.QtCore import Qt, QPointF, QRectF
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QComboBox, QPushButton, QLabel, QCheckBox
+from PySide6.QtWidgets import QComboBox, QPushButton, QLabel, QCheckBox, QListView
 from qtpy import uic
 from scdatatools import StarCitizen
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
 from starfab.gui import qtw, qtc
-from starfab.gui.widgets.image_viewer import QImageViewer
-from starfab.gui.widgets.planet_viewer import QPlanetViewer
+from starfab.gui.widgets.planets.planet_viewer import QPlanetViewer
 from starfab.log import getLogger
 from starfab.planets.planet import Planet
 from starfab.planets.data import RenderSettings
@@ -41,6 +40,8 @@ class PlanetView(qtw.QWidget):
         self.renderOutput: QPlanetViewer = None
         self.enableGridCheckBox: QCheckBox = None
         self.enableCrosshairCheckBox: QCheckBox = None
+        self.enableWaypointsCheckBox: QCheckBox = None
+        self.listWaypoints: QListView = None
         self.lbl_planetDetails: QLabel = None
         self.lbl_currentStatus: QLabel = None
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
@@ -107,9 +108,10 @@ class PlanetView(qtw.QWidget):
         self.renderButton.clicked.connect(self._do_render)
         self.exportButton.clicked.connect(self._do_export)
         self.exportButton.setEnabled(False)
-        self.renderOutput.mouse_moved.connect(self._do_mouse_moved)
-        self.enableGridCheckBox.stateChanged.connect(self.renderOutput.set_grid_enabled)
-        self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.set_crosshair_enabled)
+        self.renderOutput.crosshair_moved.connect(self._do_crosshair_moved)
+        self.renderOutput.render_window_moved.connect(self._do_render_window_changed)
+        self.enableGridCheckBox.stateChanged.connect(self.renderOutput.lyr_grid.set_enabled)
+        self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.lyr_crosshair.set_enabled)
 
         self.renderer.set_settings(self.get_settings())
 
@@ -212,13 +214,24 @@ class PlanetView(qtw.QWidget):
         if filename:
             self.last_render.tex_color.save(filename, format="png")
 
-    def _do_mouse_moved(self, new_position: QPointF):
-        # TODO: Do coordinate conversion inside of planet_viewer
-        lon = new_position.x()
-        lat = new_position.y()
-        self.lbl_currentStatus.setText(f"Mouse Position:\n"
-                                       f"\tLat: {self.coord_to_dms(lat)}\n"
-                                       f"\tLon: {self.coord_to_dms(lon)}")
+    def _do_crosshair_moved(self, new_position: QPointF):
+        self._update_status()
+
+    def _do_render_window_changed(self, new_window: QRectF):
+        self._update_status()
+
+    def _update_status(self):
+        cross: QPointF = self.renderOutput.get_crosshair_coords()
+        render_window: QRectF = self.renderOutput.get_render_coords()
+        self.lbl_currentStatus.setText(f"Crosshair:\n"
+                                       f"\tLat:\t\t{self.coord_to_dms(cross.x())}\n"
+                                       f"\tLon:\t\t{self.coord_to_dms(cross.y())}\n"
+                                       f"\n"
+                                       f"Render Window:\n"
+                                       f"\tLeft Lat:  \t{self.coord_to_dms(render_window.left())}\n"
+                                       f"\tRight Lat: \t{self.coord_to_dms(render_window.right())}\n"
+                                       f"\tTop Lat:   \t{self.coord_to_dms(render_window.top())}\n"
+                                       f"\tBottom Lat:\t{self.coord_to_dms(render_window.bottom())}")
 
     @staticmethod
     def coord_to_dms(coord):

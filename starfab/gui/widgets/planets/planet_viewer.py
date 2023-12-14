@@ -1,19 +1,22 @@
-from typing import Union, cast
+from typing import cast
 
 import PySide6
-from PIL import Image
 from PIL.ImageQt import ImageQt
-from PySide6.QtCore import QPointF, QRect, QRectF, QPoint, Signal, QSizeF
-from PySide6.QtGui import QPainterPath, QColor, QTransform, QBrush, QPen, Qt, QPainter, QMouseEvent, QPixmap, QImage
-from PySide6.QtWidgets import QGraphicsPathItem, QGraphicsEffect
+from PySide6.QtCore import QPointF, QRectF, Signal
+from PySide6.QtGui import QPainterPath, QColor, QPen, Qt, QMouseEvent, QPixmap
+from PySide6.QtWidgets import QGraphicsPathItem
 
-from starfab.gui import qtc, qtg, qtw
-from starfab.gui.widgets.image_viewer import QImageViewer
+from starfab.gui import qtw
+from starfab.gui.widgets.planets.crosshair_overlay import CrosshairOverlay
+from starfab.gui.widgets.planets.grid_overlay import GridOverlay
+
+from starfab.gui.widgets.planets.effect_overlay import EffectOverlay
 from starfab.planets.planet_renderer import RenderResult
 
 
 class QPlanetViewer(qtw.QGraphicsView):
-    mouse_moved: Signal = Signal(QPointF)
+    crosshair_moved: Signal = Signal(QPointF)
+    render_window_moved: Signal = Signal(QRectF)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,6 +25,7 @@ class QPlanetViewer(qtw.QGraphicsView):
             self._scale_factor: int = 100
             self._outer_perimeter: QRectF = QRectF()
             self._render_perimeter: QRectF = QRectF()
+            self._crosshair_position: QPointF = QPointF()
             self._render_result: None | RenderResult = None
 
             self._empty = True
@@ -49,34 +53,34 @@ class QPlanetViewer(qtw.QGraphicsView):
             self.image: qtw.QGraphicsPixmapItem = qtw.QGraphicsPixmapItem()
             self.scene.addItem(self.image)
 
-            self.perimeter_path: QPainterPath = QPainterPath()
-            self.render_outline: QPainterPath = QPainterPath()
-            self.perimeter_rect: QGraphicsPathItem = QGraphicsPathItem(self.perimeter_path)
-            self.crosshair_overlay: QGraphicsPathItem = QGraphicsPathItem(self.perimeter_path)
-            self.render_window: QGraphicsPathItem = QGraphicsPathItem(self.render_outline)
-            self.perimeter_effect: None | GridEffect = None
-            self.crosshair_overlay_effect: None | CrosshairEffect = None
-            self.update_bounds(QRectF(0, -90, 360, 180), QRectF(0, -90, 180, 90))
+            self.lyr_grid: EffectOverlay = EffectOverlay(
+                lambda: GridOverlay(self._major_grid_pen, self._minor_grid_pen,
+                                    self._scale_factor, self._outer_perimeter))
+            self.lyr_grid.setZValue(1000)
+            self.scene.addItem(self.lyr_grid)
 
-            self._grid_enabled = False
-            self.perimeter_rect.setZValue(1000)
-            self.set_grid_enabled(True)
-            self.scene.addItem(self.perimeter_rect)
+            self.lyr_crosshair: EffectOverlay = EffectOverlay(
+                lambda: CrosshairOverlay(self._crosshair_pen, self._outer_perimeter))
+            self.lyr_crosshair.setZValue(2000)
+            self.scene.addItem(self.lyr_crosshair)
 
-            self._crosshair_enabled = False
-            self.crosshair_overlay.setZValue(2000)
-            self.set_crosshair_enabled(True)
-            self.scene.addItem(self.crosshair_overlay)
+            self.lyr_render: EffectOverlay = EffectOverlay(lambda: None)
+            self.lyr_render.setPen(QPen(QColor(0, 255, 0, 255), 20))
+            self.lyr_render.setZValue(3000)
+            self.scene.addItem(self.lyr_render)
 
-            self.render_window.setPen(QPen(QColor(0, 255, 0, 255), 20))
-            self.render_window.setZValue(3000)
-            self.scene.addItem(self.render_window)
+            self.update_bounds(QRectF(0, -90, 360, 180), QRectF(0, -90, 360, 180))
+
             self.render_window_dragging: bool = False
             self.render_window_drag_pos: None | QPointF = None
 
+            self.lyr_grid.set_enabled(True)
+            self.lyr_crosshair.set_enabled(True)
+            self.lyr_render.set_enabled(True)
+
             self.setMouseTracking(True)
             self.image.setCursor(Qt.CrossCursor)
-            self.render_window.setCursor(Qt.SizeAllCursor)
+            self.lyr_render.setCursor(Qt.SizeAllCursor)
             self.fitInView(self._render_perimeter, Qt.KeepAspectRatio)
             self.ensureVisible(QRectF(0, 0, 100, 100))
             self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
@@ -90,12 +94,6 @@ class QPlanetViewer(qtw.QGraphicsView):
         self._render_perimeter: QRectF = QRectF(render_rect.topLeft() * self._scale_factor,
                                                 render_rect.size() * self._scale_factor)
 
-        # Update paths
-        self.perimeter_path.clear()
-        self.perimeter_path.addRect(self._outer_perimeter)
-        self.render_outline.clear()
-        self.render_outline.addRect(self._render_perimeter)
-
         # Add some extra padding around the planet bounds.
         image_padding = 10 * self._scale_factor
         scene_area = QRectF(self._outer_perimeter.x() - image_padding,
@@ -104,21 +102,18 @@ class QPlanetViewer(qtw.QGraphicsView):
                             self._outer_perimeter.height() + 2 * image_padding)
         self.scene.setSceneRect(scene_area)
 
-        if self.perimeter_effect:
-            self.perimeter_effect.planet_bounds = self._outer_perimeter
-        if self.crosshair_overlay_effect:
-            self.crosshair_overlay_effect.planet_bounds = self._outer_perimeter
-        self.perimeter_rect.setPath(self.perimeter_path)
-        self.crosshair_overlay.setPath(self.perimeter_path)
-        self.render_window.setPath(self.render_outline)
-        self.perimeter_rect.update()
-        self.crosshair_overlay.update()
+        self.lyr_grid.update_bounds(self._outer_perimeter)
+        self.lyr_crosshair.update_bounds(self._outer_perimeter)
+        self.lyr_render.update_bounds(self._render_perimeter)
         self.scene.update()
         self.update()
 
     def get_render_coords(self):
         return QRectF(self._render_perimeter.topLeft() / self._scale_factor,
                       self._render_perimeter.size() / self._scale_factor)
+
+    def get_crosshair_coords(self) -> QPointF:
+        return self._crosshair_position
 
     def mousePressEvent(self, event: PySide6.QtGui.QMouseEvent) -> None:
         image_space_pos = self.mapToScene(event.pos())
@@ -148,16 +143,18 @@ class QPlanetViewer(qtw.QGraphicsView):
             self._render_perimeter.setRect(final_position_x, final_position_y,
                                            self._render_perimeter.width(), self._render_perimeter.height())
 
-            self.render_outline.clear()
-            self.render_outline.addRect(self._render_perimeter)
-            self.render_window.setPath(self.render_outline)
+            self.lyr_render.update_bounds(self._render_perimeter)
+            self.render_window_moved.emit(self._render_perimeter)
         else:
             super().mouseMoveEvent(event)
 
-        self.mouse_moved.emit(global_coordinates)
-        if self.crosshair_overlay_effect:
-            self.crosshair_overlay_effect.update_mouse_position(image_space_pos)
-            self.crosshair_overlay.update(self._outer_perimeter)
+        self._crosshair_position = global_coordinates
+        self.crosshair_moved.emit(self._crosshair_position)
+
+        crosshair_overlay: CrosshairOverlay = cast(CrosshairOverlay, self.lyr_crosshair.effect_instance())
+        if crosshair_overlay:
+            crosshair_overlay.update_mouse_position(image_space_pos)
+            self.lyr_crosshair.invalidate()
 
     def mouseReleaseEvent(self, event: PySide6.QtGui.QMouseEvent) -> None:
         image_space_pos = self.mapToScene(event.pos())
@@ -195,31 +192,6 @@ class QPlanetViewer(qtw.QGraphicsView):
         # TODO: Better support non-standard render sizes
         self.image.setScale(width_scale * s)
 
-    def set_grid_enabled(self, enabled: bool):
-        self._grid_enabled = enabled
-        if enabled:
-            # Need to rebuild each time as it gets disposed of
-            self.perimeter_effect = GridEffect(self._major_grid_pen, self._minor_grid_pen,
-                                               self._scale_factor, self._outer_perimeter)
-            self.perimeter_rect.setGraphicsEffect(self.perimeter_effect)
-        else:
-            self.perimeter_rect.setGraphicsEffect(None)
-            self.perimeter_effect = None
-        self.update()
-        self.scene.update()
-
-    def set_crosshair_enabled(self, enabled: bool):
-        self._crosshair_enabled = enabled
-        if enabled:
-            # Need to rebuild each time as it gets disposed of
-            self.crosshair_overlay_effect = CrosshairEffect(self._crosshair_pen, self._outer_perimeter)
-            self.crosshair_overlay.setGraphicsEffect(self.crosshair_overlay_effect)
-        else:
-            self.crosshair_overlay.setGraphicsEffect(None)
-            self.crosshair_overlay_effect = None
-        self.update()
-        self.scene.update()
-
     def wheelEvent(self, event):
         factor = 0
         if event.angleDelta().y() > 0:
@@ -232,60 +204,3 @@ class QPlanetViewer(qtw.QGraphicsView):
                 self._zoom -= 1
         if factor:
             self.scale(factor, factor)
-
-
-class CrosshairEffect(QGraphicsEffect):
-    def __init__(self, pen: QPen, region: QRectF, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mouse_position: Union[QPointF, None] = None
-        self.pen = pen
-        self.planet_bounds = region
-
-    def update_mouse_position(self, pos: QPointF):
-        self.mouse_position = pos
-
-    def remove_mouse(self):
-        self.mouse_position = None
-
-    def draw(self, painter: QPainter) -> None:
-        if not self.mouse_position:
-            return
-
-        vp = self.planet_bounds
-        painter.setPen(self.pen)
-        painter.drawLine(vp.left(), self.mouse_position.y(), vp.right(), self.mouse_position.y())
-        painter.drawLine(self.mouse_position.x(), vp.top(), self.mouse_position.x(), vp.bottom())
-        painter.drawRect(vp)
-
-
-class GridEffect(QGraphicsEffect):
-    def __init__(self,
-                 primary_pen: QPen, secondary_pen: QPen,
-                 scale_factor: int, planet_bounds: QRectF,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.primary_pen = primary_pen
-        self.secondary_pen = secondary_pen
-        self.scale_factor = scale_factor
-        self.planet_bounds = planet_bounds
-
-    def draw(self, painter: QPainter) -> None:
-        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Difference)
-        self._draw_lines(painter, self.primary_pen, True)
-        self._draw_lines(painter, self.secondary_pen, False)
-
-    def _draw_lines(self, painter: QPainter, pen: QPen, primary: bool):
-        painter.setPen(pen)
-        xoff = self.planet_bounds.x()
-        yoff = self.planet_bounds.y()
-        for lon in range(15, 360, 15):
-            is_primary = lon % 45 == 0
-            if (is_primary and primary) or (not is_primary and not primary):
-                painter.drawLine(lon * self.scale_factor + xoff, self.planet_bounds.top(),
-                                 lon * self.scale_factor + xoff, self.planet_bounds.bottom())
-
-        for lat in range(15, 180, 15):
-            is_primary = lat % 45 == 0
-            if (is_primary and primary) or (not is_primary and not primary):
-                painter.drawLine(self.planet_bounds.left(), lat * self.scale_factor + yoff,
-                                 self.planet_bounds.right(), lat * self.scale_factor + yoff)

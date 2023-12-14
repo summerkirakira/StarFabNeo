@@ -1,6 +1,7 @@
 import struct
 from pathlib import Path
 
+from PySide6.QtCore import QPointF
 from compushady import Compute
 from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk, CryXMLBChunk
 from scdatatools.p4k import P4KInfo
@@ -8,6 +9,12 @@ from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInst
 
 from starfab.planets.data import LUTData, Brush
 from starfab.planets.ecosystem import EcoSystem
+
+
+class WaypointData:
+    def __init__(self, point: QPointF, container: ObjectContainer):
+        self.point = point
+        self.container = container
 
 
 class Planet:
@@ -30,8 +37,19 @@ class Planet:
 
         self.lut: list[list[LUTData]] = None
 
+        self.waypoints: list[WaypointData] = []
+
         self.gpu_resources = {}
         self.gpu_computer: Compute = None
+
+        if self.oc.name.endswith("stanton4.socpak"):
+            self.load_waypoints()
+
+    def load_waypoints(self):
+        print(f"==={self.oc.name}===")
+        for child_name in self.oc.children:
+            child_soc = self.oc.children[child_name]
+            print(f"{child_name} => {child_soc} {child_soc.name}/{child_soc.display_name}/{child_soc.entity_name}")
 
     def load_data(self) -> object:
         if self.planet_data:
