@@ -152,6 +152,9 @@ class PlanetView(qtw.QWidget):
 
     def _update_waypoints(self):
         planet: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
+        if not planet:
+            return
+
         waypoint_records = [(wp.container.entity_name, wp) for wp in planet.waypoints]
         waypoint_model = self.create_model(waypoint_records)
         waypoint_selection = QItemSelectionModel(waypoint_model)
