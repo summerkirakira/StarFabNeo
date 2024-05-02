@@ -5,13 +5,14 @@ from pathlib import Path
 from typing import Tuple
 
 from PySide6.QtCore import QPointF
-from compushady import Compute
 from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk, CryXMLBChunk
 from scdatatools.p4k import P4KInfo
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
 from starfab.planets.data import LUTData, Brush
 from starfab.planets.ecosystem import EcoSystem
+
+from . import *
 
 
 class WaypointData:

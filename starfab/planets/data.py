@@ -1,7 +1,7 @@
 import struct
 from typing import Tuple
 
-from compushady import Buffer, HEAP_UPLOAD
+from . import *
 
 
 class LUTData:

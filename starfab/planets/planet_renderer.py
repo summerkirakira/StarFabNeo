@@ -4,10 +4,8 @@ from typing import Union, Callable, Tuple, cast
 
 from PIL import Image
 from PySide6.QtCore import QRectF, QPointF, QSizeF, QSize
-from compushady import Texture2D, Compute, Resource, HEAP_UPLOAD, Buffer, Texture3D, HEAP_READBACK
-from compushady.formats import R8G8B8A8_UINT, R8_UINT, R16_UINT
-from compushady.shaders import hlsl
 
+from . import *
 from starfab.planets.planet import Planet
 from starfab.planets.data import LUTData, RenderJobSettings, RenderSettings
 from starfab.planets.ecosystem import EcoSystem
