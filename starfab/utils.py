@@ -1,7 +1,6 @@
 import importlib
 import subprocess
 import sys
-from distutils.util import strtobool
 
 from scdatatools.engine.textures.converter import (
     convert_buffer,
@@ -10,6 +9,16 @@ from scdatatools.engine.textures.converter import (
 )
 from starfab.gui import qtw
 from starfab.settings import get_texconv, get_compressonatorcli
+
+
+def strtobool(val: str):
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError(f"Invalid boolean string value: {val!r}")
 
 
 def parsebool(val: any):
