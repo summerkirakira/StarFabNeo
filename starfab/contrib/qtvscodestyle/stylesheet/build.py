@@ -4,7 +4,7 @@ import json
 import operator
 import re
 from dataclasses import dataclass
-from distutils.version import StrictVersion
+from packaging.version import Version
 from importlib import resources
 from pathlib import Path
 from typing import Optional
@@ -53,7 +53,7 @@ def _parse_env_patch(stylesheet: str) -> dict[str, str]:
         else:
             raise SyntaxError(f"invalid character in qualifier. Available qualifiers {list(operators.keys())}")
 
-        is_true = operators[qualifier](StrictVersion(QT_VERSION), StrictVersion(version))
+        is_true = operators[qualifier](Version(QT_VERSION), Version(version))
         replacements[match_text] = property["value"] if is_true else ""
     return replacements
 
