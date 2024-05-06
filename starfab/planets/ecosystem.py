@@ -14,6 +14,9 @@ from starfab.planets.data import LocalClimateData
 from starfab.utils import image_converter
 
 
+CACHE_DIR = Path('.cache')
+
+
 class EcoSystem:
     _cache = {}
     _tex_root = Path("Data/Textures/planets/terrain")
@@ -65,7 +68,7 @@ class EcoSystem:
 
         # TODO: Use settings to define a cache directory to store these in
         def _read_with_cache(subpath: str) -> Image:
-            check_path = Path(subpath).with_suffix(".png")
+            check_path = (CACHE_DIR / subpath).with_suffix(".png")
             if not os.path.exists(check_path.parent):
                 os.makedirs(check_path.parent)
             if check_path.exists():
