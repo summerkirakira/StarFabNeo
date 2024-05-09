@@ -156,7 +156,10 @@ class Planet:
                 lut.ground_texture_id = self.planet_data["data"]["groundTexIDLUT"][y][x]
                 lut.object_preset_id = self.planet_data["data"]["objectPresetLUT"][y][x]
                 lut.brush_id = self.planet_data["data"]["brushIDLUT"][y][x]
-                lut.brush_obj = self.brushes[lut.brush_id]
+                try:
+                    lut.brush_obj = self.brushes[lut.brush_id]
+                except IndexError as e:
+                    lut.brush_obj = None
 
                 brush_data = self.planet_data["data"]["brushDataLUT"][y][x]
 
@@ -169,13 +172,17 @@ class Planet:
                 lut.bd_orp_blend_index = brush_data["oprBlendIndex"]
                 lut.bd_texture_layer_index = brush_data["texturLayerIndex"]
 
-                lut.bedrockColor = _lerp_color(lut.brush_obj.bedrockGradientColorA,
-                                               lut.brush_obj.bedrockGradientColorB,
-                                               lut.bd_gradient_val_bedrock / 127)
+                if lut.brush_obj:
+                    lut.bedrockColor = _lerp_color(lut.brush_obj.bedrockGradientColorA,
+                                                    lut.brush_obj.bedrockGradientColorB,
+                                                    lut.bd_gradient_val_bedrock / 127)
 
-                lut.surfaceColor = _lerp_color(lut.brush_obj.surfaceGradientColorA,
-                                               lut.brush_obj.surfaceGradientColorB,
-                                               lut.bd_gradient_val_surface / 127)
+                    lut.surfaceColor = _lerp_color(lut.brush_obj.surfaceGradientColorA,
+                                                    lut.brush_obj.surfaceGradientColorB,
+                                                    lut.bd_gradient_val_surface / 127)
+                else:
+                    lut.bedrockColor = [255, 0, 255, 255]   # purple placeholder to stand out
+                    lut.surfaceColor = [255, 0, 255, 255]
 
     @staticmethod
     def try_create(oc: ObjectContainerInstance):
