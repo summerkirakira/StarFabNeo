@@ -41,15 +41,16 @@ class ThreadLogger:
     def __init__(self, name):
         self.logger = logging.getLogger(name)
 
-    def log(self, level, msg, extra=None, *args, **kwargs):
-        if extra is None:
-            extra = {}
-        extra["qThreadName"] = QThread.currentThread().objectName()
-        if not extra["qThreadName"]:
-            extra["qThreadName"] = threading.get_ident()
+    def log(self, level, msg, *args, **kwargs):
+        kwargs.setdefault('extra', {})
+
+        kwargs['extra']["qThreadName"] = QThread.currentThread().objectName()
+        if not kwargs['extra']["qThreadName"]:
+            kwargs['extra']["qThreadName"] = threading.get_ident()
         else:
-            extra["qThreadName"] += f"-{threading.get_ident()}"
-        self.logger.log(level, msg, extra=extra, *args, **kwargs)
+            kwargs['extra']["qThreadName"] += f"-{threading.get_ident()}"
+
+        self.logger.log(level, msg, *args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         self.log(logging.DEBUG, msg, *args, **kwargs)
