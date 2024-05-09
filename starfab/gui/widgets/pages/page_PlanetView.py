@@ -285,19 +285,36 @@ class PlanetView(qtw.QWidget):
 
     def _handle_datacore_loaded(self):
         logger.info("DataCore loaded")
-        megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
-        pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
-        try:
-            pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
-            bodies: list[Planet] = self._search_for_bodies(pu_oc)
+
+        for filename in [
+            'libs/foundry/records/megamap/pu_all.xml',  # Pyro Tech-Preview builds have had the normal Stanton-only megamap.pu.xml,
+                                                        # plus a Pyro only megamap, and this one contaning both
+            'libs/foundry/records/megamap/megamap.pu.xml',      # default megamap record for Stanton only builds
+        ]:
+            res = self.sc.datacore.search_filename(filename)
+            if res:
+                megamap_pu = res[0]
+                break
+        else:
+            logger.error("No megamap record found")
+            return
+
+        # megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
+        # pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
+
+        bodies: list[Planet] = []
+        for solar_system in megamap_pu.properties['SolarSystems']:
+            pu_socpak = solar_system.properties['ObjectContainers'][0].value
+            try:
+                pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
+                bodies.extend(self._search_for_bodies(pu_oc))
+            except Exception as ex:
+                logger.exception(ex)
+                return
 
             self.planetComboBox.setModel(self.create_model([
                 (b.oc.display_name, b) for b in bodies
             ]))
-
-        except Exception as ex:
-            logger.exception(ex)
-            return
 
     @staticmethod
     def _search_for_bodies(socpak: ObjectContainer, search_depth_after_first_body: int = 1):
