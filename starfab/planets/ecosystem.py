@@ -10,9 +10,12 @@ from scdatatools import StarCitizen
 from scdatatools.engine.textures import unsplit_dds
 from scdatatools.p4k import P4KInfo
 
+from starfab.log import getLogger
 from starfab.planets.data import LocalClimateData
 from starfab.utils import image_converter
 
+
+logger = getLogger(__name__)
 
 CACHE_DIR = Path('.cache')
 
@@ -24,7 +27,11 @@ class EcoSystem:
 
     @staticmethod
     def find_in_cache_(guid: str):
-        return EcoSystem._cache[guid] if guid in EcoSystem._cache else None
+        if guid in EcoSystem._cache:
+            return EcoSystem._cache[guid]
+        else:
+            logger.error("Could not find EcoSystem with guid %r", guid)
+            return None
 
     @staticmethod
     def read_eco_headers(sc: StarCitizen):
