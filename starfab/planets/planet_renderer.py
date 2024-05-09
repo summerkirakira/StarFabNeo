@@ -241,7 +241,9 @@ class PlanetRenderer:
         def _update_from_bytes(gpu_resource: Resource, data: bytearray):
             logger.debug(f"_update_from_bytes({gpu_resource.size=} {len(data)=})")
             if gpu_resource.size < len(data):
-                raise IndexError("Resource size (%d) does not match data size (%d)", gpu_resource.size, len(data))
+                raise ValueError(f"Resource size ({gpu_resource.size}) does not match data size ({len(data)})")
+            elif gpu_resource.size > len(data):
+                logger.info(f"Resource size ({gpu_resource.size}) mismatch with data size ({len(data)})")
             staging = Buffer(gpu_resource.size, HEAP_UPLOAD)
             staging.upload(data)
             staging.copy_to(gpu_resource)
