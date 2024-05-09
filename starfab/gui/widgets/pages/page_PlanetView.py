@@ -287,9 +287,9 @@ class PlanetView(qtw.QWidget):
         logger.info("DataCore loaded")
 
         for filename in [
-            'libs/foundry/records/megamap/pu_all.xml',  # Pyro Tech-Preview builds have had the normal Stanton-only megamap.pu.xml,
-                                                        # plus a Pyro only megamap, and this one contaning both
-            'libs/foundry/records/megamap/megamap.pu.xml',      # default megamap record for Stanton only builds
+            'libs/foundry/records/megamap/pu_all.xml',  # Pyro Tech-Preview builds used pu_all.xml containing both Stanton and Pyro
+                                                        # (however the Stanton-only megamap.pu.xml plus a Pyro-only pyro.xml were also included)
+            'libs/foundry/records/megamap/megamap.pu.xml',      # default megamap record for Stanton-only builds
         ]:
             res = self.sc.datacore.search_filename(filename)
             if res:
