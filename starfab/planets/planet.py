@@ -10,10 +10,14 @@ from scdatatools.engine.cryxml import dict_from_cryxml_file
 from scdatatools.p4k import P4KInfo
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
+from starfab.log import getLogger
 from starfab.planets.data import LUTData, Brush
 from starfab.planets.ecosystem import EcoSystem
 
 from . import *
+
+
+logger = getLogger(__name__)
 
 
 class WaypointData:
@@ -150,6 +154,8 @@ class Planet:
                 _clamp(_lerp_int(a[3], b[3], val), 0, 255)
             ]
 
+        brush_id_errors = []
+
         for y in range(128):
             for x in range(128):
                 lut = self.lut[x][y]
@@ -160,6 +166,7 @@ class Planet:
                     lut.brush_obj = self.brushes[lut.brush_id]
                 except IndexError as e:
                     lut.brush_obj = None
+                    brush_id_errors.append((x, y, lut.brush_id))
 
                 brush_data = self.planet_data["data"]["brushDataLUT"][y][x]
 
@@ -183,6 +190,10 @@ class Planet:
                 else:
                     lut.bedrockColor = [255, 0, 255, 255]   # purple placeholder to stand out
                     lut.surfaceColor = [255, 0, 255, 255]
+
+        if brush_id_errors:
+            logger.warning("One or more tiles with invalid brushIDLUT, used placeholder color.")
+            logger.debug("brush_id_errors: %r", brush_id_errors)
 
     @staticmethod
     def try_create(oc: ObjectContainerInstance):
