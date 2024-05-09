@@ -227,11 +227,11 @@ class PlanetView(qtw.QWidget):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
         selected_obj.load_data()
 
-        self.renderer.set_planet(selected_obj)
-        self.renderer.set_settings(self.get_settings())
-
         # TODO: Deal with buffer directly
         try:
+            self.renderer.set_planet(selected_obj)
+            self.renderer.set_settings(self.get_settings())
+
             layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
             render_bounds = self.renderOutput.get_render_coords()
             self.last_render = self.renderer.render(render_bounds.topLeft())
