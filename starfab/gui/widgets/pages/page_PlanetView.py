@@ -1,5 +1,6 @@
 import io
-from typing import Union, cast
+from operator import itemgetter
+from typing import Union, cast, NamedTuple
 
 from PIL import Image
 from PySide6.QtCore import Qt, QPointF, QRectF, QItemSelectionModel, QItemSelection
@@ -26,12 +27,19 @@ from pathlib import Path
 logger = getLogger(__name__)
 
 
+class SolarSystem(NamedTuple):
+    id: str
+    name: str
+    model: QStandardItemModel
+
+
 class PlanetView(qtw.QWidget):
     def __init__(self, sc):
         super().__init__(parent=None)
 
         self.renderButton: QPushButton = None
         self.exportButton: QPushButton = None
+        self.systemComboBox: QComboBox = None
         self.planetComboBox: QComboBox = None
         self.renderResolutionComboBox: QComboBox = None
         self.coordinateSystemComboBox: QComboBox = None
@@ -51,6 +59,9 @@ class PlanetView(qtw.QWidget):
         uic.loadUi(str(RES_PATH / "ui" / "PlanetView.ui"), self)  # Load the ui into self
 
         self.starmap = None
+
+        self.solar_systems: dict[str, SolarSystem] = {}
+        self.planets: dict[str, Planet] = {}
 
         self.renderer = PlanetRenderer((2048, 1024))
         self.last_render: Union[None, RenderResult] = None
@@ -109,6 +120,7 @@ class PlanetView(qtw.QWidget):
             self.sc.datacore_model.loaded.connect(self._hack_before_load)
             self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
+        self.systemComboBox.currentIndexChanged.connect(self._system_changed)
         self.planetComboBox.currentIndexChanged.connect(self._planet_changed)
         self.renderButton.clicked.connect(self._do_render)
         self.exportButton.clicked.connect(self._do_export)
@@ -121,6 +133,17 @@ class PlanetView(qtw.QWidget):
 
         self.renderer.set_settings(self.get_settings())
         self._planet_changed()
+
+    def _get_selected_planet(self):
+        planet_id: str = self.planetComboBox.currentData(role=Qt.UserRole)
+        try:
+            return self.planets[planet_id]
+        except KeyError:
+            return None
+
+    def _system_changed(self):
+        system_id: str = self.systemComboBox.currentData(role=Qt.UserRole)
+        self.planetComboBox.setModel(self.solar_systems[system_id].model)
 
     def _planet_changed(self):
         # TODO: Pre-load ecosystem data here w/ progressbar
@@ -155,9 +178,10 @@ class PlanetView(qtw.QWidget):
                                         self.renderer.get_bounds_for_render(render_bounds.topLeft()))
 
     def _update_waypoints(self):
-        planet: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
+        planet = self._get_selected_planet()
         if not planet:
             return
+        planet.load_waypoints()
 
         planet.load_waypoints()
 
@@ -225,7 +249,9 @@ class PlanetView(qtw.QWidget):
                               hillshade_enabled, ocean_mask_binary)
 
     def _do_render(self):
-        selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
+        selected_obj = self._get_selected_planet()
+        if not selected_obj:
+            return
         selected_obj.load_data()
 
         # TODO: Deal with buffer directly
@@ -316,19 +342,35 @@ class PlanetView(qtw.QWidget):
         # megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
         # pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
 
-        bodies: list[Planet] = []
         for solar_system in megamap_pu.properties['SolarSystems']:
+            solar_system_guid = str(solar_system.properties['Record'])
+            solar_system_record = self.sc.datacore.records_by_guid[solar_system_guid]
+
             pu_socpak = solar_system.properties['ObjectContainers'][0].value
+            body_records = []
+
             try:
                 pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
-                bodies.extend(self._search_for_bodies(pu_oc))
+
+                for body in self._search_for_bodies(pu_oc):
+                    id = body.oc.entity_name
+                    label = body.oc.display_name
+                    if label != id:
+                        label += f" ({id})"
+                    body_records.append((label, id))
+
+                    if id in self.planets:
+                        raise KeyError("Duplcate entity_name: %s", id)
+                    self.planets[id] = body
             except Exception as ex:
                 logger.exception(ex)
                 return
 
-            self.planetComboBox.setModel(self.create_model([
-                (b.oc.display_name, b) for b in bodies
-            ]))
+            self.solar_systems[solar_system_guid] = SolarSystem(solar_system_guid, solar_system_record.name, self.create_model(sorted(body_records, key=itemgetter(1))))
+
+        self.systemComboBox.setModel(
+            self.create_model([(solar_system.name, solar_system.id) for guid, solar_system in self.solar_systems.items()])
+        )
 
     @staticmethod
     def _search_for_bodies(socpak: ObjectContainer, search_depth_after_first_body: int = 1):
