@@ -117,6 +117,7 @@ class PlanetView(qtw.QWidget):
         self.renderOutput.render_window_moved.connect(self._do_render_window_changed)
         self.enableGridCheckBox.stateChanged.connect(self.renderOutput.lyr_grid.set_enabled)
         self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.lyr_crosshair.set_enabled)
+        self.enableWaypointsCheckBox.stateChanged.connect(self.renderOutput.lyr_waypoints.set_enabled)
 
         self.renderer.set_settings(self.get_settings())
         self._planet_changed()
