@@ -250,7 +250,13 @@ class PlanetView(qtw.QWidget):
                                                filter="PNG Image (*.png)")
         filename, filter = edir
         if filename:
-            self.last_render.tex_color.save(filename, format="png")
+            layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
+            if layer == 'surface':
+                self.last_render.tex_color.save(filename, format="png")
+            elif layer == 'heightmap':
+                self.last_render.tex_heightmap.save(filename, format="png")
+            else:
+                raise ValueError()
 
     def _do_crosshair_moved(self, new_position: QPointF):
         self._update_status()
