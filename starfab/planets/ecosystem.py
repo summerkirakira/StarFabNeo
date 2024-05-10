@@ -94,4 +94,4 @@ class EcoSystem:
             self.elevation_bytes = bytearray(o.read())
             self.elevation_size = int(math.sqrt(len(self.elevation_bytes) / 2))
 
-        print(f"Textures loaded for {self.name}")
+        logger.info(f"Textures loaded for {self.name}")
