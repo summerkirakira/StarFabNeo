@@ -293,10 +293,17 @@ class PlanetView(qtw.QWidget):
     def _handle_datacore_loaded(self):
         logger.info("DataCore loaded")
 
+        # TODO: A more graceful selection and/or detection of solar systems may be needed eventually.
+        # Normal Stanton-only builds use megamap.pu.xml and have only Stanton in their 'SolarSystems' property.
+        # The Pyro Playground Tech-Preview from late 2023 added a pyro.xml containing only Pyro, but the
+        # Stanton-only megamap.xml was also still preset (but not functional due to other files missing).
+        # The server meshing Tech-Preview from March 2024 introduced a pu_all.xml containing both Stanton and Pyro,
+        # but the other megamaps were also still present.
+        # For now, check all three megamaps in decreasing order of interest and use the first one found.
         for filename in [
-            'libs/foundry/records/megamap/pu_all.xml',  # Pyro Tech-Preview builds used pu_all.xml containing both Stanton and Pyro
-                                                        # (however the Stanton-only megamap.pu.xml plus a Pyro-only pyro.xml were also included)
-            'libs/foundry/records/megamap/megamap.pu.xml',      # default megamap record for Stanton-only builds
+            'libs/foundry/records/megamap/pu_all.xml',      # Server meshing Tech-Preview builds containing both Stanton and Pyro
+            'libs/foundry/records/megamap/pyro.xml',        # Pyro playground Tech-Preview
+            'libs/foundry/records/megamap/megamap.pu.xml',  # default megamap record for Stanton-only builds
         ]:
             res = self.sc.datacore.search_filename(filename)
             if res:
