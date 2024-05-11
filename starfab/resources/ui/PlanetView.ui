@@ -204,26 +204,6 @@
              </property>
             </widget>
            </item>
-           <item row="12" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Waypoints</string>
-             </property>
-            </widget>
-           </item>
-           <item row="13" column="1">
-            <widget class="QListView" name="listWaypoints"/>
-           </item>
-           <item row="13" column="0">
-            <widget class="QLabel" name="enableBinaryOceanMaskLabel">
-             <property name="text">
-              <string>Enable Binary Ocean Mask</string>
-             </property>
-            </widget>
-           </item>
-           <item row="12" column="1">
-            <widget class="QCheckBox" name="enableBinaryOceanMaskCheckBox"/>
-           </item>
            <item row="11" column="0">
             <widget class="QLabel" name="enableHillshadeLabel">
              <property name="text">
@@ -233,6 +213,26 @@
            </item>
            <item row="11" column="1">
             <widget class="QCheckBox" name="enableHillshadeCheckBox"/>
+           </item>
+           <item row="12" column="0">
+            <widget class="QLabel" name="enableBinaryOceanMaskLabel">
+             <property name="text">
+              <string>Enable Binary Ocean Mask</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="1">
+            <widget class="QCheckBox" name="enableBinaryOceanMaskCheckBox"/>
+           </item>
+           <item row="13" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Waypoints</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="1">
+            <widget class="QListView" name="listWaypoints"/>
            </item>
           </layout>
          </item>
