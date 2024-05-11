@@ -117,6 +117,7 @@ class PlanetView(qtw.QWidget):
         self.renderOutput.render_window_moved.connect(self._do_render_window_changed)
         self.enableGridCheckBox.stateChanged.connect(self.renderOutput.lyr_grid.set_enabled)
         self.enableCrosshairCheckBox.stateChanged.connect(self.renderOutput.lyr_crosshair.set_enabled)
+        self.enableWaypointsCheckBox.stateChanged.connect(self.renderOutput.lyr_waypoints.set_enabled)
 
         self.renderer.set_settings(self.get_settings())
         self._planet_changed()
@@ -227,11 +228,11 @@ class PlanetView(qtw.QWidget):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
         selected_obj.load_data()
 
-        self.renderer.set_planet(selected_obj)
-        self.renderer.set_settings(self.get_settings())
-
         # TODO: Deal with buffer directly
         try:
+            self.renderer.set_planet(selected_obj)
+            self.renderer.set_settings(self.get_settings())
+
             layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
             render_bounds = self.renderOutput.get_render_coords()
             self.last_render = self.renderer.render(render_bounds.topLeft())
@@ -249,7 +250,13 @@ class PlanetView(qtw.QWidget):
                                                filter="PNG Image (*.png)")
         filename, filter = edir
         if filename:
-            self.last_render.tex_color.save(filename, format="png")
+            layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
+            if layer == 'surface':
+                self.last_render.tex_color.save(filename, format="png")
+            elif layer == 'heightmap':
+                self.last_render.tex_heightmap.save(filename, format="png")
+            else:
+                raise ValueError()
 
     def _do_crosshair_moved(self, new_position: QPointF):
         self._update_status()
@@ -285,19 +292,43 @@ class PlanetView(qtw.QWidget):
 
     def _handle_datacore_loaded(self):
         logger.info("DataCore loaded")
-        megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
-        pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
-        try:
-            pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
-            bodies: list[Planet] = self._search_for_bodies(pu_oc)
+
+        # TODO: A more graceful selection and/or detection of solar systems may be needed eventually.
+        # Normal Stanton-only builds use megamap.pu.xml and have only Stanton in their 'SolarSystems' property.
+        # The Pyro Playground Tech-Preview from late 2023 added a pyro.xml containing only Pyro, but the
+        # Stanton-only megamap.xml was also still preset (but not functional due to other files missing).
+        # The server meshing Tech-Preview from March 2024 introduced a pu_all.xml containing both Stanton and Pyro,
+        # but the other megamaps were also still present.
+        # For now, check all three megamaps in decreasing order of interest and use the first one found.
+        for filename in [
+            'libs/foundry/records/megamap/pu_all.xml',      # Server meshing Tech-Preview builds containing both Stanton and Pyro
+            'libs/foundry/records/megamap/pyro.xml',        # Pyro playground Tech-Preview
+            'libs/foundry/records/megamap/megamap.pu.xml',  # default megamap record for Stanton-only builds
+        ]:
+            res = self.sc.datacore.search_filename(filename)
+            if res:
+                megamap_pu = res[0]
+                break
+        else:
+            logger.error("No megamap record found")
+            return
+
+        # megamap_pu = self.sc.datacore.search_filename(f'libs/foundry/records/megamap/megamap.pu.xml')[0]
+        # pu_socpak = megamap_pu.properties['SolarSystems'][0].properties['ObjectContainers'][0].value
+
+        bodies: list[Planet] = []
+        for solar_system in megamap_pu.properties['SolarSystems']:
+            pu_socpak = solar_system.properties['ObjectContainers'][0].value
+            try:
+                pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
+                bodies.extend(self._search_for_bodies(pu_oc))
+            except Exception as ex:
+                logger.exception(ex)
+                return
 
             self.planetComboBox.setModel(self.create_model([
                 (b.oc.display_name, b) for b in bodies
             ]))
-
-        except Exception as ex:
-            logger.exception(ex)
-            return
 
     @staticmethod
     def _search_for_bodies(socpak: ObjectContainer, search_depth_after_first_body: int = 1):

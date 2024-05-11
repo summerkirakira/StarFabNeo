@@ -6,9 +6,13 @@ from PIL import Image
 from PySide6.QtCore import QRectF, QPointF, QSizeF, QSize
 
 from . import *
+from starfab.log import getLogger
 from starfab.planets.planet import Planet
 from starfab.planets.data import LUTData, RenderJobSettings, RenderSettings
 from starfab.planets.ecosystem import EcoSystem
+
+
+logger = getLogger(__name__)
 
 
 class RenderResult:
@@ -33,13 +37,13 @@ class PlanetRenderer:
         self.planet: None | Planet = None
         self.settings: None | RenderSettings = None
         self.gpu_resources: dict[str, Resource] = {}
-        self.render_resolution: QSize() = QSize(*buffer_resolution)
+        self.render_resolution: QSize = QSize(*buffer_resolution)
 
         self._create_gpu_output_resources()
 
     def set_planet(self, planet: Planet):
         if planet != self.planet:
-            self._cleanup_planet_gpu_resources()
+            # self._cleanup_planet_gpu_resources()
             self._cleanup_planet_gpu_resources()
             self.planet = planet
             self._create_planet_gpu_resources()
@@ -198,8 +202,8 @@ class PlanetRenderer:
 
     def _create_planet_gpu_resources(self):
         climate_size = int(math.sqrt(len(self.planet.climate_data) / 4))
-        offset_size = int(math.sqrt(len(self.planet.climate_data) / 4))
-        heightmap_size = int(math.sqrt(len(self.planet.climate_data) / 4))
+        offset_size = int(math.sqrt(len(self.planet.offset_data)))
+        heightmap_size = int(math.sqrt(len(self.planet.heightmap_data) / 2))
         ecosystem_climate_size = self.planet.ecosystems[0].climate_image.width
         ecosystem_heightmap_size = self.planet.ecosystems[0].elevation_size
 
@@ -208,6 +212,7 @@ class PlanetRenderer:
         self.gpu_resources['planet_climate'] = Texture2D(climate_size, climate_size, R8G8B8A8_UINT)
         self.gpu_resources['planet_offsets'] = Texture2D(offset_size, offset_size, R8_UINT)
         self.gpu_resources['planet_heightmap'] = Texture2D(heightmap_size, heightmap_size, R16_UINT)
+        logger.debug(f"{climate_size=} {offset_size=} {heightmap_size=}")
 
         self.gpu_resources['ecosystem_climates'] = Texture3D(ecosystem_climate_size, ecosystem_climate_size,
                                                      len(self.planet.ecosystems), R8G8B8A8_UINT)
@@ -231,14 +236,19 @@ class PlanetRenderer:
             # TODO: Can we write directly into the buffer as we generate?
             staging.upload(bytes(data))
             staging.copy_to(gpu_resource)
-            del staging
+            # del staging
 
         def _update_from_bytes(gpu_resource: Resource, data: bytearray):
-            staging = Buffer(len(data), HEAP_UPLOAD)
+            logger.debug(f"_update_from_bytes({gpu_resource.size=} {len(data)=})")
+            if gpu_resource.size < len(data):
+                raise ValueError(f"Resource size ({gpu_resource.size}) does not match data size ({len(data)})")
+            elif gpu_resource.size > len(data):
+                logger.info(f"Resource size ({gpu_resource.size}) mismatch with data size ({len(data)})")
+            staging = Buffer(gpu_resource.size, HEAP_UPLOAD)
             staging.upload(data)
             staging.copy_to(gpu_resource)
-            del staging
-            return gpu_resource
+            # del staging
+            # return gpu_resource
 
         def _update_from_ecosystems(gpu_resource: Resource, fn_data: Callable[[EcoSystem], Union[bytes, Image.Image]]):
             staging = Buffer(gpu_resource.size, HEAP_UPLOAD)

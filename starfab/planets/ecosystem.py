@@ -10,8 +10,14 @@ from scdatatools import StarCitizen
 from scdatatools.engine.textures import unsplit_dds
 from scdatatools.p4k import P4KInfo
 
+from starfab.log import getLogger
 from starfab.planets.data import LocalClimateData
 from starfab.utils import image_converter
+
+
+logger = getLogger(__name__)
+
+CACHE_DIR = Path('.cache')
 
 
 class EcoSystem:
@@ -21,7 +27,11 @@ class EcoSystem:
 
     @staticmethod
     def find_in_cache_(guid: str):
-        return EcoSystem._cache[guid] if guid in EcoSystem._cache else None
+        if guid in EcoSystem._cache:
+            return EcoSystem._cache[guid]
+        else:
+            logger.error("Could not find EcoSystem with guid %r", guid)
+            return None
 
     @staticmethod
     def read_eco_headers(sc: StarCitizen):
@@ -65,7 +75,7 @@ class EcoSystem:
 
         # TODO: Use settings to define a cache directory to store these in
         def _read_with_cache(subpath: str) -> Image:
-            check_path = Path(subpath).with_suffix(".png")
+            check_path = (CACHE_DIR / subpath).with_suffix(".png")
             if not os.path.exists(check_path.parent):
                 os.makedirs(check_path.parent)
             if check_path.exists():
@@ -84,4 +94,4 @@ class EcoSystem:
             self.elevation_bytes = bytearray(o.read())
             self.elevation_size = int(math.sqrt(len(self.elevation_bytes) / 2))
 
-        print(f"Textures loaded for {self.name}")
+        logger.info(f"Textures loaded for {self.name}")

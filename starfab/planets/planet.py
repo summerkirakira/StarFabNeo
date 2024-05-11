@@ -10,10 +10,14 @@ from scdatatools.engine.cryxml import dict_from_cryxml_file
 from scdatatools.p4k import P4KInfo
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
+from starfab.log import getLogger
 from starfab.planets.data import LUTData, Brush
 from starfab.planets.ecosystem import EcoSystem
 
 from . import *
+
+
+logger = getLogger(__name__)
 
 
 class WaypointData:
@@ -150,13 +154,19 @@ class Planet:
                 _clamp(_lerp_int(a[3], b[3], val), 0, 255)
             ]
 
+        brush_id_errors = []
+
         for y in range(128):
             for x in range(128):
                 lut = self.lut[x][y]
                 lut.ground_texture_id = self.planet_data["data"]["groundTexIDLUT"][y][x]
                 lut.object_preset_id = self.planet_data["data"]["objectPresetLUT"][y][x]
                 lut.brush_id = self.planet_data["data"]["brushIDLUT"][y][x]
-                lut.brush_obj = self.brushes[lut.brush_id]
+                try:
+                    lut.brush_obj = self.brushes[lut.brush_id]
+                except IndexError as e:
+                    lut.brush_obj = None
+                    brush_id_errors.append((x, y, lut.brush_id))
 
                 brush_data = self.planet_data["data"]["brushDataLUT"][y][x]
 
@@ -169,13 +179,21 @@ class Planet:
                 lut.bd_orp_blend_index = brush_data["oprBlendIndex"]
                 lut.bd_texture_layer_index = brush_data["texturLayerIndex"]
 
-                lut.bedrockColor = _lerp_color(lut.brush_obj.bedrockGradientColorA,
-                                               lut.brush_obj.bedrockGradientColorB,
-                                               lut.bd_gradient_val_bedrock / 127)
+                if lut.brush_obj:
+                    lut.bedrockColor = _lerp_color(lut.brush_obj.bedrockGradientColorA,
+                                                    lut.brush_obj.bedrockGradientColorB,
+                                                    lut.bd_gradient_val_bedrock / 127)
 
-                lut.surfaceColor = _lerp_color(lut.brush_obj.surfaceGradientColorA,
-                                               lut.brush_obj.surfaceGradientColorB,
-                                               lut.bd_gradient_val_surface / 127)
+                    lut.surfaceColor = _lerp_color(lut.brush_obj.surfaceGradientColorA,
+                                                    lut.brush_obj.surfaceGradientColorB,
+                                                    lut.bd_gradient_val_surface / 127)
+                else:
+                    lut.bedrockColor = [255, 0, 255, 255]   # purple placeholder to stand out
+                    lut.surfaceColor = [255, 0, 255, 255]
+
+        if brush_id_errors:
+            logger.warning("One or more tiles with invalid brushIDLUT, used placeholder color.")
+            logger.debug("brush_id_errors: %r", brush_id_errors)
 
     @staticmethod
     def try_create(oc: ObjectContainerInstance):
