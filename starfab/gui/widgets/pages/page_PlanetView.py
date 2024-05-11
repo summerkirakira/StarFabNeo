@@ -60,8 +60,8 @@ class PlanetView(qtw.QWidget):
 
         self.starmap = None
 
-        self.solar_systems: dict[str, SolarSystem] = {}
-        self.planets: dict[str, Planet] = {}
+        self.solar_systems: dict[str, SolarSystem] = {}     # mapping of solar system GUID to SolarSystem namedtuple
+        self.planets: dict[str, Planet] = {}                # mapping of planet entity_name to Planet object
 
         self.renderer = PlanetRenderer((2048, 1024))
         self.last_render: Union[None, RenderResult] = None
@@ -347,7 +347,7 @@ class PlanetView(qtw.QWidget):
             solar_system_record = self.sc.datacore.records_by_guid[solar_system_guid]
 
             pu_socpak = solar_system.properties['ObjectContainers'][0].value
-            body_records = []
+            planet_records: list[tuple[str, str]] = []  # records for the model, tuples of label and id/entity_name
 
             try:
                 pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
@@ -356,8 +356,10 @@ class PlanetView(qtw.QWidget):
                     id = body.oc.entity_name
                     label = body.oc.display_name
                     if label != id:
-                        label += f" ({id})"
-                    body_records.append((label, id))
+                        # display_name falls back to entity_name if missing,
+                        # only append the entity_name if it's different
+                        label += f" - {id}"
+                    planet_records.append((label, id))
 
                     if id in self.planets:
                         raise KeyError("Duplcate entity_name: %s", id)
@@ -366,7 +368,13 @@ class PlanetView(qtw.QWidget):
                 logger.exception(ex)
                 return
 
-            self.solar_systems[solar_system_guid] = SolarSystem(solar_system_guid, solar_system_record.name, self.create_model(sorted(body_records, key=itemgetter(1))))
+            if solar_system_guid in self.solar_systems:
+                raise KeyError("Duplicate solar system GUID: %s", solar_system_guid)
+            self.solar_systems[solar_system_guid] = SolarSystem(
+                                                        solar_system_guid,
+                                                        solar_system_record.name,
+                                                        self.create_model(sorted(planet_records, key=itemgetter(1)))
+                                                    )
 
         self.systemComboBox.setModel(
             self.create_model([(solar_system.name, solar_system.id) for guid, solar_system in self.solar_systems.items()])
