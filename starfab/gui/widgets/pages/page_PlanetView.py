@@ -13,6 +13,7 @@ from starfab.gui import qtw, qtc
 from starfab.gui.widgets.planets.planet_viewer import QPlanetViewer
 from starfab.gui.widgets.planets.waypoint_overlay import WaypointOverlay
 from starfab.log import getLogger
+from starfab.planets import *
 from starfab.planets.planet import Planet
 from starfab.planets.data import RenderSettings
 from starfab.planets.ecosystem import EcoSystem
@@ -42,6 +43,8 @@ class PlanetView(qtw.QWidget):
         self.enableGridCheckBox: QCheckBox = None
         self.enableCrosshairCheckBox: QCheckBox = None
         self.enableWaypointsCheckBox: QCheckBox = None
+        self.enableHillshadeCheckBox: QCheckBox = None
+        self.enableBinaryOceanMaskCheckBox: QCheckBox = None
         self.listWaypoints: QListView = None
         self.lbl_planetDetails: QLabel = None
         self.lbl_currentStatus: QLabel = None
@@ -155,7 +158,9 @@ class PlanetView(qtw.QWidget):
         if not planet:
             return
 
-        waypoint_records = [(wp.container.entity_name, wp) for wp in planet.waypoints]
+        planet.load_waypoints()
+
+        waypoint_records = [(wp.container.display_name, wp) for wp in planet.waypoints]
         waypoint_model = self.create_model(waypoint_records)
         waypoint_selection = QItemSelectionModel(waypoint_model)
         waypoint_selection.selectionChanged.connect(self._waypoint_changed)
@@ -197,20 +202,26 @@ class PlanetView(qtw.QWidget):
 
         return model
 
-    def shader_path(self) -> Path:
-        return Path(__file__) / '../../../../planets/shader.hlsl'
+    def shader_path(self, name) -> Path:
+        return Path(__file__) / f'../../../../planets/hlsl/{name}'
 
-    def _get_shader(self):
-        with io.open(self.shader_path(), "r") as shader:
-            return shader.read()
+    def _get_shader(self, name):
+        with io.open(self.shader_path(name), "r") as shader:
+            return hlsl.compile(shader.read())
 
     def get_settings(self):
         scale = self.renderResolutionComboBox.currentData(role=Qt.UserRole)
         coordinates = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
         interpolation = self.sampleModeComboBox.currentData(role=Qt.UserRole)
         resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
-        shader = self._get_shader()
-        return RenderSettings(True, scale, coordinates, shader, interpolation, resolution)
+        main_shader = self._get_shader("shader.hlsl")
+        hillshade_shader = self._get_shader("hillshade.hlsl")
+        hillshade_enabled = self.enableHillshadeCheckBox.isChecked()
+        ocean_mask_binary = self.enableBinaryOceanMaskCheckBox.isChecked()
+        return RenderSettings(True, scale, coordinates,
+                              main_shader, hillshade_shader,
+                              interpolation, resolution,
+                              hillshade_enabled, ocean_mask_binary)
 
     def _do_render(self):
         selected_obj: Planet = self.planetComboBox.currentData(role=Qt.UserRole)
@@ -281,7 +292,7 @@ class PlanetView(qtw.QWidget):
             bodies: list[Planet] = self._search_for_bodies(pu_oc)
 
             self.planetComboBox.setModel(self.create_model([
-                (b.oc.entity_name, b) for b in bodies
+                (b.oc.display_name, b) for b in bodies
             ]))
 
         except Exception as ex:

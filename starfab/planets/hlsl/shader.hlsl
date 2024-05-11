@@ -16,8 +16,15 @@ struct RenderJobSettings
     float global_terrain_height_influence;
     float ecosystem_terrain_height_influence;
 
+    bool ocean_enabled;
+    bool ocean_mask_binary;
+    bool ocean_heightmap_flat;
     float ocean_depth;
-    uint3 ocean_color;
+    uint4 ocean_color;
+
+    bool hillshade_enabled;
+    float hillshade_zenith;
+    float hillshade_azimuth;
 };
 
 struct LocalizedWarping
@@ -51,6 +58,7 @@ ConstantBuffer<RenderJobSettings> jobSettings : register(b0);
 
 RWTexture2D<uint4> output_color : register(u0);
 RWTexture2D<uint4> output_heightmap: register(u1);
+RWTexture2D<uint> output_ocean_mask: register(u2);
 
 uint4 lerp2d(uint4 ul, uint4 ur, uint4 bl, uint4 br, float2 value)
 {
@@ -440,6 +448,7 @@ void main(uint3 tid : SV_DispatchThreadID)
 
 	uint4 out_color = uint4(0, 0, 0, 255);
 	float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
+	float out_ocean_mask = 0;
 
     if (eco_influence.is_override) {
         out_color.xyz = eco_influence.override;
@@ -455,8 +464,31 @@ void main(uint3 tid : SV_DispatchThreadID)
         out_color.xyz = surface_color.xyz;
     }
 
+
     if (out_height < jobSettings.ocean_depth) {
         out_color.xyz = jobSettings.ocean_color.xyz;
+    }
+
+    if (jobSettings.ocean_enabled && out_height < jobSettings.ocean_depth) {
+
+        out_color.xyz = jobSettings.ocean_color.xyz;
+
+        if (jobSettings.ocean_mask_binary) {
+            out_ocean_mask = 1.0;
+        } else {
+            float ocean_max =
+                -   (jobSettings.ecosystem_terrain_height_influence +
+                    jobSettings.global_terrain_height_influence +
+                    jobSettings.ocean_depth);
+            out_ocean_mask = (out_height + jobSettings.ocean_depth) / ocean_max;
+        }
+
+        if (jobSettings.ocean_heightmap_flat) {
+            out_height = jobSettings.ocean_depth;
+        }
+    } else {
+        //Color already applied, no need to do anything
+        out_ocean_mask = 0;
     }
 
     // Squash out_height from meter range to normalized +/- 1.0 range
@@ -472,4 +504,5 @@ void main(uint3 tid : SV_DispatchThreadID)
 	output_color[tid.xy] = out_color;
 	//output_heightmap[tid.xy] = uint4(global_height & 0xFF, (global_height & 0xFF00) >> 8, 0, 255);
 	output_heightmap[tid.xy] = uint4(out_height * 127 + 127, 0, 0, 255);
+	//output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 127 + 127, 0), 255);
 }

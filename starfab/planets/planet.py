@@ -6,6 +6,7 @@ from typing import Tuple
 
 from PySide6.QtCore import QPointF
 from scdatatools.engine.chunkfile import ChunkFile, Chunk, JSONChunk, CryXMLBChunk
+from scdatatools.engine.cryxml import dict_from_cryxml_file
 from scdatatools.p4k import P4KInfo
 from scdatatools.sc.object_container import ObjectContainer, ObjectContainerInstance
 
@@ -46,9 +47,6 @@ class Planet:
         self.gpu_resources = {}
         self.gpu_computer: Compute = None
 
-        if self.oc.name.endswith("stanton4.socpak"):
-            self.load_waypoints()
-
     @staticmethod
     def position_to_coordinates(x: float, y: float, z: float) -> Tuple[QPointF, float]:
         xy_len = sqrt(x * x + y * y)
@@ -59,10 +57,23 @@ class Planet:
         return QPointF((lon + 90 + 360) % 360, lat), alt
 
     def load_waypoints(self):
+        # If we already loaded waypoints, don't do anything
+        if len(self.waypoints) != 0:
+            return
+
+        # Need to preload *all* entities in the entdata folder to be able to map them
+        # We used to be able to look up based on the guid, but that's no longer valid
+        ent_paths = [p.filename for p in self.oc.socpak.filelist if "/entdata/" in p.filename]
+        ent_infos = [self.oc.socpak.p4k.getinfo(p) for p in ent_paths]
+        ent_data = [dict_from_cryxml_file(a.open())["Entity"] for a in ent_infos]
+        ent_map = {ent["@EntityCryGUID"]: ent for ent in ent_data}
+
         for child_name in self.oc.children:
-            child_soc = self.oc.children[child_name]
+            child_soc: ObjectContainerInstance = self.oc.children[child_name]
             coords = self.position_to_coordinates(child_soc.position.x, child_soc.position.y, child_soc.position.z)
             self.waypoints.append(WaypointData(coords[0], child_soc))
+            if child_soc.guid in ent_map:
+                child_soc.entdata = ent_map[child_soc.guid]
 
     def load_data(self) -> object:
         if self.planet_data:

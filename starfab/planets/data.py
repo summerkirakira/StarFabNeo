@@ -25,7 +25,9 @@ class LUTData:
 
 
 class RenderJobSettings:
-    PACK_STRING: str = "5f3i5f4i"
+    # NOTE: Bools are GPU-register aligned, so need to be 4 bytes, not 1
+    # so we pack them as i instead of ?
+    PACK_STRING: str = "5f3i4f3i1f5i2f"
     PACK_LENGTH: int = struct.calcsize(PACK_STRING)
 
     def __init__(self):
@@ -45,8 +47,15 @@ class RenderJobSettings:
         self.global_terrain_height_influence: float = 4000
         self.ecosystem_terrain_height_influence: float = 1000
 
+        self.ocean_enabled: bool = True
+        self.ocean_mask_binary: bool = False
+        self.ocean_heightmap_flat: bool = True
         self.ocean_depth: float = -2000
         self.ocean_color: list[int] = [0, 0, 0, 255]
+
+        self.hillshade_enabled: bool = True
+        self.hillshade_zenith: float = 45
+        self.hillshade_azimuth: float = 135
 
     def pack(self) -> bytes:
         return struct.pack(RenderJobSettings.PACK_STRING,
@@ -55,7 +64,9 @@ class RenderJobSettings:
                            self.render_scale_x, self.render_scale_y,
                            self.local_humidity_influence, self.local_temperature_influence,
                            self.global_terrain_height_influence, self.ecosystem_terrain_height_influence,
-                           self.ocean_depth, *self.ocean_color)
+                           self.ocean_enabled, self.ocean_mask_binary, self.ocean_heightmap_flat,
+                           self.ocean_depth, *self.ocean_color,
+                           self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth)
 
     def update_buffer(self, buffer_gpu: Buffer):
         data = self.pack()
@@ -117,11 +128,16 @@ class LocalClimateData:
 
 
 class RenderSettings:
-    def __init__(self, gpu: bool, resolution: int, coordinate_mode: str, hlsl: str,
-                 interpolation: int, output_resolution: Tuple[int, int]):
+    def __init__(self, gpu: bool, resolution: int, coordinate_mode: str,
+                 shader_main: str, shader_hillshade: str,
+                 interpolation: int, output_resolution: Tuple[int, int],
+                 hillshade_enabled: bool, ocean_mask_binary: bool):
         self.gpu = gpu
         self.resolution = resolution
         self.coordinate_mode = coordinate_mode
-        self.hlsl = hlsl
+        self.shader_main = shader_main
+        self.shader_hillshade = shader_hillshade
         self.interpolation = interpolation
         self.output_resolution = output_resolution
+        self.hillshade_enabled = hillshade_enabled
+        self.ocean_mask_binary = ocean_mask_binary

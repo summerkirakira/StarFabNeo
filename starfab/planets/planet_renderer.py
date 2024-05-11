@@ -97,21 +97,33 @@ class PlanetRenderer:
         job_s.interpolation = self.settings.interpolation
         job_s.render_scale_x = self.settings.resolution * 2
         job_s.render_scale_y = self.settings.resolution
+        job_s.hillshade_enabled = self.settings.hillshade_enabled
+        job_s.ocean_mask_binary = self.settings.ocean_mask_binary
+
         job_s.planet_radius = self.planet.radius_m
         job_s.local_humidity_influence = self.planet.humidity_influence
         job_s.local_temperature_influence = self.planet.temperature_influence
 
         job_s.update_buffer(cast(Buffer, self.gpu_resources['settings']))
 
+        # Main render pass
         computer = self._get_computer()
 
         computer.dispatch(self.render_resolution.width() // 8, self.render_resolution.height() // 8, 1)
         # TODO: Keep this around and render multiple tiles with the same Compute obj
 
+        del computer
+
+        if job_s.hillshade_enabled:
+            # Hill-shade pass
+            hillshade_compute = self._get_hillshade_computer()
+
+            hillshade_compute.dispatch(self.render_resolution.width() // 8, self.render_resolution.height() // 8, 1)
+
+            del hillshade_compute
+
         out_color: Image = self._read_frame("output_color")
         out_heightmap: Image = self._read_frame("output_heightmap")
-
-        del computer
 
         planet_bouds = self.get_outer_bounds()
         render_bounds = self.get_bounds_for_render(render_coords)
@@ -143,10 +155,30 @@ class PlanetRenderer:
         ]
 
         output_buffers = [
-            res['output_color'], res['output_heightmap']
+            res['output_color'], res['output_heightmap'], res['output_ocean_mask']
         ]
 
-        return Compute(hlsl.compile(self.settings.hlsl),
+        return Compute(self.settings.shader_main,
+                       srv=samplers,
+                       cbv=constant_buffers,
+                       uav=output_buffers)
+
+    def _get_hillshade_computer(self) -> Compute:
+        res = self.gpu_resources
+
+        samplers = [
+            res['output_color'], res['output_heightmap'], res['output_ocean_mask']
+        ]
+
+        constant_buffers = [
+            res['settings']
+        ]
+
+        output_buffers = [
+            res['output_color']
+        ]
+
+        return Compute(self.settings.shader_hillshade,
                        srv=samplers,
                        cbv=constant_buffers,
                        uav=output_buffers)
@@ -230,7 +262,7 @@ class PlanetRenderer:
         _update_from_ecosystems(self.gpu_resources['ecosystem_heightmaps'], lambda x: x.elevation_bytes)
 
     def _cleanup_gpu_output_resources(self):
-        self._do_cleanup('output_color', 'output_heightmap', 'readback')
+        self._do_cleanup('output_color', 'output_heightmap', 'output_ocean_mask', 'readback')
 
     def _create_gpu_output_resources(self):
         if 'output_color' in self.gpu_resources:
@@ -243,9 +275,11 @@ class PlanetRenderer:
         out_h = self.render_resolution.height()
         output_color_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
         output_heightmap_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
+        output_ocean_mask_texture = Texture2D(out_w, out_h, R8_UINT)
 
         self.gpu_resources['output_color'] = output_color_texture
         self.gpu_resources['output_heightmap'] = output_heightmap_texture
+        self.gpu_resources['output_ocean_mask'] = output_ocean_mask_texture
         # NOTE: We will use the same readback buffer to read output_color and output_heightmap
         #       We take output_color's size because it will be 2x the size of the heightmap tex
         self.gpu_resources['readback'] = Buffer(output_color_texture.size, HEAP_READBACK)
