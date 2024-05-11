@@ -183,8 +183,6 @@ class PlanetView(qtw.QWidget):
             return
         planet.load_waypoints()
 
-        planet.load_waypoints()
-
         waypoint_records = [(wp.container.display_name, wp) for wp in planet.waypoints]
         waypoint_model = self.create_model(waypoint_records)
         waypoint_selection = QItemSelectionModel(waypoint_model)
@@ -353,17 +351,16 @@ class PlanetView(qtw.QWidget):
                 pu_oc = self.sc.oc_manager.load_socpak(pu_socpak)
 
                 for body in self._search_for_bodies(pu_oc):
-                    id = body.oc.entity_name
                     label = body.oc.display_name
-                    if label != id:
+                    if label != body.oc.entity_name:
                         # display_name falls back to entity_name if missing,
                         # only append the entity_name if it's different
-                        label += f" - {id}"
-                    planet_records.append((label, id))
+                        label += f" - {body.oc.entity_name}"
+                    planet_records.append((label, body.oc.entity_name))
 
-                    if id in self.planets:
-                        raise KeyError("Duplcate entity_name: %s", id)
-                    self.planets[id] = body
+                    if body.oc.entity_name in self.planets:
+                        raise KeyError("Duplcate entity_name: %s", body.oc.entity_name)
+                    self.planets[body.oc.entity_name] = body
             except Exception as ex:
                 logger.exception(ex)
                 return
