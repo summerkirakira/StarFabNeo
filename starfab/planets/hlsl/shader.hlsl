@@ -428,6 +428,7 @@ void main(uint3 tid : SV_DispatchThreadID)
     float2 projected_size = float2(6000, 6000) * terrain_scaling;
     float2 physical_size = float2(4000, 4000) * terrain_scaling;
     float2 local_influence = float2(jobSettings.local_humidity_influence, jobSettings.local_temperature_influence);
+    float2 max_deformation = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
 
     // Calculate normalized position in the world (ie: 0,0 = top-left, 1,1 = bottom-right)
 	float2 normalized_position = tid.xy / float2(clim_sz) / jobSettings.render_scale;
@@ -476,11 +477,11 @@ void main(uint3 tid : SV_DispatchThreadID)
         if (jobSettings.ocean_mask_binary) {
             out_ocean_mask = 1.0;
         } else {
-            float ocean_max =
-                -   (jobSettings.ecosystem_terrain_height_influence +
-                    jobSettings.global_terrain_height_influence +
-                    jobSettings.ocean_depth);
-            out_ocean_mask = (out_height + jobSettings.ocean_depth) / ocean_max;
+            float ocean_bottom = -max_deformation;
+            float relative_depth = jobSettings.ocean_depth - out_height;
+            float ocean_max_depth = jobSettings.ocean_depth - ocean_bottom;
+
+            out_ocean_mask = relative_depth / ocean_max_depth;
         }
 
         if (jobSettings.ocean_heightmap_flat) {
@@ -492,7 +493,7 @@ void main(uint3 tid : SV_DispatchThreadID)
     }
 
     // Squash out_height from meter range to normalized +/- 1.0 range
-    out_height /= (jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence);
+    out_height /= max_deformation;
 
 	// DEBUG: Grid rendering
 	int2 cell_position = int2(normalized_position * out_sz * jobSettings.render_scale) % jobSettings.render_scale;
@@ -504,5 +505,5 @@ void main(uint3 tid : SV_DispatchThreadID)
 	output_color[tid.xy] = out_color;
 	//output_heightmap[tid.xy] = uint4(global_height & 0xFF, (global_height & 0xFF00) >> 8, 0, 255);
 	output_heightmap[tid.xy] = uint4(out_height * 127 + 127, 0, 0, 255);
-	//output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 127 + 127, 0), 255);
+	output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 255, 0), 255);
 }
