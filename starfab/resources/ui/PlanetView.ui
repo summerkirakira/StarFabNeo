@@ -83,146 +83,156 @@
          <item>
           <layout class="QFormLayout" name="formLayout_2">
            <item row="0" column="0">
+            <widget class="QLabel" name="systemLabel">
+             <property name="text">
+              <string>System</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="systemComboBox"/>
+           </item>
+           <item row="1" column="0">
             <widget class="QLabel" name="planetLabel">
              <property name="text">
               <string>Planet</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QComboBox" name="planetComboBox"/>
            </item>
-           <item row="1" column="0">
+           <item row="2" column="0">
             <widget class="QLabel" name="renderResolutionLabel">
              <property name="text">
               <string>Render Resolution</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="2" column="1">
             <widget class="QComboBox" name="renderResolutionComboBox"/>
            </item>
-           <item row="2" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="coordinateSystemLabel">
              <property name="text">
               <string>Coordinate System</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="3" column="1">
             <widget class="QComboBox" name="coordinateSystemComboBox"/>
            </item>
-           <item row="3" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="sampleModeLabel">
              <property name="text">
               <string>Sample Mode</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
+           <item row="4" column="1">
             <widget class="QComboBox" name="sampleModeComboBox"/>
            </item>
-           <item row="4" column="0">
+           <item row="5" column="0">
             <widget class="QLabel" name="outputResolutionLabel">
              <property name="text">
               <string>Output Resolution</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="5" column="1">
             <widget class="QComboBox" name="outputResolutionComboBox"/>
            </item>
-           <item row="5" column="0">
+           <item row="6" column="0">
             <widget class="QLabel" name="displayModeLabel">
              <property name="text">
               <string>Display Mode</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="6" column="1">
             <widget class="QComboBox" name="displayModeComboBox"/>
            </item>
-           <item row="6" column="0">
+           <item row="7" column="0">
             <widget class="QLabel" name="displayLayerLabel">
              <property name="text">
               <string>Display Layer</string>
              </property>
             </widget>
            </item>
-           <item row="6" column="1">
+           <item row="7" column="1">
             <widget class="QComboBox" name="displayLayerComboBox"/>
            </item>
-           <item row="7" column="0">
+           <item row="8" column="0">
             <widget class="QLabel" name="enableGridLabel">
              <property name="text">
               <string>Enable Grid</string>
              </property>
             </widget>
            </item>
-           <item row="7" column="1">
+           <item row="8" column="1">
             <widget class="QCheckBox" name="enableGridCheckBox">
              <property name="checked">
               <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="8" column="0">
+           <item row="9" column="0">
             <widget class="QLabel" name="enableCrosshairLabel">
              <property name="text">
               <string>Enable Crosshair</string>
              </property>
             </widget>
            </item>
-           <item row="8" column="1">
+           <item row="9" column="1">
             <widget class="QCheckBox" name="enableCrosshairCheckBox">
              <property name="checked">
               <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="9" column="0">
+           <item row="10" column="0">
             <widget class="QLabel" name="enableWaypointsLabel">
              <property name="text">
               <string>Enable Waypoints</string>
              </property>
             </widget>
            </item>
-           <item row="9" column="1">
+           <item row="10" column="1">
             <widget class="QCheckBox" name="enableWaypointsCheckBox">
              <property name="checked">
               <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="12" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Waypoints</string>
-             </property>
-            </widget>
-           </item>
-           <item row="12" column="1">
-            <widget class="QListView" name="listWaypoints"/>
-           </item>
            <item row="11" column="0">
-            <widget class="QLabel" name="enableBinaryOceanMaskLabel">
-             <property name="text">
-              <string>Enable Binary Ocean Mask</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="1">
-            <widget class="QCheckBox" name="enableBinaryOceanMaskCheckBox"/>
-           </item>
-           <item row="10" column="0">
             <widget class="QLabel" name="enableHillshadeLabel">
              <property name="text">
               <string>Enable Hillshade</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="1">
+           <item row="11" column="1">
             <widget class="QCheckBox" name="enableHillshadeCheckBox"/>
+           </item>
+           <item row="12" column="0">
+            <widget class="QLabel" name="enableBinaryOceanMaskLabel">
+             <property name="text">
+              <string>Enable Binary Ocean Mask</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="1">
+            <widget class="QCheckBox" name="enableBinaryOceanMaskCheckBox"/>
+           </item>
+           <item row="13" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Waypoints</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="1">
+            <widget class="QListView" name="listWaypoints"/>
            </item>
           </layout>
          </item>
