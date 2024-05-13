@@ -118,13 +118,102 @@ uint4 take_sample(Texture2D<uint4> texture, float2 position, int2 dimensions, in
     }
 }
 
+float UnpackUInt4ToFloat(uint4 packedValue, int bit_depth)
+{
+    // Ensure the bit depth is valid
+    if (bit_depth != 8 && bit_depth != 16 && bit_depth != 24 && bit_depth != 32)
+        return 0.0;
+
+    // Combine the components of packedValue to reconstruct the float value
+    float factor = (1L << bit_depth) - 1.0f;
+    float reconstructedValue = 0.0;
+
+    if (bit_depth == 8) { // Greyscale
+        reconstructedValue = packedValue.x / factor;
+    } else {
+        // Combine components based on bit depth
+        reconstructedValue += packedValue.x / factor;
+        reconstructedValue += packedValue.y / factor * 256.0;
+        reconstructedValue += packedValue.z / factor * 65536.0;
+
+        if (bit_depth == 32) {
+            reconstructedValue += packedValue.w / factor * 16777216.0;
+        }
+    }
+
+    // Map the range [0.0, 1.0] back to [-1.0, 1.0]
+    reconstructedValue = reconstructedValue * 2.0f - 1.0f;
+
+    return reconstructedValue;
+}
+
+float read_height(uint2 coordinate, int2 relative, int2 dimensions)
+{
+    uint4 samp = take_sample_nn(input_heightmap, coordinate + relative, dimensions);
+    float max_deform = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
+    return UnpackUInt4ToFloat(samp, jobSettings.heightmap_bit_depth) * max_deform;
+}
+
+
+
 [numthreads(8,8,1)]
 void main(uint3 tid : SV_DispatchThreadID)
 {
-    uint4 out_color = uint4(input_ocean_mask[tid.xy], 0, 0, 255);
+    uint2 hm_sz; input_heightmap.GetDimensions(hm_sz.x, hm_sz.y);
 
     if(input_ocean_mask[tid.xy] != 0)
         return;
 
-	//output_color[tid.xy] = out_color;
+    float ZFactor = 1.0f;
+
+    float a = read_height(tid.xy, int2(1, 1), hm_sz);
+    float b = read_height(tid.xy, int2(0, -1), hm_sz);
+    float c = read_height(tid.xy, int2(1, -1), hm_sz);
+    float d = read_height(tid.xy, int2(-1, 0), hm_sz);
+    float f = read_height(tid.xy, int2(1, 0), hm_sz);
+    float g = read_height(tid.xy, int2(-1, 1), hm_sz);
+    float h = read_height(tid.xy, int2(0, 1), hm_sz);
+    float i = read_height(tid.xy, int2(1, 1), hm_sz);
+
+    //Cellsize needs to be the same scale as the X/Y distance
+    //This calculation does not take into account projection warping at all
+    float planet_circ_m = PI * 2 * jobSettings.planet_radius;
+    float cellsize_m = planet_circ_m / (hm_sz.x * jobSettings.render_scale * 2);
+
+    float dzdx = ((c + 2 * f + i) - (a + 2 * d + g)) / (8 * cellsize_m);
+    float dzdy = ((g + 2 * h + i) - (a + 2 * b + c)) / (8 * cellsize_m);
+    float aspect = 0.0;
+
+    float slope = atan(ZFactor * sqrt(dzdx * dzdx + dzdy * dzdy));
+
+    if (dzdx != 0)
+    {
+        aspect = atan2(dzdy, -dzdx);
+        if (aspect < 0)
+            aspect += PI * 2;
+    }
+    else
+    {
+        if (dzdy > 0)
+            aspect = PI / 2;
+        else if (dzdy < 0)
+            aspect = (PI * 2) - (PI / 2);
+    }
+
+    //Normalize slope to +/- 1
+    slope = min(PI, max(-PI, slope)) / PI;
+
+    int hillshade_amount = 255 * (
+        (cos(jobSettings.hillshade_zenith) * cos(slope)) +
+        (sin(jobSettings.hillshade_zenith) * sin(slope) * cos(jobSettings.hillshade_azimuth - aspect)));
+    //Tone down hillshade, and make centered around 0
+    hillshade_amount = (hillshade_amount - 127) / 4;
+
+    uint3 final_color = output_color[tid.xy].xyz;
+
+    final_color.x = max(0, min(255, final_color.x + hillshade_amount));
+    final_color.y = max(0, min(255, final_color.y + hillshade_amount));
+    final_color.z = max(0, min(255, final_color.z + hillshade_amount));
+
+	output_color[tid.xy].xyz = final_color;
 }
