@@ -134,7 +134,8 @@ class RenderSettings:
     def __init__(self, gpu: bool, resolution: int, coordinate_mode: str,
                  shader_main: str, shader_hillshade: str,
                  interpolation: int, output_resolution: Tuple[int, int],
-                 hillshade_enabled: bool, ocean_mask_binary: bool):
+                 hillshade_enabled: bool, ocean_mask_binary: bool,
+                 heightmap_bit_depth: int):
         self.gpu = gpu
         self.resolution = resolution
         self.coordinate_mode = coordinate_mode
@@ -144,3 +145,4 @@ class RenderSettings:
         self.output_resolution = output_resolution
         self.hillshade_enabled = hillshade_enabled
         self.ocean_mask_binary = ocean_mask_binary
+        self.heightmap_bit_depth = heightmap_bit_depth

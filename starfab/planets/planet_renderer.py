@@ -103,6 +103,7 @@ class PlanetRenderer:
         job_s.render_scale_y = self.settings.resolution
         job_s.hillshade_enabled = self.settings.hillshade_enabled
         job_s.ocean_mask_binary = self.settings.ocean_mask_binary
+        job_s.heightmap_bit_depth = self.settings.heightmap_bit_depth
 
         job_s.planet_radius = self.planet.radius_m
         job_s.local_humidity_influence = self.planet.humidity_influence

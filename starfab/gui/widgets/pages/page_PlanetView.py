@@ -45,6 +45,7 @@ class PlanetView(qtw.QWidget):
         self.coordinateSystemComboBox: QComboBox = None
         self.sampleModeComboBox: QComboBox = None
         self.outputResolutionComboBox: QComboBox = None
+        self.heightmapBitDepthComboBox: QComboBox = None
         self.displayModeComboBox: QComboBox = None
         self.displayLayerComboBox: QComboBox = None
         self.renderOutput: QPlanetViewer = None
@@ -99,6 +100,13 @@ class PlanetView(qtw.QWidget):
             ("128MP - 16,384 x 8,192", (16384, 8192))
         ]))
         self.outputResolutionComboBox.currentIndexChanged.connect(self._display_resolution_changed)
+
+        self.heightmapBitDepthComboBox.setModel(self.create_model([
+            ("8-Bit Greyscale", 8),
+            ("16-Bit (R,G)", 16),
+            ("24-Bit (R,G,B)", 24),
+            ("32-Bit (R,G,B,A)", 32)
+        ]))
 
         self.displayModeComboBox.setModel(self.create_model([
             ("Pixel-Perfect", qtc.Qt.FastTransformation),
@@ -237,6 +245,7 @@ class PlanetView(qtw.QWidget):
         coordinates = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
         interpolation = self.sampleModeComboBox.currentData(role=Qt.UserRole)
         resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
+        hm_bitdepth = self.heightmapBitDepthComboBox.currentData(role=Qt.UserRole)
         main_shader = self._get_shader("shader.hlsl")
         hillshade_shader = self._get_shader("hillshade.hlsl")
         hillshade_enabled = self.enableHillshadeCheckBox.isChecked()
@@ -244,7 +253,8 @@ class PlanetView(qtw.QWidget):
         return RenderSettings(True, scale, coordinates,
                               main_shader, hillshade_shader,
                               interpolation, resolution,
-                              hillshade_enabled, ocean_mask_binary)
+                              hillshade_enabled, ocean_mask_binary,
+                              hm_bitdepth)
 
     def _do_render(self):
         selected_obj = self._get_selected_planet()
