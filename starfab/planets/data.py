@@ -27,7 +27,7 @@ class LUTData:
 class RenderJobSettings:
     # NOTE: Bools are GPU-register aligned, so need to be 4 bytes, not 1
     # so we pack them as i instead of ?
-    PACK_STRING: str = "5f3i4f3i1f5i2f"
+    PACK_STRING: str = "5f3i4f3i1f5i2f1i"
     PACK_LENGTH: int = struct.calcsize(PACK_STRING)
 
     def __init__(self):
@@ -57,6 +57,8 @@ class RenderJobSettings:
         self.hillshade_zenith: float = 45
         self.hillshade_azimuth: float = 135
 
+        self.heightmap_bit_depth: int = 16
+
     def pack(self) -> bytes:
         return struct.pack(RenderJobSettings.PACK_STRING,
                            self.offset_x, self.offset_y, self.size_x, self.size_y,
@@ -66,7 +68,8 @@ class RenderJobSettings:
                            self.global_terrain_height_influence, self.ecosystem_terrain_height_influence,
                            self.ocean_enabled, self.ocean_mask_binary, self.ocean_heightmap_flat,
                            self.ocean_depth, *self.ocean_color,
-                           self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth)
+                           self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth,
+                           self.heightmap_bit_depth)
 
     def update_buffer(self, buffer_gpu: Buffer):
         data = self.pack()

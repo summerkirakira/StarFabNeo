@@ -25,6 +25,8 @@ struct RenderJobSettings
     bool hillshade_enabled;
     float hillshade_zenith;
     float hillshade_azimuth;
+
+    int heightmap_bit_depth;
 };
 
 Texture2D<uint4> input_color : register(t0);
@@ -121,5 +123,8 @@ void main(uint3 tid : SV_DispatchThreadID)
 {
     uint4 out_color = uint4(input_ocean_mask[tid.xy], 0, 0, 255);
 
-	output_color[tid.xy] = out_color;
+    if(input_ocean_mask[tid.xy] != 0)
+        return;
+
+	//output_color[tid.xy] = out_color;
 }

@@ -25,6 +25,8 @@ struct RenderJobSettings
     bool hillshade_enabled;
     float hillshade_zenith;
     float hillshade_azimuth;
+
+    int heightmap_bit_depth;
 };
 
 struct LocalizedWarping
@@ -415,6 +417,45 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
     return result;
 }
 
+uint4 PackFloatToUInt4(float value, int bit_depth)
+{
+    if (bit_depth != 8 && bit_depth != 16 && bit_depth != 24 && bit_depth != 32)
+        return uint4(0, 0, 0, 0);
+
+    // Clamp the input value to the range [-1.0, 1.0]
+    value = clamp(value, -1.0f, 1.0f);
+
+    // Map the range [-1.0, 1.0] to the range [0.0, 1.0]
+    value = value * 0.5f + 0.5f;
+
+    // Convert the float value to 32-bit unsigned integer
+    float factor = (1 << bit_depth) - 1.0f;
+    uint intValue = uint(value * factor);
+
+    // Pack the unsigned integer value into a uint4
+    uint4 packedValue;
+
+    packedValue.x = (intValue >> 0) & 0xFF;
+
+    if (bit_depth == 8) { //Render as greyscale
+        packedValue.y = (intValue >> 0) & 0xFF;
+        packedValue.z = (intValue >> 0) & 0xFF;
+        packedValue.w = 255;
+    } else {
+        //Valid for 16, 24 and 32 bit
+        packedValue.y = (intValue >> 8) & 0xFF;
+        packedValue.z = (intValue >> 16) & 0xFF;
+
+        if (bit_depth == 32) {
+            packedValue.w = (intValue >> 24) & 0xFF;
+        } else {
+            packedValue.w = 255;
+        }
+    }
+
+    return packedValue;
+}
+
 // TODO: Use the z-thread ID for doing sub-pixel searching
 [numthreads(8,8,1)]
 void main(uint3 tid : SV_DispatchThreadID)
@@ -428,7 +469,7 @@ void main(uint3 tid : SV_DispatchThreadID)
     float2 projected_size = float2(6000, 6000) * terrain_scaling;
     float2 physical_size = float2(4000, 4000) * terrain_scaling;
     float2 local_influence = float2(jobSettings.local_humidity_influence, jobSettings.local_temperature_influence);
-    float2 max_deformation = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
+    float max_deformation = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
 
     // Calculate normalized position in the world (ie: 0,0 = top-left, 1,1 = bottom-right)
 	float2 normalized_position = tid.xy / float2(clim_sz) / jobSettings.render_scale;
@@ -465,11 +506,6 @@ void main(uint3 tid : SV_DispatchThreadID)
         out_color.xyz = surface_color.xyz;
     }
 
-
-    if (out_height < jobSettings.ocean_depth) {
-        out_color.xyz = jobSettings.ocean_color.xyz;
-    }
-
     if (jobSettings.ocean_enabled && out_height < jobSettings.ocean_depth) {
 
         out_color.xyz = jobSettings.ocean_color.xyz;
@@ -503,7 +539,7 @@ void main(uint3 tid : SV_DispatchThreadID)
 	}
 
 	output_color[tid.xy] = out_color;
-	//output_heightmap[tid.xy] = uint4(global_height & 0xFF, (global_height & 0xFF00) >> 8, 0, 255);
-	output_heightmap[tid.xy] = uint4(out_height * 127 + 127, 0, 0, 255);
+
+	output_heightmap[tid.xy] = PackFloatToUInt4(out_height, jobSettings.heightmap_bit_depth);
 	output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 255, 0), 255);
 }
