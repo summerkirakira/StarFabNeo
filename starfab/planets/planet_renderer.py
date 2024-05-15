@@ -32,7 +32,7 @@ class RenderResult:
         self.coordinate_bounds = coordinate_bounds
         self.coordinate_bounds_planet = coordinate_bounds_planet
         start_norm_x = (coordinate_bounds.left() - coordinate_bounds_planet.left()) / coordinate_bounds_planet.width()
-        start_norm_y = (coordinate_bounds.bottom() - coordinate_bounds_planet.bottom()) / coordinate_bounds_planet.height()
+        start_norm_y = (coordinate_bounds.top() - coordinate_bounds_planet.top()) / coordinate_bounds_planet.height()
         size_norm = coordinate_bounds.height() / coordinate_bounds_planet.height()
         self.coordinate_normalized = QRectF(QPointF(start_norm_x, start_norm_y), QSizeF(size_norm, size_norm))
 
