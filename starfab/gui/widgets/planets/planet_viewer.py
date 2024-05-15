@@ -209,6 +209,8 @@ class QPlanetViewer(qtw.QGraphicsView):
             img = self._render_result.tex_color
         elif layer == "heightmap":
             img = self._render_result.tex_heightmap
+        elif layer == "ocean_mask":
+            img = self._render_result.tex_oceanmask
         else:
             raise Exception(f"Unknown layer: {layer}")
 

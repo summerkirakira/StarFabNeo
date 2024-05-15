@@ -1,6 +1,6 @@
 import gc
 import math
-from typing import Union, Callable, Tuple, cast
+from typing import Union, Callable, Tuple, cast, Literal
 
 from PIL import Image
 from PySide6.QtCore import QRectF, QPointF, QSizeF, QSize
@@ -20,15 +20,21 @@ class RenderResult:
                  settings: RenderJobSettings,
                  tex_color: Image.Image,
                  tex_heightmap: Image.Image,
+                 tex_oceanmask: Image.Image,
                  splat_dimensions: Tuple[float, float],
                  coordinate_bounds_planet: QRectF,
                  coordinate_bounds: QRectF):
         self.settings = settings
         self.tex_color: Image.Image = tex_color
         self.tex_heightmap: Image.Image = tex_heightmap
+        self.tex_oceanmask: Image.Image = tex_oceanmask
         self.splat_resolution = splat_dimensions
         self.coordinate_bounds = coordinate_bounds
         self.coordinate_bounds_planet = coordinate_bounds_planet
+        start_norm_x = (coordinate_bounds.left() - coordinate_bounds_planet.left()) / coordinate_bounds_planet.width()
+        start_norm_y = (coordinate_bounds.bottom() - coordinate_bounds_planet.bottom()) / coordinate_bounds_planet.height()
+        size_norm = coordinate_bounds.height() / coordinate_bounds_planet.height()
+        self.coordinate_normalized = QRectF(QPointF(start_norm_x, start_norm_y), QSizeF(size_norm, size_norm))
 
 
 class PlanetRenderer:
@@ -127,23 +133,25 @@ class PlanetRenderer:
 
             del hillshade_compute
 
-        out_color: Image = self._read_frame("output_color")
-        out_heightmap: Image = self._read_frame("output_heightmap")
+        out_color: Image = self._read_frame("output_color", "RGBA")
+        out_heightmap: Image = self._read_frame("output_heightmap", "RGBA")
+        out_oceanmask: Image = self._read_frame("output_ocean_mask", "L")
 
         planet_bouds = self.get_outer_bounds()
         render_bounds = self.get_bounds_for_render(render_coords)
 
-        return RenderResult(job_s, out_color, out_heightmap, self.render_resolution,
-                            planet_bouds, render_bounds)
+        return RenderResult(job_s, out_color, out_heightmap, out_oceanmask,
+                            self.render_resolution, planet_bouds, render_bounds)
 
-    def _read_frame(self, resource_name: str) -> Image:
-        readback: Buffer = cast(Buffer, self.gpu_resources['readback'])
+    def _read_frame(self, resource_name: str, mode: Literal['L', 'RGBA']) -> Image:
+        resource: Resource = self.gpu_resources['readback']
+        readback: Buffer = cast(Buffer, resource)
         destination: Texture2D = cast(Texture2D, self.gpu_resources[resource_name])
         destination.copy_to(readback)
         output_bytes = readback.readback()
         del readback
 
-        return Image.frombuffer('RGBA',
+        return Image.frombuffer(mode,
                                 (destination.width, destination.height),
                                 output_bytes)
 

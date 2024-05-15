@@ -116,7 +116,8 @@ class PlanetView(qtw.QWidget):
 
         self.displayLayerComboBox.setModel(self.create_model([
             ("Surface", "surface"),
-            ("Heightmap", "heightmap")
+            ("Heightmap", "heightmap"),
+            ("Ocean Mask", "ocean_mask")
         ]))
         self.displayLayerComboBox.currentIndexChanged.connect(self._display_layer_changed)
 
@@ -233,11 +234,13 @@ class PlanetView(qtw.QWidget):
 
         return model
 
-    def shader_path(self, name) -> Path:
+    @staticmethod
+    def shader_path(name) -> Path:
         return Path(__file__) / f'../../../../planets/hlsl/{name}'
 
-    def _get_shader(self, name):
-        with io.open(self.shader_path(name), "r") as shader:
+    @staticmethod
+    def _get_shader(name):
+        with io.open(PlanetView.shader_path(name), "r") as shader:
             return hlsl.compile(shader.read())
 
     def get_settings(self):
@@ -289,6 +292,8 @@ class PlanetView(qtw.QWidget):
                 self.last_render.tex_color.save(filename, format="png")
             elif layer == 'heightmap':
                 self.last_render.tex_heightmap.save(filename, format="png")
+            elif layer == 'ocean_mask':
+                self.last_render.tex_oceanmask.save(filename, format="png")
             else:
                 raise ValueError()
 
