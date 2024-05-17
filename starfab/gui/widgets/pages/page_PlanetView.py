@@ -52,6 +52,7 @@ class PlanetView(qtw.QWidget):
         self.enableGridCheckBox: QCheckBox = None
         self.enableCrosshairCheckBox: QCheckBox = None
         self.enableWaypointsCheckBox: QCheckBox = None
+        self.enableEcosystemBlendingCheckBox: QCheckBox = None
         self.enableHillshadeCheckBox: QCheckBox = None
         self.enableBinaryOceanMaskCheckBox: QCheckBox = None
         self.listWaypoints: QListView = None
@@ -251,11 +252,13 @@ class PlanetView(qtw.QWidget):
         hm_bitdepth = self.heightmapBitDepthComboBox.currentData(role=Qt.UserRole)
         main_shader = self._get_shader("shader.hlsl")
         hillshade_shader = self._get_shader("hillshade.hlsl")
+        blending_enabled = self.enableEcosystemBlendingCheckBox.isChecked()
         hillshade_enabled = self.enableHillshadeCheckBox.isChecked()
         ocean_mask_binary = self.enableBinaryOceanMaskCheckBox.isChecked()
         return RenderSettings(True, scale, coordinates,
                               main_shader, hillshade_shader,
                               interpolation, resolution,
+                              blending_enabled,
                               hillshade_enabled, ocean_mask_binary,
                               hm_bitdepth)
 

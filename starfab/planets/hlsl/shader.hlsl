@@ -22,6 +22,8 @@ struct RenderJobSettings
     float ocean_depth;
     uint4 ocean_color;
 
+    bool blending_enabled;
+
     bool hillshade_enabled;
     float hillshade_zenith;
     float hillshade_azimuth;
@@ -485,24 +487,28 @@ void main(uint3 tid : SV_DispatchThreadID)
 	global_height = (global_height - 32767) / 32767.0f;
     global_climate = uint4(global_climate.xy / 2, 0, 0);
 
-    // Calculate influence of all neighboring terrain
-    ProjectedTerrainInfluence eco_influence = calculate_projected_tiles(normalized_position, projected_size, physical_size);
-
 	uint4 out_color = uint4(0, 0, 0, 255);
 	float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
 	float out_ocean_mask = 0;
 
-    if (eco_influence.is_override) {
-        out_color.xyz = eco_influence.override;
-    } else {
-        if(eco_influence.mask_total > 0) {
-            eco_influence.temp_humidity /= eco_influence.mask_total;
-            global_climate.yx += eco_influence.temp_humidity * local_influence;
-            out_height += eco_influence.elevation * jobSettings.ecosystem_terrain_height_influence;
+    if (jobSettings.blending_enabled) {
+        // Calculate influence of all neighboring terrain
+        ProjectedTerrainInfluence eco_influence = calculate_projected_tiles(normalized_position, projected_size, physical_size);
+
+        if (eco_influence.is_override) {
+            out_color.xyz = eco_influence.override;
+        } else {
+            if(eco_influence.mask_total > 0) {
+                eco_influence.temp_humidity /= eco_influence.mask_total;
+                global_climate.yx += eco_influence.temp_humidity * local_influence;
+                out_height += eco_influence.elevation * jobSettings.ecosystem_terrain_height_influence;
+            }
+
+            uint4 surface_color = take_sample(surface, global_climate.yx, int2(128, 128), jobSettings.interpolation);
+            out_color.xyz = surface_color.xyz;
         }
-
+    } else {
         uint4 surface_color = take_sample(surface, global_climate.yx, int2(128, 128), jobSettings.interpolation);
-
         out_color.xyz = surface_color.xyz;
     }
 

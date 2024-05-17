@@ -107,6 +107,7 @@ class PlanetRenderer:
         job_s.interpolation = self.settings.interpolation
         job_s.render_scale_x = self.settings.resolution * 2
         job_s.render_scale_y = self.settings.resolution
+        job_s.blending_enabled = self.settings.blending_enabled
         job_s.hillshade_enabled = self.settings.hillshade_enabled
         job_s.ocean_mask_binary = self.settings.ocean_mask_binary
         job_s.heightmap_bit_depth = self.settings.heightmap_bit_depth

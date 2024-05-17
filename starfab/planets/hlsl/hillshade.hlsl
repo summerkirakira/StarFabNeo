@@ -22,6 +22,8 @@ struct RenderJobSettings
     float ocean_depth;
     uint4 ocean_color;
 
+    bool blending_enabled;
+
     bool hillshade_enabled;
     float hillshade_zenith;
     float hillshade_azimuth;

@@ -27,7 +27,7 @@ class LUTData:
 class RenderJobSettings:
     # NOTE: Bools are GPU-register aligned, so need to be 4 bytes, not 1
     # so we pack them as i instead of ?
-    PACK_STRING: str = "5f3i4f3i1f5i2f1i"
+    PACK_STRING: str = "5f3i4f3i1f6i2f1i"
     PACK_LENGTH: int = struct.calcsize(PACK_STRING)
 
     def __init__(self):
@@ -53,6 +53,8 @@ class RenderJobSettings:
         self.ocean_depth: float = -2000
         self.ocean_color: list[int] = [0, 0, 0, 255]
 
+        self.blending_enabled: bool = True
+
         self.hillshade_enabled: bool = True
         self.hillshade_zenith: float = 45
         self.hillshade_azimuth: float = 135
@@ -68,6 +70,7 @@ class RenderJobSettings:
                            self.global_terrain_height_influence, self.ecosystem_terrain_height_influence,
                            self.ocean_enabled, self.ocean_mask_binary, self.ocean_heightmap_flat,
                            self.ocean_depth, *self.ocean_color,
+                           self.blending_enabled,
                            self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth,
                            self.heightmap_bit_depth)
 
@@ -134,6 +137,7 @@ class RenderSettings:
     def __init__(self, gpu: bool, resolution: int, coordinate_mode: str,
                  shader_main: str, shader_hillshade: str,
                  interpolation: int, output_resolution: Tuple[int, int],
+                 blending_enabled: bool,
                  hillshade_enabled: bool, ocean_mask_binary: bool,
                  heightmap_bit_depth: int):
         self.gpu = gpu
@@ -143,6 +147,7 @@ class RenderSettings:
         self.shader_hillshade = shader_hillshade
         self.interpolation = interpolation
         self.output_resolution = output_resolution
+        self.blending_enabled = blending_enabled
         self.hillshade_enabled = hillshade_enabled
         self.ocean_mask_binary = ocean_mask_binary
         self.heightmap_bit_depth = heightmap_bit_depth
