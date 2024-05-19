@@ -71,7 +71,13 @@ class EcoSystem:
                          in p4k_dds_files
                          if not record.orig_filename.endswith("a")}
             res: bytes = unsplit_dds(dds_files)
-            return image_converter.convert_buffer(res, "dds", "png")
+
+            test = Image.open(io.BytesIO(res), formats=["DDS"])
+            test2 = test.convert("RGBA")
+            out_buffer = io.BytesIO()
+            test2.save(out_buffer, format="PNG")
+            out_buffer.seek(0)
+            return out_buffer.read()
 
         # TODO: Use settings to define a cache directory to store these in
         def _read_with_cache(subpath: str) -> Image:
