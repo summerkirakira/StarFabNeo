@@ -18,7 +18,6 @@ settings_defaults = {
 
     # external tools
     "external_tools/cgf-converter": "",
-    "external_tools/texconv": "",
 
     # conversion
     "convert/cryxml_fmt": "xml",
@@ -111,14 +110,6 @@ def get_revorb():
 
 def get_cgf_converter():
     return _get_exec("cgf-converter", "external_tools/cgf-converter")
-
-
-def get_texconv():
-    return _get_exec("texconv", "external_tools/texconv")
-
-
-def get_compressonatorcli():
-    return _get_exec("compressonatorcli", "external_tools/compressonatorcli")
 
 
 settings = StarFabSettings("SCModding", "StarFab")

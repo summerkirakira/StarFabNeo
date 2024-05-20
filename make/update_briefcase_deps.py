@@ -38,12 +38,6 @@ def run():
     with open(BUILD_DIR / 'requirements.txt', 'w') as r:
         r.write(reqs)
 
-    if platform == 'win32':
-        print('Fetching latest texconv')
-        CONTRIB_DIR = (BUILD_DIR.parent / 'starfab' / 'contrib')
-        urllib.request.urlretrieve('https://github.com/Microsoft/DirectXTex/releases/latest/download/texconv.exe',
-                                   str(CONTRIB_DIR / 'texconv.exe'))
-
 
 if __name__ == "__main__":
     run()

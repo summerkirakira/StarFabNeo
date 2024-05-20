@@ -10,7 +10,7 @@ from qtpy.QtCore import Slot, Signal
 from scdatatools.engine.textures.dds import unsplit_dds
 from starfab.gui import qtc, qtg, qtw
 from starfab.gui.utils import ScrollMessageBox
-from starfab.utils import image_converter
+from starfab.utils import convert_image_buffer
 
 Image.init()
 SUPPORTED_IMG_FORMATS = set(Image.EXTENSION.keys())
@@ -221,7 +221,7 @@ class DDSImageViewer(qtw.QWidget):
         try:
             dds_file = unsplit_dds({p: i.info for p, i in dds_files.items()})
             data = BytesIO(
-                image_converter.convert_buffer(dds_file, "dds", DDS_CONV_FORMAT)
+                convert_image_buffer(dds_file, "dds", DDS_CONV_FORMAT)
             )
             if not image.load_from_file(data):
                 raise RuntimeError
