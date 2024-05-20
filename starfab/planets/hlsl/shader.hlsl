@@ -416,6 +416,12 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
         }
     }
 
+    result.temp_humidity = min(float2(1, 1), max(float2(-1, -1), result.temp_humidity));
+    result.elevation = min(1, max(-1, result.elevation));
+
+    result.temp_humidity /= result.mask_total;
+    result.elevation /= result.mask_total;
+
     return result;
 }
 
@@ -470,7 +476,7 @@ void main(uint3 tid : SV_DispatchThreadID)
     float terrain_scaling = 1;
     float2 projected_size = float2(6000, 6000) * terrain_scaling;
     float2 physical_size = float2(4000, 4000) * terrain_scaling;
-    float2 local_influence = float2(jobSettings.local_humidity_influence, jobSettings.local_temperature_influence);
+    float2 local_influence = float2(jobSettings.local_temperature_influence, jobSettings.local_humidity_influence);
     float max_deformation = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
 
     // Calculate normalized position in the world (ie: 0,0 = top-left, 1,1 = bottom-right)
@@ -499,7 +505,6 @@ void main(uint3 tid : SV_DispatchThreadID)
             out_color.xyz = eco_influence.override;
         } else {
             if(eco_influence.mask_total > 0) {
-                eco_influence.temp_humidity /= eco_influence.mask_total;
                 global_climate.yx += eco_influence.temp_humidity * local_influence;
                 out_height += eco_influence.elevation * jobSettings.ecosystem_terrain_height_influence;
             }
