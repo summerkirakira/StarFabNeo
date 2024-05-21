@@ -27,7 +27,7 @@ class LUTData:
 class RenderJobSettings:
     # NOTE: Bools are GPU-register aligned, so need to be 4 bytes, not 1
     # so we pack them as i instead of ?
-    PACK_STRING: str = "5f3i4f3i1f6i2f1i"
+    PACK_STRING: str = "5f3i4f3i1f6i2f2i"
     PACK_LENGTH: int = struct.calcsize(PACK_STRING)
 
     def __init__(self):
@@ -61,6 +61,8 @@ class RenderJobSettings:
 
         self.heightmap_bit_depth: int = 16
 
+        self.debug_mode: int = 0
+
     def pack(self) -> bytes:
         return struct.pack(RenderJobSettings.PACK_STRING,
                            self.offset_x, self.offset_y, self.size_x, self.size_y,
@@ -72,7 +74,7 @@ class RenderJobSettings:
                            self.ocean_depth, *self.ocean_color,
                            self.blending_enabled,
                            self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth,
-                           self.heightmap_bit_depth)
+                           self.heightmap_bit_depth, self.debug_mode)
 
     def update_buffer(self, buffer_gpu: Buffer):
         data = self.pack()
@@ -139,7 +141,7 @@ class RenderSettings:
                  interpolation: int, output_resolution: Tuple[int, int],
                  blending_enabled: bool,
                  hillshade_enabled: bool, ocean_mask_binary: bool,
-                 heightmap_bit_depth: int):
+                 heightmap_bit_depth: int, debug_mode: int):
         self.gpu = gpu
         self.resolution = resolution
         self.coordinate_mode = coordinate_mode
@@ -151,3 +153,4 @@ class RenderSettings:
         self.hillshade_enabled = hillshade_enabled
         self.ocean_mask_binary = ocean_mask_binary
         self.heightmap_bit_depth = heightmap_bit_depth
+        self.debug_mode = debug_mode

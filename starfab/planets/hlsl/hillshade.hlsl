@@ -29,6 +29,8 @@ struct RenderJobSettings
     float hillshade_azimuth;
 
     int heightmap_bit_depth;
+
+    int debug_mode;
 };
 
 Texture2D<uint4> input_color : register(t0);

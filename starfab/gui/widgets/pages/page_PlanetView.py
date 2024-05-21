@@ -55,6 +55,8 @@ class PlanetView(qtw.QWidget):
         self.enableEcosystemBlendingCheckBox: QCheckBox = None
         self.enableHillshadeCheckBox: QCheckBox = None
         self.enableBinaryOceanMaskCheckBox: QCheckBox = None
+        self.debugGridCheckBox: QCheckBox = None
+        self.debugModeComboBox: QComboBox = None
         self.listWaypoints: QListView = None
         self.lbl_planetDetails: QLabel = None
         self.lbl_currentStatus: QLabel = None
@@ -121,6 +123,17 @@ class PlanetView(qtw.QWidget):
             ("Ocean Mask", "ocean_mask")
         ]))
         self.displayLayerComboBox.currentIndexChanged.connect(self._display_layer_changed)
+
+        self.debugModeComboBox.setModel(self.create_model([
+            ("None", 0),
+            ("Mask", 1 << 1),
+            ("Terrain UV (no mask)", 1 << 2),
+            ("Patch UV (no mask)", 1 << 3),
+            ("Terrain Ecosystem (no mask)", 1 << 4),
+            ("Terrain UV", 1 << 5),
+            ("Patch UV", 1 << 6),
+            ("Terrain Ecosystem", 1 << 7)
+        ]))
 
         if isinstance(sc, StarCitizen):
             self.sc = sc
@@ -255,12 +268,17 @@ class PlanetView(qtw.QWidget):
         blending_enabled = self.enableEcosystemBlendingCheckBox.isChecked()
         hillshade_enabled = self.enableHillshadeCheckBox.isChecked()
         ocean_mask_binary = self.enableBinaryOceanMaskCheckBox.isChecked()
+
+        debug_mode = 0
+        debug_mode += 1 if self.debugGridCheckBox.isChecked() else 0
+        debug_mode += self.debugModeComboBox.currentData(role=Qt.UserRole)
+
         return RenderSettings(True, scale, coordinates,
                               main_shader, hillshade_shader,
                               interpolation, resolution,
                               blending_enabled,
                               hillshade_enabled, ocean_mask_binary,
-                              hm_bitdepth)
+                              hm_bitdepth, debug_mode)
 
     def _do_render(self):
         selected_obj = self._get_selected_planet()

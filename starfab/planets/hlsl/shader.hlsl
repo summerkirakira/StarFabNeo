@@ -3,6 +3,21 @@
 #define MODE_BI_LINEAR 1
 #define MODE_BI_CUBIC 2
 
+#define DEBUG_GRID 1 << 0
+
+#define DEBUG_MASK 1 << 1
+#define DEBUG_UV_TERRAIN_NO_MASK 1 << 2
+#define DEBUG_UV_PATCH_NO_MASK 1 << 3
+#define DEBUG_ECOSYSTEM_NO_MASK 1 << 4
+#define DEBUG_UV_TERRAIN 1 << 5
+#define DEBUG_UV_PATCH 1 << 6
+#define DEBUG_ECOSYSTEM 1 << 7
+
+#define DEBUG_ANY (DEBUG_MASK | \
+    DEBUG_UV_TERRAIN_NO_MASK | DEBUG_UV_TERRAIN | \
+    DEBUG_UV_PATCH_NO_MASK | DEBUG_UV_PATCH | \
+    DEBUG_ECOSYSTEM_NO_MASK | DEBUG_ECOSYSTEM)
+
 struct RenderJobSettings
 {
     float2 offset;
@@ -29,6 +44,8 @@ struct RenderJobSettings
     float hillshade_azimuth;
 
     int heightmap_bit_depth;
+
+    int debug_mode;
 };
 
 struct LocalizedWarping
@@ -398,15 +415,32 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
 
             int4 local_eco_data = take_sample_nn_3d(ecosystem_climates, terrain_uv * eco_sz.xy, eco_sz.xy, ecosystem_id);
             float4 local_eco_normalized = (local_eco_data - 127) / 127.0f;
-            // TODO: Heightmaps
+
             float local_eco_height = take_sample_nn_3d(ecosystem_heightmaps, terrain_uv * eco_sz.xy, eco_sz.xy, ecosystem_id);
 	        local_eco_height = (local_eco_height - 32767) / 32767.0f;
 
-            if (false && (round(search_x_px % 20) == 0 && round(search_y_px % 20) == 0)) {
-                result.is_override = true;
-                //result.override = uint3(255 * terrain_uv.x, 255 * terrain_uv.y, 0) * local_mask_value;
-                result.override = uint3(offset * 256, 0, 0);
-                return result;
+            if (jobSettings.debug_mode & DEBUG_ANY)
+            {
+                if ((round(search_x_px % 10) == 0 && round(search_y_px % 10) == 0))
+                {
+                    result.is_override = true;
+                    if (jobSettings.debug_mode & DEBUG_MASK) {
+                        result.override = uint3(local_mask_value * 256, local_mask_value * 256, local_mask_value * 256);
+                    } else if (jobSettings.debug_mode & DEBUG_UV_TERRAIN_NO_MASK) {
+                        result.override = uint3(255 * terrain_uv.x, 255 * terrain_uv.y, 0);
+                    } else if (jobSettings.debug_mode & DEBUG_UV_PATCH_NO_MASK) {
+                        result.override = uint3(255 * patch_uv.x, 255 * patch_uv.y, 0);
+                    } else if (jobSettings.debug_mode & DEBUG_ECOSYSTEM_NO_MASK) {
+                        result.override = uint3(local_eco_data.x, local_eco_data.y, 0);
+                    } else if (jobSettings.debug_mode & DEBUG_UV_TERRAIN) {
+                        result.override = uint3(255 * terrain_uv.x, 255 * terrain_uv.y, 0) * local_mask_value;
+                    } else if (jobSettings.debug_mode & DEBUG_UV_PATCH) {
+                        result.override = uint3(255 * patch_uv.x, 255 * patch_uv.y, 0) * local_mask_value;
+                    } else if (jobSettings.debug_mode & DEBUG_ECOSYSTEM) {
+                        result.override = uint3(local_eco_data.x, local_eco_data.y, 0) * local_mask_value;
+                    }
+                    return result;
+                }
             }
 
             result.temp_humidity += local_eco_normalized.xy * local_mask_value;
@@ -539,18 +573,20 @@ void main(uint3 tid : SV_DispatchThreadID)
         out_ocean_mask = 0;
     }
 
+	// DEBUG: Grid rendering
+	if(jobSettings.debug_mode & DEBUG_GRID)
+	{
+        int2 cell_position = (normalized_position.xy * clim_sz * jobSettings.render_scale) % jobSettings.render_scale;
+        if (cell_position.x == 0 || cell_position.y == 0)
+        {
+            out_color.xyz = uint3(255, 0, 0);
+        }
+	}
+
     // Squash out_height from meter range to normalized +/- 1.0 range
     out_height /= max_deformation;
 
-	// DEBUG: Grid rendering
-	int2 cell_position = int2(normalized_position * out_sz * jobSettings.render_scale) % jobSettings.render_scale;
-	if(false && (cell_position.x == 0 || cell_position.y == 0))
-	{
-	    out_color.xyz = uint3(255, 0, 0);
-	}
-
 	output_color[tid.xy] = out_color;
-
 	output_heightmap[tid.xy] = PackFloatToUInt4(out_height, jobSettings.heightmap_bit_depth);
 	output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 255, 0), 255);
 }
