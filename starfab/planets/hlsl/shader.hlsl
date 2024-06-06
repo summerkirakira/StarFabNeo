@@ -18,6 +18,9 @@
     DEBUG_UV_PATCH_NO_MASK | DEBUG_UV_PATCH | \
     DEBUG_ECOSYSTEM_NO_MASK | DEBUG_ECOSYSTEM)
 
+#define HORIZONTAL_BLEED 0.50f
+#define VERTICAL_BLEED 0.50f
+
 struct RenderJobSettings
 {
     float2 offset;
@@ -333,9 +336,9 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
 
     //TODO Vary terrain step from 1 at pole_distance to TileCount at the pole
     if (position_px.y < pole_distance / 2 || position_px.y >= clim_sz.y - pole_distance / 2) {
-        terrain_step = 8;
+        //terrain_step = 3;
     }else if(position_px.y < pole_distance || position_px.y >= clim_sz.y - pole_distance) {
-        terrain_step = 4;
+        //terrain_step = 2;
     }
 
     //Search vertically all cells that our projection overlaps with
@@ -371,7 +374,7 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
 
             // TODO: Use global random offset data
             float offset = take_sample_nn(planet_offsets, search_pos_normal * off_sz, off_sz) / 256.0f;
-            float2 terrain_center = float2(search_x_px, search_y_px) + offset;
+            float2 terrain_center = float2(search_x_px, search_y_px) + float2(0.5f, 0.5f);// + offset;
 
             //Now finally calculate the local distortion at the center of the terrain
             float2 terrain_center_m = pixels_to_meters(terrain_center, clim_sz.y);
@@ -379,39 +382,40 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
             float half_terrain_width_projected_px = (projected_size.x / 2 / terrain_circumference) * clim_sz.y;
             float half_terrain_width_physical_px = (terrain_size.x / 2 / terrain_circumference) * clim_sz.y;
 
+            // Both of these coordinates represent 0-1 on the scale of a single pixel in the climate output_heightmap
+            // So we can simply subtract them to get a UV-like coordinate for our position in this grid cell
+            float2 grid_uv = (position_px - search_pos) + offset;
+
             float terrain_left_edge = terrain_center.x - half_terrain_width_projected_px;
             float terrain_right_edge = terrain_center.x + half_terrain_width_projected_px;
             float terrain_top_edge = terrain_center.y - (projection_warping.vertical_delta * clim_sz.y);
             float terrain_bottom_edge = terrain_center.y + (projection_warping.vertical_delta * clim_sz.y);
 
-            //Reject pixels outside of the terrains projected pixel borders
-            if (position_px.x < terrain_left_edge || position_px.x > terrain_right_edge)
+            //Reject pixels outside of the grid square
+            if( grid_uv.x < -HORIZONTAL_BLEED || grid_uv.x >= 1 + HORIZONTAL_BLEED ||
+                grid_uv.y < -VERTICAL_BLEED || grid_uv.y >= 1 + VERTICAL_BLEED)
+            {
                 continue;
-            if (position_px.y < terrain_top_edge || position_px.y > terrain_bottom_edge)
-                continue;
+            }
 
             //Finally calculate UV coordinates and return result
-            float terrain_u = ((position_px.x - terrain_center.x) / half_terrain_width_physical_px / 2) + 0.5f;
-            float terrain_v = ((position_px.y - terrain_center.y) / (physical_warping.vertical_delta * clim_sz.y * 2)) + 0.5f;
+            float terrain_u = ((position_px.x - terrain_center.x) / half_terrain_width_physical_px / 2);
+            float terrain_v = ((position_px.y - terrain_center.y) / (physical_warping.vertical_delta * clim_sz.y * 2));
             float patch_u = ((position_px.x - terrain_left_edge) / (half_terrain_width_projected_px * 2));
             float patch_v = ((position_px.y - terrain_top_edge) / (projection_warping.vertical_delta * clim_sz.y * 2));
 
-            if (terrain_u < 0) terrain_u += 1;
-            if (terrain_v < 0) terrain_v += 1;
-            if (terrain_u >= 1) terrain_u -= 1;
-            if (terrain_v >= 1) terrain_v -= 1;
-
-            if (patch_u < 0) patch_u += 1;
-            if (patch_v < 0) patch_v += 1;
-            if (patch_u >= 1) patch_u -= 1;
-            if (patch_v >= 1) patch_v -= 1;
-
-            float2 terrain_uv = float2(terrain_u, terrain_v);
+            float2 terrain_uv = float2(terrain_u, terrain_v) + offset;
             float2 patch_uv = float2(patch_u, patch_v);
 
-            float2 delta = patch_uv - float2(0.5f, 0.5f);
-            float center_distance = sqrt(delta.x * delta.x + delta.y * delta.y) * 1;
-            float local_mask_value = (float)(center_distance > 0.5f ? 0 : cos(center_distance * PI));
+            terrain_uv = (terrain_uv + 10) % 1;
+            patch_uv = (patch_uv + 10) % 1;
+
+            float2 delta = grid_uv - float2(0.5f, 0.5f);
+            float center_distance = sqrt(delta.x * delta.x + delta.y * delta.y);
+            float local_mask_value = 1 - (center_distance / float2(1 + HORIZONTAL_BLEED, 1 + VERTICAL_BLEED));
+            //(float)(center_distance > 0.5f ? 0 : cos(center_distance * PI));
+
+            local_mask_value = pow(clamp(local_mask_value, 0, 1), 3);
 
             int4 local_eco_data = take_sample_nn_3d(ecosystem_climates, terrain_uv * eco_sz.xy, eco_sz.xy, ecosystem_id);
             float4 local_eco_normalized = (local_eco_data - 127) / 127.0f;
@@ -527,6 +531,7 @@ void main(uint3 tid : SV_DispatchThreadID)
 	global_height = (global_height - 32767) / 32767.0f;
     global_climate = uint4(global_climate.xy / 2, 0, 0);
 
+    bool out_override = false;
 	uint4 out_color = uint4(0, 0, 0, 255);
 	float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
 	float out_ocean_mask = 0;
@@ -536,6 +541,7 @@ void main(uint3 tid : SV_DispatchThreadID)
         ProjectedTerrainInfluence eco_influence = calculate_projected_tiles(normalized_position, projected_size, physical_size);
 
         if (eco_influence.is_override) {
+            out_override = true;
             out_color.xyz = eco_influence.override;
         } else {
             if(eco_influence.mask_total > 0) {
@@ -553,7 +559,9 @@ void main(uint3 tid : SV_DispatchThreadID)
 
     if (jobSettings.ocean_enabled && out_height < jobSettings.ocean_depth) {
 
-        out_color.xyz = jobSettings.ocean_color.xyz;
+        if(!out_override) {
+            out_color.xyz = jobSettings.ocean_color.xyz;
+        }
 
         if (jobSettings.ocean_mask_binary) {
             out_ocean_mask = 1.0;
