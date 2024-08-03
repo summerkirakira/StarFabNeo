@@ -43,6 +43,7 @@ struct RenderJobSettings
     bool blending_enabled;
 
     bool hillshade_enabled;
+    float hillshade_level;
     float hillshade_zenith;
     float hillshade_azimuth;
 
@@ -81,7 +82,7 @@ Texture3D<uint> ecosystem_heightmaps: register(t6);
 ConstantBuffer<RenderJobSettings> jobSettings : register(b0);
 
 RWTexture2D<uint4> output_color : register(u0);
-RWTexture2D<uint4> output_heightmap: register(u1);
+RWTexture2D<uint> output_heightmap: register(u1);
 RWTexture2D<uint> output_ocean_mask: register(u2);
 
 uint4 lerp2d(uint4 ul, uint4 ur, uint4 bl, uint4 br, float2 value)
@@ -98,6 +99,14 @@ uint lerp2d(uint ul, uint ur, uint bl, uint br, float2 value)
     float bottomRow = lerp(bl, br, value.x);
 
     return lerp(topRow, bottomRow, value.y);
+}
+
+float lanczos(float x, float a)
+{
+    if (x == 0.0) return 1.0;
+    if (x < -a || x > a) return 0.0;
+    x *= PI;
+    return a * sin(x) * sin(x / a) / (x * x);
 }
 
 uint4 interpolate_cubic(float4 v0, float4 v1, float4 v2, float4 v3, float fraction)
@@ -454,56 +463,56 @@ ProjectedTerrainInfluence calculate_projected_tiles(float2 normal_position, floa
         }
     }
 
+    // Ensure safe division
+    result.temp_humidity /= max(result.mask_total, 1.0f);
+    result.elevation /= max(result.mask_total, 1.0f);
+
+    // Normalize and clamp
     result.temp_humidity = min(float2(1, 1), max(float2(-1, -1), result.temp_humidity));
     result.elevation = min(1, max(-1, result.elevation));
-
-    result.temp_humidity /= result.mask_total;
-    result.elevation /= result.mask_total;
 
     return result;
 }
 
-uint4 PackFloatToUInt4(float value, int bit_depth)
+uint PackFloatToUInt(float value, int bit_depth)
 {
-    if (bit_depth != 8 && bit_depth != 16 && bit_depth != 24 && bit_depth != 32)
-        return uint4(0, 0, 0, 0);
-
     // Clamp the input value to the range [-1.0, 1.0]
     value = clamp(value, -1.0f, 1.0f);
 
     // Map the range [-1.0, 1.0] to the range [0.0, 1.0]
     value = value * 0.5f + 0.5f;
 
-    // Convert the float value to 32-bit unsigned integer
-    float factor = (1 << bit_depth) - 1.0f;
-    uint intValue = uint(value * factor);
+    uint intValue;
 
-    // Pack the unsigned integer value into a uint4
-    uint4 packedValue;
-
-    packedValue.x = (intValue >> 0) & 0xFF;
-
-    if (bit_depth == 8) { //Render as greyscale
-        packedValue.y = (intValue >> 0) & 0xFF;
-        packedValue.z = (intValue >> 0) & 0xFF;
-        packedValue.w = 255;
+    if (bit_depth == 8) {
+        // Convert the float value to an 8-bit unsigned integer
+        intValue = uint(value * 255.0f);
+    } else if (bit_depth == 16) {
+        // Convert the float value to an 16-bit unsigned integer
+        intValue = uint(value * 65535.0f);
     } else {
-        //Valid for 16, 24 and 32 bit
-        packedValue.y = (intValue >> 8) & 0xFF;
-        packedValue.z = (intValue >> 16) & 0xFF;
-
-        if (bit_depth == 32) {
-            packedValue.w = (intValue >> 24) & 0xFF;
-        } else {
-            packedValue.w = 255;
-        }
+        intValue = 0;
     }
 
-    return packedValue;
+    return intValue;
 }
 
-// TODO: Use the z-thread ID for doing sub-pixel searching
-[numthreads(8,8,1)]
+int PackFloatToInt(float value, int bit_depth)
+{
+    // Clamp the input value to the range [-1.0, 1.0]
+    value = clamp(value, -1.0f, 1.0f);
+
+    // Map the range [-1.0, 1.0] to the range [0.0, 1.0]
+    value = value * 0.5f + 0.5f;
+
+    // Convert the float value to an 32-bit signed integer
+    int intValue = int(value * 4294967295.0f - 2147483648.0f);
+
+    return intValue;
+}
+
+
+[numthreads(8, 8, 4)] // 4 threads in the z dimension for sub-pixel sampling
 void main(uint3 tid : SV_DispatchThreadID)
 {
     uint2 out_sz; output_color.GetDimensions(out_sz.x, out_sz.y);
@@ -518,23 +527,28 @@ void main(uint3 tid : SV_DispatchThreadID)
     float max_deformation = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
 
     // Calculate normalized position in the world (ie: 0,0 = top-left, 1,1 = bottom-right)
-	float2 normalized_position = tid.xy / float2(clim_sz) / jobSettings.render_scale;
-	normalized_position.xy += jobSettings.offset;
-	//normalized_position.y += 0.25f;
-	normalized_position = normalized_position % 1;
+    float2 normalized_position = tid.xy / float2(clim_sz) / jobSettings.render_scale;
+    normalized_position.xy += jobSettings.offset;
+    normalized_position = normalized_position % 1;
+
+    // Offsets for sub-pixel sampling based on z-thread ID
+    float sub_pixel_offset = (tid.z / 4.0) - 0.375; // Example offset, adjust as needed
+
+    // Adjust the normalized position with the sub-pixel offset
+    normalized_position += sub_pixel_offset / float2(out_sz);
 
     // Sample global data
-	uint4 global_climate = take_sample(planet_climate, normalized_position * clim_sz, clim_sz, jobSettings.interpolation);
-	float global_height = take_sample(planet_heightmap, normalized_position * hm_sz, hm_sz, jobSettings.interpolation);
-	uint global_offset = take_sample_nn(planet_offsets, normalized_position * off_sz, off_sz);
+    uint4 global_climate = take_sample(planet_climate, normalized_position * clim_sz, clim_sz, jobSettings.interpolation);
+    float global_height = take_sample(planet_heightmap, normalized_position * hm_sz, hm_sz, jobSettings.interpolation);
+    uint global_offset = take_sample_nn(planet_offsets, normalized_position * off_sz, off_sz);
 
-	global_height = (global_height - 32767) / 32767.0f;
+    global_height = (global_height - 32767) / 32767.0f;
     global_climate = uint4(global_climate.xy / 2, 0, 0);
 
     bool out_override = false;
-	uint4 out_color = uint4(0, 0, 0, 255);
-	float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
-	float out_ocean_mask = 0;
+    uint4 out_color = uint4(0, 0, 0, 255);
+    float out_height = global_height * jobSettings.global_terrain_height_influence; // Value
+    float out_ocean_mask = 0;
 
     if (jobSettings.blending_enabled) {
         // Calculate influence of all neighboring terrain
@@ -544,7 +558,7 @@ void main(uint3 tid : SV_DispatchThreadID)
             out_override = true;
             out_color.xyz = eco_influence.override;
         } else {
-            if(eco_influence.mask_total > 0) {
+            if (eco_influence.mask_total > 0) {
                 global_climate.yx += eco_influence.temp_humidity * local_influence;
                 out_height += eco_influence.elevation * jobSettings.ecosystem_terrain_height_influence;
             }
@@ -558,8 +572,7 @@ void main(uint3 tid : SV_DispatchThreadID)
     }
 
     if (jobSettings.ocean_enabled && out_height < jobSettings.ocean_depth) {
-
-        if(!out_override) {
+        if (!out_override) {
             out_color.xyz = jobSettings.ocean_color.xyz;
         }
 
@@ -577,24 +590,28 @@ void main(uint3 tid : SV_DispatchThreadID)
             out_height = jobSettings.ocean_depth;
         }
     } else {
-        //Color already applied, no need to do anything
+        // Color already applied, no need to do anything
         out_ocean_mask = 0;
     }
 
-	// DEBUG: Grid rendering
-	if(jobSettings.debug_mode & DEBUG_GRID)
-	{
+    // DEBUG: Grid rendering
+    if (jobSettings.debug_mode & DEBUG_GRID) {
         int2 cell_position = (normalized_position.xy * clim_sz * jobSettings.render_scale) % jobSettings.render_scale;
-        if (cell_position.x == 0 || cell_position.y == 0)
-        {
+        if (cell_position.x == 0 || cell_position.y == 0) {
             out_color.xyz = uint3(255, 0, 0);
         }
-	}
+    }
 
     // Squash out_height from meter range to normalized +/- 1.0 range
     out_height /= max_deformation;
 
-	output_color[tid.xy] = out_color;
-	output_heightmap[tid.xy] = PackFloatToUInt4(out_height, jobSettings.heightmap_bit_depth);
-	output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 255, 0), 255);
+    output_color[tid.xy] = out_color;
+
+    if (jobSettings.heightmap_bit_depth == 32) {
+        output_heightmap[tid.xy] = PackFloatToInt(out_height, jobSettings.heightmap_bit_depth);
+    } else {
+        output_heightmap[tid.xy] = PackFloatToUInt(out_height, jobSettings.heightmap_bit_depth);
+    }
+
+    output_ocean_mask[tid.xy] = min(max(out_ocean_mask * 255, 0), 255);
 }

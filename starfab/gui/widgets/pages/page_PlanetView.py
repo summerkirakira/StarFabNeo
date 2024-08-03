@@ -54,6 +54,7 @@ class PlanetView(qtw.QWidget):
         self.enableWaypointsCheckBox: QCheckBox = None
         self.enableEcosystemBlendingCheckBox: QCheckBox = None
         self.enableHillshadeCheckBox: QCheckBox = None
+        self.hillshadeLevelComboBox: QComboBox = None
         self.enableBinaryOceanMaskCheckBox: QCheckBox = None
         self.debugGridCheckBox: QCheckBox = None
         self.debugModeComboBox: QComboBox = None
@@ -92,7 +93,7 @@ class PlanetView(qtw.QWidget):
         self.sampleModeComboBox.setModel(self.create_model([
             ("Nearest Neighbor", 0),
             ("Bi-Linear", 1),
-            ("Bi-Cubic", 2),
+            ("Bi-Cubic", 2)
         ]))
         self.sampleModeComboBox.setCurrentIndex(1)
 
@@ -105,10 +106,9 @@ class PlanetView(qtw.QWidget):
         self.outputResolutionComboBox.currentIndexChanged.connect(self._display_resolution_changed)
 
         self.heightmapBitDepthComboBox.setModel(self.create_model([
-            ("8-Bit Greyscale", 8),
-            ("16-Bit (R,G)", 16),
-            ("24-Bit (R,G,B)", 24),
-            ("32-Bit (R,G,B,A)", 32)
+            ("8-Bit Greyscale (PNG)", 8),
+            ("16-Bit Greyscale (PNG)", 16),
+            ("32-Bit Greyscale (TIFF)", 32)
         ]))
 
         self.displayModeComboBox.setModel(self.create_model([
@@ -123,6 +123,12 @@ class PlanetView(qtw.QWidget):
             ("Ocean Mask", "ocean_mask")
         ]))
         self.displayLayerComboBox.currentIndexChanged.connect(self._display_layer_changed)
+
+        self.hillshadeLevelComboBox.setModel(self.create_model([
+            ("Weak", 0.5),
+            ("Normal", 1),
+            ("Strong", 2)
+        ]))
 
         self.debugModeComboBox.setModel(self.create_model([
             ("None", 0),
@@ -267,6 +273,7 @@ class PlanetView(qtw.QWidget):
         hillshade_shader = self._get_shader("hillshade.hlsl")
         blending_enabled = self.enableEcosystemBlendingCheckBox.isChecked()
         hillshade_enabled = self.enableHillshadeCheckBox.isChecked()
+        hillshade_level = self.hillshadeLevelComboBox.currentData(role=Qt.UserRole)
         ocean_mask_binary = self.enableBinaryOceanMaskCheckBox.isChecked()
 
         debug_mode = 0
@@ -277,7 +284,7 @@ class PlanetView(qtw.QWidget):
                               main_shader, hillshade_shader,
                               interpolation, resolution,
                               blending_enabled,
-                              hillshade_enabled, ocean_mask_binary,
+                              hillshade_enabled, hillshade_level, ocean_mask_binary,
                               hm_bitdepth, debug_mode)
 
     def _do_render(self):
@@ -302,17 +309,28 @@ class PlanetView(qtw.QWidget):
 
     def _do_export(self):
         prev_dir = settings.value("exportDirectory")
+        layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
+
         title = "Save Render to..."
+        format = "png"
+        formatfilter = "PNG Image (*.png)"
+        if self.renderer.settings.heightmap_bit_depth == 32 and layer == 'heightmap':
+            format = "tiff"
+            formatfilter = "TIFF Image (*.tiff)"
+
         edir = qtw.QFileDialog.getSaveFileName(self, title,
-                                               dir=f"{self.renderer.planet.oc.entity_name}.png",
-                                               filter="PNG Image (*.png)")
+                                               dir=f"{self.renderer.planet.oc.entity_name}.{format}",
+                                               filter=formatfilter)
+
         filename, filter = edir
         if filename:
-            layer = self.displayLayerComboBox.currentData(role=Qt.UserRole)
             if layer == 'surface':
                 self.last_render.tex_color.save(filename, format="png")
             elif layer == 'heightmap':
-                self.last_render.tex_heightmap.save(filename, format="png")
+                if self.renderer.settings.heightmap_bit_depth == 32:
+                    self.last_render.tex_heightmap.save(filename, format="tiff")
+                else:
+                    self.last_render.tex_heightmap.save(filename, format="png")
             elif layer == 'ocean_mask':
                 self.last_render.tex_oceanmask.save(filename, format="png")
             else:

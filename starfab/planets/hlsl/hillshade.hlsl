@@ -25,6 +25,7 @@ struct RenderJobSettings
     bool blending_enabled;
 
     bool hillshade_enabled;
+    float hillshade_level;
     float hillshade_zenith;
     float hillshade_azimuth;
 
@@ -34,7 +35,7 @@ struct RenderJobSettings
 };
 
 Texture2D<uint4> input_color : register(t0);
-Texture2D<uint4> input_heightmap: register(t1);
+Texture2D<int> input_heightmap: register(t1);
 Texture2D<uint> input_ocean_mask: register(t2);
 
 ConstantBuffer<RenderJobSettings> jobSettings : register(b0);
@@ -73,6 +74,14 @@ uint interpolate_cubic_uint(float v0, float v1, float v2, float v3, float fracti
     float r = v2 - v0;
 
     return (fraction * ((fraction * ((fraction * p) + q)) + r)) + v1;
+}
+
+/* Texture2D<uint/int> implementations */
+
+
+int take_sample_nn_int(Texture2D<int> texture, float2 position, int2 dimensions)
+{
+    return texture[position % dimensions];
 }
 
 /* Texture2D<uint4> implementations */
@@ -122,102 +131,189 @@ uint4 take_sample(Texture2D<uint4> texture, float2 position, int2 dimensions, in
     }
 }
 
-float UnpackUInt4ToFloat(uint4 packedValue, int bit_depth)
+
+float UnpackIntToFloat(int packedValue, int bit_depth)
 {
     // Ensure the bit depth is valid
-    if (bit_depth != 8 && bit_depth != 16 && bit_depth != 24 && bit_depth != 32)
+    if (bit_depth != 8 && bit_depth != 16 && bit_depth != 32)
         return 0.0;
 
-    // Combine the components of packedValue to reconstruct the float value
-    float factor = (1L << bit_depth) - 1.0f;
-    float reconstructedValue = 0.0;
+    float normalizedValue = 0.0;
 
-    if (bit_depth == 8) { // Greyscale
-        reconstructedValue = packedValue.x / factor;
-    } else {
-        // Combine components based on bit depth
-        reconstructedValue += packedValue.x / factor;
-        reconstructedValue += packedValue.y / factor * 256.0;
-        reconstructedValue += packedValue.z / factor * 65536.0;
-
-        if (bit_depth == 32) {
-            reconstructedValue += packedValue.w / factor * 16777216.0;
-        }
+    if (bit_depth == 8)
+    {
+        // Convert unsigned 8-bit to signed range [-1, 1]
+        normalizedValue = (packedValue / 255.0f) * 2.0f - 1.0f;
+    }
+    else if (bit_depth == 16)
+    {
+        // Convert unsigned 16-bit to signed range [-1, 1]
+        normalizedValue = (packedValue / 65535.0f) * 2.0f - 1.0f;
+    }
+    else if (bit_depth == 32)
+    {
+        // Convert signed 32-bit to signed range [-1, 1]
+        normalizedValue = packedValue / 2147483647.0f; // 2^31 - 1 (maximum positive value for a 32-bit signed integer)
     }
 
-    // Map the range [0.0, 1.0] back to [-1.0, 1.0]
-    reconstructedValue = reconstructedValue * 2.0f - 1.0f;
-
-    return reconstructedValue;
+    return normalizedValue;
 }
+
+
 
 float read_height(uint2 coordinate, int2 relative, int2 dimensions)
 {
-    uint4 samp = take_sample_nn(input_heightmap, coordinate + relative, dimensions);
     float max_deform = jobSettings.global_terrain_height_influence + jobSettings.ecosystem_terrain_height_influence;
-    return UnpackUInt4ToFloat(samp, jobSettings.heightmap_bit_depth) * max_deform;
+
+    int packedValue = take_sample_nn_int(input_heightmap, coordinate + relative, dimensions); //input_heightmap is uint for 8 and 16 bit!
+    float height = UnpackIntToFloat(packedValue, jobSettings.heightmap_bit_depth); //UnpackIntToFloat should deal with 8 and 16 bit cases (hopefully)
+
+    return height * max_deform;
 }
 
 
 
-[numthreads(8,8,1)]
+
+// Function to read and smooth the height map
+float read_and_smooth_height(uint2 tid, int2 offset, uint2 hm_sz, Texture2D<int> input_heightmap)
+{
+
+    int smoothing = 1;
+    if (jobSettings.render_scale[1] == 2) {
+        smoothing = 2;
+    } else if (jobSettings.render_scale[1] == 4) {
+        smoothing = 3;
+    } else if (jobSettings.render_scale[1] == 8) {
+        smoothing = 4;
+    } else if (jobSettings.render_scale[1] == 16) {
+        smoothing = 5;
+    }
+
+    float sum = 0.0;
+    int count = 0;
+    for (int y = -1 * smoothing; y <= smoothing; y++)
+    {
+        for (int x = -1 * smoothing; x <= smoothing; x++)
+        {
+            int2 sample_pos = tid + offset + int2(x, y);
+            if (sample_pos.x >= 0 && sample_pos.x < hm_sz.x && sample_pos.y >= 0 && sample_pos.y < hm_sz.y)
+            {
+                float sample_height = input_heightmap.Load(int3(sample_pos, 0));
+                sum += sample_height;
+                count++;
+            }
+        }
+    }
+    return sum / count;
+}
+
+[numthreads(8, 8, 1)]
 void main(uint3 tid : SV_DispatchThreadID)
 {
-    uint2 hm_sz; input_heightmap.GetDimensions(hm_sz.x, hm_sz.y);
+    uint2 hm_sz;
+    input_heightmap.GetDimensions(hm_sz.x, hm_sz.y);
 
-    if(input_ocean_mask[tid.xy] != 0)
+    if (input_ocean_mask[tid.xy] != 0)
         return;
 
-    float ZFactor = 1.0f;
+    float pi = 3.14159265359f;
+    float ZFactor = 100.0f;
 
-    float a = read_height(tid.xy, int2(1, 1), hm_sz);
-    float b = read_height(tid.xy, int2(0, -1), hm_sz);
-    float c = read_height(tid.xy, int2(1, -1), hm_sz);
-    float d = read_height(tid.xy, int2(-1, 0), hm_sz);
-    float f = read_height(tid.xy, int2(1, 0), hm_sz);
-    float g = read_height(tid.xy, int2(-1, 1), hm_sz);
-    float h = read_height(tid.xy, int2(0, 1), hm_sz);
-    float i = read_height(tid.xy, int2(1, 1), hm_sz);
+    // Calculating the cell size considering equirectangular projection
+    float planet_circ_m = pi * 2 * jobSettings.planet_radius;
+    float lat = (tid.y / (float)hm_sz.y) * pi - pi / 2; // Convert y to latitude in radians
+    float cosLat = cos(lat);
+    float cellsize_x = planet_circ_m * cosLat / (hm_sz.x * jobSettings.render_scale);
+    float cellsize_y = planet_circ_m / (hm_sz.y * jobSettings.render_scale);
 
-    //Cellsize needs to be the same scale as the X/Y distance
-    //This calculation does not take into account projection warping at all
-    float planet_circ_m = PI * 2 * jobSettings.planet_radius;
-    float cellsize_m = planet_circ_m / (hm_sz.x * jobSettings.render_scale * 2);
+    // Slope calculations with larger feature capture
+    float heights[9];
+    int2 offsets[9] = { int2(-2, -2), int2(0, -2), int2(2, -2), int2(-2, 0), int2(2, 0), int2(-2, 2), int2(0, 2), int2(2, 2), int2(0, 0) };
+    for (int i = 0; i < 9; i++)
+    {
+        heights[i] = read_and_smooth_height(tid.xy, offsets[i], hm_sz, input_heightmap);
+    }
 
-    float dzdx = ((c + 2 * f + i) - (a + 2 * d + g)) / (8 * cellsize_m);
-    float dzdy = ((g + 2 * h + i) - (a + 2 * b + c)) / (8 * cellsize_m);
-    float aspect = 0.0;
-
+    float dzdx = ((heights[2] + 2 * heights[4] + heights[5]) - (heights[0] + 2 * heights[3] + heights[6])) / (8 * cellsize_x);
+    float dzdy = ((heights[6] + 2 * heights[7] + heights[5]) - (heights[0] + 2 * heights[1] + heights[2])) / (8 * cellsize_y);
     float slope = atan(ZFactor * sqrt(dzdx * dzdx + dzdy * dzdy));
 
+    float aspect = 0.0;
     if (dzdx != 0)
     {
         aspect = atan2(dzdy, -dzdx);
         if (aspect < 0)
-            aspect += PI * 2;
+            aspect += pi * 2;
     }
     else
     {
         if (dzdy > 0)
-            aspect = PI / 2;
+            aspect = pi / 2;
         else if (dzdy < 0)
-            aspect = (PI * 2) - (PI / 2);
+            aspect = 3 * pi / 2;
     }
 
-    //Normalize slope to +/- 1
-    slope = min(PI, max(-PI, slope)) / PI;
+    // Normalize slope to [0, 1]
+    slope = min(pi, max(0, slope)) / pi;
 
-    int hillshade_amount = 255 * (
-        (cos(jobSettings.hillshade_zenith) * cos(slope)) +
-        (sin(jobSettings.hillshade_zenith) * sin(slope) * cos(jobSettings.hillshade_azimuth - aspect)));
-    //Tone down hillshade, and make centered around 0
+    // Calculate hillshade
+    float cos_zenith = cos(jobSettings.hillshade_zenith);
+    float sin_zenith = sin(jobSettings.hillshade_zenith);
+    float cos_slope = cos(slope);
+    float sin_slope = sin(slope);
+    float cos_azimuth_aspect = cos(jobSettings.hillshade_azimuth - aspect);
+
+    int hillshade_amount = (int)(255 * (cos_zenith * cos_slope + sin_zenith * sin_slope * cos_azimuth_aspect));
     hillshade_amount = (hillshade_amount - 127) / 4;
 
-    uint3 final_color = output_color[tid.xy].xyz;
+    // Ray marching for longer shadows
+    float dx = cos(jobSettings.hillshade_azimuth) * cos(jobSettings.hillshade_zenith);
+    float dy = sin(jobSettings.hillshade_azimuth) * cos(jobSettings.hillshade_zenith);
+    float dz = sin(jobSettings.hillshade_zenith);
 
-    final_color.x = max(0, min(255, final_color.x + hillshade_amount));
-    final_color.y = max(0, min(255, final_color.y + hillshade_amount));
-    final_color.z = max(0, min(255, final_color.z + hillshade_amount));
+    float max_distance = 1000.0; // Maximum distance to march the ray
+    float step_size = 1.0; // Step size for ray marching
+    float shadow_intensity = 0.0; // Shadow intensity
+    float current_distance = 0.0;
 
-	output_color[tid.xy].xyz = final_color;
+    float3 position = float3(tid.xy, read_and_smooth_height(tid.xy, int2(0, 0), hm_sz, input_heightmap) * ZFactor);
+
+    while (current_distance < max_distance)
+    {
+        position += float3(dx * step_size, dy * step_size, dz * step_size);
+        current_distance += step_size;
+
+        int2 sample_pos = int2(position.xy);
+        if (sample_pos.x < 0 || sample_pos.x >= hm_sz.x || sample_pos.y < 0 || sample_pos.y >= hm_sz.y)
+            break;
+
+        float sample_height = read_and_smooth_height(sample_pos, int2(0, 0), hm_sz, input_heightmap) * ZFactor;
+
+        if (position.z < sample_height)
+        {
+            shadow_intensity = 1.0;
+            break;
+        }
+    }
+
+    int ray_march_shadow_amount = (int)(255 * (1.0 - shadow_intensity));
+    ray_march_shadow_amount = (ray_march_shadow_amount - 127) / 16;
+
+    // Combine hillshade and ray marching shadows
+    int combined_shadow_amount = (hillshade_amount + ray_march_shadow_amount) * jobSettings.hillshade_level;
+
+    // Apply combined shadows to color
+    int3 final_color = output_color[tid.xy].xyz;
+
+    final_color.x = max(0, min(255, final_color.x + combined_shadow_amount));
+    final_color.y = max(0, min(255, final_color.y + combined_shadow_amount));
+    final_color.z = max(0, min(255, final_color.z + combined_shadow_amount));
+
+    uint3 final_color_uint;
+    final_color_uint.x = (uint)final_color.x;
+    final_color_uint.y = (uint)final_color.y;
+    final_color_uint.z = (uint)final_color.z;
+
+    output_color[tid.xy].xyz = final_color_uint;
 }
+
