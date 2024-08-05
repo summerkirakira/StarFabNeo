@@ -56,7 +56,9 @@ class PlanetRenderer:
             self._write_planet_input_resources()
 
     def set_settings(self, settings: RenderSettings):
+        self._cleanup_gpu_output_resources()  # Cleanup current GPU resources
         self.settings = settings
+        self._create_gpu_output_resources()   # Create new GPU resources with updated settings
 
     def set_resolution(self, new_dimensions: Tuple[int, int]):
         self._cleanup_gpu_output_resources()
@@ -109,6 +111,7 @@ class PlanetRenderer:
         job_s.render_scale_y = self.settings.resolution
         job_s.blending_enabled = self.settings.blending_enabled
         job_s.hillshade_enabled = self.settings.hillshade_enabled
+        job_s.hillshade_level = self.settings.hillshade_level
         job_s.ocean_mask_binary = self.settings.ocean_mask_binary
         job_s.heightmap_bit_depth = self.settings.heightmap_bit_depth
         job_s.debug_mode = self.settings.debug_mode
@@ -136,7 +139,21 @@ class PlanetRenderer:
             del hillshade_compute
 
         out_color: Image = self._read_frame("output_color", "RGBA")
-        out_heightmap: Image = self._read_frame("output_heightmap", "RGBA")
+
+        # Check if self.settings is defined; otherwise, revert to R8_UINT
+        if self.settings is None:
+            out_heightmap: Image = self._read_frame("output_heightmap", "L")
+        else:
+            # Determine the appropriate format for the heightmap texture based on the bit depth
+            if self.settings.heightmap_bit_depth == 8:
+                out_heightmap: Image = self._read_frame("output_heightmap", "L")
+            elif self.settings.heightmap_bit_depth == 16:
+                out_heightmap: Image = self._read_frame("output_heightmap", "I;16")
+            elif self.settings.heightmap_bit_depth == 32:
+                out_heightmap: Image = self._read_frame("output_heightmap", "I;32")
+            else:
+                raise ValueError(f"Unsupported heightmap bit depth: {self.settings.heightmap_bit_depth}")
+
         out_oceanmask: Image = self._read_frame("output_ocean_mask", "L")
 
         planet_bouds = self.get_outer_bounds()
@@ -145,7 +162,7 @@ class PlanetRenderer:
         return RenderResult(job_s, out_color, out_heightmap, out_oceanmask,
                             self.render_resolution, planet_bouds, render_bounds)
 
-    def _read_frame(self, resource_name: str, mode: Literal['L', 'RGBA']) -> Image:
+    def _read_frame(self, resource_name: str, mode: Literal['L', 'RGBA', 'I;16', 'I;32']) -> Image:
         resource: Resource = self.gpu_resources['readback']
         readback: Buffer = cast(Buffer, resource)
         destination: Texture2D = cast(Texture2D, self.gpu_resources[resource_name])
@@ -153,9 +170,14 @@ class PlanetRenderer:
         output_bytes = readback.readback()
         del readback
 
-        return Image.frombuffer(mode,
-                                (destination.width, destination.height),
-                                output_bytes)
+        if mode == 'I;16':  # 16-bit unsigned integer, single channel
+            return Image.frombuffer('I;16', (destination.width, destination.height), output_bytes, 'raw', 'I;16', 0, 1)
+        elif mode == 'I;32':  # 32-bit signed integer, single channel
+            return Image.frombuffer('I', (destination.width, destination.height), output_bytes, 'raw', 'I', 0, 1)
+        else:
+            return Image.frombuffer(mode,
+                                    (destination.width, destination.height),
+                                    output_bytes)
 
     def _get_computer(self) -> Compute:
         res = self.gpu_resources
@@ -295,7 +317,21 @@ class PlanetRenderer:
         out_w = self.render_resolution.width()
         out_h = self.render_resolution.height()
         output_color_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
-        output_heightmap_texture = Texture2D(out_w, out_h, R8G8B8A8_UINT)
+
+        # Check if self.settings is defined; otherwise, revert to R8_UINT
+        if self.settings is None:
+            output_heightmap_texture = Texture2D(out_w, out_h, R8_UINT)
+        else:
+            # Determine the appropriate format for the heightmap texture based on the bit depth
+            if self.settings.heightmap_bit_depth == 8:
+                output_heightmap_texture = Texture2D(out_w, out_h, R8_UINT)
+            elif self.settings.heightmap_bit_depth == 16:
+                output_heightmap_texture = Texture2D(out_w, out_h, R16_UINT)
+            elif self.settings.heightmap_bit_depth == 32:
+                output_heightmap_texture = Texture2D(out_w, out_h, R32_SINT)
+            else:
+                raise ValueError(f"Unsupported heightmap bit depth: {self.settings.heightmap_bit_depth}")
+
         output_ocean_mask_texture = Texture2D(out_w, out_h, R8_UINT)
 
         self.gpu_resources['output_color'] = output_color_texture

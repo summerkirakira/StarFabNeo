@@ -27,7 +27,7 @@ class LUTData:
 class RenderJobSettings:
     # NOTE: Bools are GPU-register aligned, so need to be 4 bytes, not 1
     # so we pack them as i instead of ?
-    PACK_STRING: str = "5f3i4f3i1f6i2f2i"
+    PACK_STRING: str = "5f3i4f3i1f6i3f2i"
     PACK_LENGTH: int = struct.calcsize(PACK_STRING)
 
     def __init__(self):
@@ -56,6 +56,8 @@ class RenderJobSettings:
         self.blending_enabled: bool = True
 
         self.hillshade_enabled: bool = True
+        self.hillshade_level : float = 1
+
         self.hillshade_zenith: float = 45
         self.hillshade_azimuth: float = 135
 
@@ -73,7 +75,7 @@ class RenderJobSettings:
                            self.ocean_enabled, self.ocean_mask_binary, self.ocean_heightmap_flat,
                            self.ocean_depth, *self.ocean_color,
                            self.blending_enabled,
-                           self.hillshade_enabled, self.hillshade_zenith, self.hillshade_azimuth,
+                           self.hillshade_enabled, self.hillshade_level, self.hillshade_zenith, self.hillshade_azimuth,
                            self.heightmap_bit_depth, self.debug_mode)
 
     def update_buffer(self, buffer_gpu: Buffer):
@@ -140,7 +142,7 @@ class RenderSettings:
                  shader_main: str, shader_hillshade: str,
                  interpolation: int, output_resolution: Tuple[int, int],
                  blending_enabled: bool,
-                 hillshade_enabled: bool, ocean_mask_binary: bool,
+                 hillshade_enabled: bool, hillshade_level: float, ocean_mask_binary: bool,
                  heightmap_bit_depth: int, debug_mode: int):
         self.gpu = gpu
         self.resolution = resolution
@@ -151,6 +153,7 @@ class RenderSettings:
         self.output_resolution = output_resolution
         self.blending_enabled = blending_enabled
         self.hillshade_enabled = hillshade_enabled
+        self.hillshade_level = hillshade_level
         self.ocean_mask_binary = ocean_mask_binary
         self.heightmap_bit_depth = heightmap_bit_depth
         self.debug_mode = debug_mode

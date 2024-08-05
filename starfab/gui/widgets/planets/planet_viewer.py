@@ -214,6 +214,10 @@ class QPlanetViewer(qtw.QGraphicsView):
         else:
             raise Exception(f"Unknown layer: {layer}")
 
+        # Convert the image to a mode supported by QPixmap
+        if img.mode not in ["RGB", "RGBA"]:
+            img = img.convert("RGBA")
+
         qt_image: QPixmap = QPixmap.fromImage(ImageQt(img))
         width_scale = self._render_result.coordinate_bounds.width() / qt_image.width()
         self.image.setPixmap(qt_image)
