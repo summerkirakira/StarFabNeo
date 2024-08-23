@@ -119,6 +119,7 @@ class PlanetRenderer:
         job_s.planet_radius = self.planet.radius_m
         job_s.local_humidity_influence = self.planet.humidity_influence
         job_s.local_temperature_influence = self.planet.temperature_influence
+        job_s.ocean_enabled = self.planet.ocean_enabled
 
         job_s.update_buffer(cast(Buffer, self.gpu_resources['settings']))
 
