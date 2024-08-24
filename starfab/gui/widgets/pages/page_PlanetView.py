@@ -30,7 +30,7 @@ logger = getLogger(__name__)
 class SolarSystem(NamedTuple):
     id: str
     name: str
-    model: QStandardItemModel
+    uimodel: QStandardItemModel
 
 
 class PlanetView(qtw.QWidget):
@@ -174,7 +174,10 @@ class PlanetView(qtw.QWidget):
 
     def _system_changed(self):
         system_id: str = self.systemComboBox.currentData(role=Qt.UserRole)
-        self.planetComboBox.setModel(self.solar_systems[system_id].model)
+        if system_id:
+            self.planetComboBox.setModel(self.solar_systems[system_id].uimodel)
+        else:
+            self.planetComboBox.setModel(QStandardItemModel())
 
     def _planet_changed(self):
         selected_planet = self._get_selected_planet()
@@ -232,6 +235,7 @@ class PlanetView(qtw.QWidget):
     def _update_waypoints(self):
         planet = self._get_selected_planet()
         if not planet:
+            self.listWaypoints.setModel(QStandardItemModel())
             return
         planet.load_waypoints(self.starfab)
 
@@ -264,9 +268,12 @@ class PlanetView(qtw.QWidget):
         self._handle_datacore_loaded()
 
     @staticmethod
-    def create_model(records):
+    def create_model(records, leading_empty=False):
         # Create a model
         model = QStandardItemModel()
+
+        if leading_empty:
+            model.appendRow(QStandardItem())
 
         # Add items to the model with visible name and hidden ID
         for item_text, item_id in records:
@@ -314,6 +321,7 @@ class PlanetView(qtw.QWidget):
         selected_obj = self._get_selected_planet()
         if not selected_obj:
             return
+        selected_obj.load_ecosystems(self.starfab)
 
         # TODO: Deal with buffer directly
         try:
@@ -450,7 +458,10 @@ class PlanetView(qtw.QWidget):
                                                     )
 
         self.systemComboBox.setModel(
-            self.create_model([(solar_system.name, solar_system.id) for guid, solar_system in self.solar_systems.items()])
+            self.create_model([
+                (solar_system.name, solar_system.id)
+                for guid, solar_system in self.solar_systems.items()
+            ], leading_empty=True)
         )
 
     @staticmethod

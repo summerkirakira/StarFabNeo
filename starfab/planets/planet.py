@@ -66,7 +66,6 @@ class Planet:
             return
 
         if starfab:
-            total = len(self.oc.children)
             starfab.task_started.emit(
                 "planet_load_waypoints", f"Loading entdata for {self.oc.entity_name}",
                 0, 1
@@ -76,13 +75,19 @@ class Planet:
         # We used to be able to look up based on the guid, but that's no longer valid
         ent_paths = [p.filename for p in self.oc.socpak.filelist if "/entdata/" in p.filename]
         ent_infos = [self.oc.socpak.p4k.getinfo(p) for p in ent_paths]
-        ent_data = [dict_from_cryxml_file(a.open())["Entity"] for a in ent_infos]
-        ent_map = {ent["@EntityCryGUID"]: ent for ent in ent_data}
+        ent_map = {}
+        for i, info in enumerate(ent_infos):
+            if starfab and i % 25 == 0:
+                starfab.update_status_progress.emit(
+                    "planet_load_waypoints", i, 0, len(ent_infos), f"Loading entdata for {self.oc.entity_name}",
+                )
+            ent = dict_from_cryxml_file(info.open())["Entity"]
+            ent_map[ent["@EntityCryGUID"]] = ent
 
         for i, child_name in enumerate(self.oc.children):
             if starfab:
                 starfab.update_status_progress.emit(
-                    "planet_load_waypoints", i, 0, total, f"Loading waypoints for {self.oc.entity_name}"
+                    "planet_load_waypoints", i, 0, len(self.oc.children), f"Loading waypoints for {self.oc.entity_name}"
                 )
 
             child_soc: ObjectContainerInstance = self.oc.children[child_name]
@@ -94,14 +99,33 @@ class Planet:
         if starfab:
             starfab.task_finished.emit("planet_load_waypoints", True, "")
 
-    def load_data(self, starfab=None) -> object:
+    def load_ecosystems(self, starfab=None):
+        if starfab:
+            total = len(self.ecosystems)
+            starfab.task_started.emit(
+                "planet_load_ecosystems", f"Loading ecosystems",
+                0, total
+            )
+
+        eco: EcoSystem
+        for i, eco in enumerate(self.ecosystems):
+            if starfab:
+                starfab.update_status_progress.emit(
+                    "planet_load_ecosystems", i, 0, total, f"Loading ecosystems - {eco.name}"
+                )
+            eco.read_full_data()
+
+        if starfab:
+            starfab.task_finished.emit("planet_load_ecosystems", True, "")
+
+    def load_data(self, starfab=None):
         if self.planet_data:
-            return self.planet_data
+            return
 
         if starfab:
             starfab.task_started.emit(
                 "planet_load_data", f"Loading {self.oc.entity_name}",
-                0, 1
+                0, 6
             )
 
         self.planet_data = self.data.dict()
@@ -124,24 +148,26 @@ class Planet:
         except Exception as ex:
             print(ex)
 
+        if starfab:
+            starfab.update_status_progress.emit(
+                "planet_load_data", 1, 0, 6, f"Loading {self.oc.entity_name} - Brushes"
+            )
+
         self.brushes = [Brush(b) for b in self.planet_data["data"]["General"]["brushes"]]
+
+        if starfab:
+            starfab.update_status_progress.emit(
+                "planet_load_data", 2, 0, 6, f"Loading {self.oc.entity_name} - Ecosystems"
+            )
 
         ecosystem_ids = self.planet_data["data"]["General"]["uniqueEcoSystemsGUIDs"]
         self.ecosystems = [EcoSystem.find_in_cache_(e)
                            for e in ecosystem_ids
                            if e != "00000000-0000-0000-0000-000000000000"]
 
-        eco: EcoSystem
-        for i, eco in enumerate(self.ecosystems):
-            if starfab:
-                starfab.update_status_progress.emit(
-                    "planet_load_data", i, 0, len(self.ecosystems), f"Loading ecosystems for {self.oc.entity_name} - {eco.name}"
-                )
-            eco.read_full_data()
-
         if starfab:
             starfab.update_status_progress.emit(
-                "planet_load_data", 0, 0, 1, f"Loading grid data for {self.oc.entity_name}"
+                "planet_load_data", 3, 0, 6, f"Loading {self.oc.entity_name} - Grid data"
             )
 
         # R = Temp, G = Humidity, B = Biome ID, A = Unused
@@ -150,6 +176,11 @@ class Planet:
 
         offsets_raw = self.planet_data["data"]["randomOffset"]
         self.offset_data = bytearray(offsets_raw)
+
+        if starfab:
+            starfab.update_status_progress.emit(
+                "planet_load_data", 4, 0, 6, f"Loading {self.oc.entity_name} - Heightmap"
+            )
 
         hm_path = self.planet_data["data"]["General"]["tSphere"]["sHMWorld"]
         hm_path_posix = ("data" / Path(hm_path)).as_posix().lower()
@@ -164,7 +195,7 @@ class Planet:
 
         if starfab:
             starfab.update_status_progress.emit(
-                "planet_load_data", 0, 0, 1, f"Building LUT for {self.oc.entity_name}"
+                "planet_load_data", 5, 0, 6, f"Loading {self.oc.entity_name} - LUT"
             )
 
         self._build_lut()
