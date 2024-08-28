@@ -36,6 +36,7 @@ class Planet:
         self.radius_m = None
         self.humidity_influence = None
         self.temperature_influence = None
+        self.ocean_enabled = None
 
         self.climate_data: bytearray = None
         self.offset_data: bytearray = None
@@ -90,6 +91,7 @@ class Planet:
         self.humidity_influence = self.planet_data["data"]["General"]["textureLayers"]["localHumidityInfluence"]
         self.temperature_influence = self.planet_data["data"]["General"]["textureLayers"]["localTemperatureInfluence"]
 
+        self.ocean_enabled = self.planet_data["data"]["oceanParams"]["General"]["Enabled"]
         ocean_material = self.planet_data["data"]["oceanParams"]["Geometry"]["MaterialOceanPlanet"]
         ocean_path_posix = ("data" / Path(ocean_material)).as_posix().lower()
         try:
