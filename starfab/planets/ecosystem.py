@@ -59,7 +59,7 @@ class EcoSystem:
         self.elevation_size: int = 0
 
     def read_full_data(self):
-        if self.climate_data:
+        if self.climate_image:
             return
 
         def _read_texture(subpath: str) -> bytes:

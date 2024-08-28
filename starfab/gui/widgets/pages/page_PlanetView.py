@@ -30,11 +30,11 @@ logger = getLogger(__name__)
 class SolarSystem(NamedTuple):
     id: str
     name: str
-    model: QStandardItemModel
+    uimodel: QStandardItemModel
 
 
 class PlanetView(qtw.QWidget):
-    def __init__(self, sc):
+    def __init__(self, starfab_or_sc):
         super().__init__(parent=None)
 
         self.renderButton: QPushButton = None
@@ -141,13 +141,15 @@ class PlanetView(qtw.QWidget):
             ("Terrain Ecosystem", 1 << 7)
         ]))
 
-        if isinstance(sc, StarCitizen):
-            self.sc = sc
+        if isinstance(starfab_or_sc, StarCitizen):
+            self.sc = starfab_or_sc
+            self.starfab = None
             self._handle_datacore_loaded()
         else:
-            self.sc = sc.sc_manager
-            self.sc.datacore_model.loaded.connect(self._hack_before_load)
-            self.sc.datacore_model.unloading.connect(self._handle_datacore_unloading)
+            self.sc = None      # will be set in _hack_before_load()
+            self.starfab = starfab_or_sc
+            self.starfab.sc_manager.datacore_model.loaded.connect(self._hack_before_load)
+            self.starfab.sc_manager.datacore_model.unloading.connect(self._handle_datacore_unloading)
 
         self.systemComboBox.currentIndexChanged.connect(self._system_changed)
         self.planetComboBox.currentIndexChanged.connect(self._planet_changed)
@@ -172,10 +174,17 @@ class PlanetView(qtw.QWidget):
 
     def _system_changed(self):
         system_id: str = self.systemComboBox.currentData(role=Qt.UserRole)
-        self.planetComboBox.setModel(self.solar_systems[system_id].model)
+        if system_id:
+            self.planetComboBox.setModel(self.solar_systems[system_id].uimodel)
+        else:
+            self.planetComboBox.setModel(QStandardItemModel())
 
     def _planet_changed(self):
-        # TODO: Pre-load ecosystem data here w/ progressbar
+        selected_planet = self._get_selected_planet()
+        if selected_planet:
+            selected_planet.load_data(self.starfab)
+            self._update_render_scale()
+
         self._update_waypoints()
 
     def _render_scale_changed(self):
@@ -186,6 +195,7 @@ class PlanetView(qtw.QWidget):
     def _display_resolution_changed(self):
         new_resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
         self.renderer.set_resolution(new_resolution)
+        self._update_render_scale()
         self._update_planet_viewer()
 
     def _display_mode_changed(self):
@@ -196,6 +206,22 @@ class PlanetView(qtw.QWidget):
         new_coordinate_mode = self.coordinateSystemComboBox.currentData(role=Qt.UserRole)
         self.renderer.settings.coordinate_mode = new_coordinate_mode
         self._update_planet_viewer()
+
+    def _update_render_scale(self):
+        resolution = self.outputResolutionComboBox.currentData(role=Qt.UserRole)
+        selected_planet = self._get_selected_planet()
+        if not selected_planet:
+            return
+
+        scale = int(resolution[1] / selected_planet.tile_count)
+        logger.debug("Auto calculated scaling factor %s for resolution %r and tile_count=%s", scale, resolution, selected_planet.tile_count)
+
+        index = self.renderResolutionComboBox.findData(scale)
+        if index == -1:
+            logger.error("Scale %s not found in renderResolutionComboBox", scale)
+            return
+
+        self.renderResolutionComboBox.setCurrentIndex(index)
 
     def _update_planet_viewer(self):
         if not self.renderer.planet:
@@ -209,8 +235,9 @@ class PlanetView(qtw.QWidget):
     def _update_waypoints(self):
         planet = self._get_selected_planet()
         if not planet:
+            self.listWaypoints.setModel(QStandardItemModel())
             return
-        planet.load_waypoints()
+        planet.load_waypoints(self.starfab)
 
         waypoint_records = [(wp.container.display_name, wp) for wp in planet.waypoints]
         waypoint_model = self.create_model(waypoint_records)
@@ -236,14 +263,17 @@ class PlanetView(qtw.QWidget):
 
     def _hack_before_load(self):
         # Hacky method to support faster dev testing and launching directly in-app
-        self.sc = self.sc.sc
+        self.sc = self.starfab.sc
         EcoSystem.read_eco_headers(self.sc)
         self._handle_datacore_loaded()
 
     @staticmethod
-    def create_model(records):
+    def create_model(records, leading_empty=False):
         # Create a model
         model = QStandardItemModel()
+
+        if leading_empty:
+            model.appendRow(QStandardItem())
 
         # Add items to the model with visible name and hidden ID
         for item_text, item_id in records:
@@ -291,7 +321,7 @@ class PlanetView(qtw.QWidget):
         selected_obj = self._get_selected_planet()
         if not selected_obj:
             return
-        selected_obj.load_data()
+        selected_obj.load_ecosystems(self.starfab)
 
         # TODO: Deal with buffer directly
         try:
@@ -428,7 +458,10 @@ class PlanetView(qtw.QWidget):
                                                     )
 
         self.systemComboBox.setModel(
-            self.create_model([(solar_system.name, solar_system.id) for guid, solar_system in self.solar_systems.items()])
+            self.create_model([
+                (solar_system.name, solar_system.id)
+                for guid, solar_system in self.solar_systems.items()
+            ], leading_empty=True)
         )
 
     @staticmethod

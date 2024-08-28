@@ -61,28 +61,79 @@ class Planet:
         # +90 if offsetting for NASA coords, gives us 0-360deg output range
         return QPointF((lon + 90 + 360) % 360, lat), alt
 
-    def load_waypoints(self):
+    def load_waypoints(self, starfab=None):
         # If we already loaded waypoints, don't do anything
         if len(self.waypoints) != 0:
             return
+
+        if starfab:
+            starfab.task_started.emit(
+                "planet_load_waypoints", f"Loading entdata for {self.oc.entity_name}",
+                0, 1
+            )
 
         # Need to preload *all* entities in the entdata folder to be able to map them
         # We used to be able to look up based on the guid, but that's no longer valid
         ent_paths = [p.filename for p in self.oc.socpak.filelist if "/entdata/" in p.filename]
         ent_infos = [self.oc.socpak.p4k.getinfo(p) for p in ent_paths]
-        ent_data = [dict_from_cryxml_file(a.open())["Entity"] for a in ent_infos]
-        ent_map = {ent["@EntityCryGUID"]: ent for ent in ent_data}
+        ent_map = {}
+        for i, info in enumerate(ent_infos):
+            if starfab and i % 25 == 0:
+                starfab.update_status_progress.emit(
+                    "planet_load_waypoints", i, 0, len(ent_infos), f"Loading entdata for {self.oc.entity_name}",
+                )
+            ent = dict_from_cryxml_file(info.open())["Entity"]
+            ent_map[ent["@EntityCryGUID"]] = ent
 
-        for child_name in self.oc.children:
+        for i, child_name in enumerate(self.oc.children):
+            if starfab:
+                starfab.update_status_progress.emit(
+                    "planet_load_waypoints", i, 0, len(self.oc.children), f"Loading waypoints for {self.oc.entity_name}"
+                )
+
             child_soc: ObjectContainerInstance = self.oc.children[child_name]
             coords = self.position_to_coordinates(child_soc.position.x, child_soc.position.y, child_soc.position.z)
             self.waypoints.append(WaypointData(coords[0], child_soc))
             if child_soc.guid in ent_map:
                 child_soc.entdata = ent_map[child_soc.guid]
 
-    def load_data(self) -> object:
+        if starfab:
+            starfab.task_finished.emit("planet_load_waypoints", True, "")
+
+    def load_ecosystems(self, starfab=None):
+        self.load_data(starfab)     # Ensure basic data loaded already
+
+        if starfab:
+            starfab.task_started.emit(
+                "planet_load_ecosystems", f"Loading ecosystems",
+                0, 1
+            )
+
+        ecosystem_ids = self.planet_data["data"]["General"]["uniqueEcoSystemsGUIDs"]
+        self.ecosystems = [EcoSystem.find_in_cache_(e)
+                           for e in ecosystem_ids
+                           if e != "00000000-0000-0000-0000-000000000000"]
+
+        eco: EcoSystem
+        for i, eco in enumerate(self.ecosystems):
+            if starfab:
+                starfab.update_status_progress.emit(
+                    "planet_load_ecosystems", i, 0, len(self.ecosystems), f"Loading ecosystems - {eco.name}"
+                )
+            eco.read_full_data()
+
+        if starfab:
+            starfab.task_finished.emit("planet_load_ecosystems", True, "")
+
+    def load_data(self, starfab=None):
         if self.planet_data:
-            return self.planet_data
+            return
+
+        if starfab:
+            starfab.task_started.emit(
+                "planet_load_data", f"Loading {self.oc.entity_name}",
+                0, 2
+            )
 
         self.planet_data = self.data.dict()
 
@@ -107,15 +158,6 @@ class Planet:
 
         self.brushes = [Brush(b) for b in self.planet_data["data"]["General"]["brushes"]]
 
-        ecosystem_ids = self.planet_data["data"]["General"]["uniqueEcoSystemsGUIDs"]
-        self.ecosystems = [EcoSystem.find_in_cache_(e)
-                           for e in ecosystem_ids
-                           if e != "00000000-0000-0000-0000-000000000000"]
-
-        eco: EcoSystem
-        for eco in self.ecosystems:
-            eco.read_full_data()
-
         # R = Temp, G = Humidity, B = Biome ID, A = Unused
         splat_raw = self.planet_data["data"]["splatMap"]
         self.climate_data = bytearray(splat_raw)
@@ -134,7 +176,15 @@ class Planet:
 
         self.heightmap_data = hm_raw
 
+        if starfab:
+            starfab.update_status_progress.emit(
+                "planet_load_data", 1, 0, 2, f"Building LUT for {self.oc.entity_name}"
+            )
+
         self._build_lut()
+
+        if starfab:
+            starfab.task_finished.emit("planet_load_data", True, "")
 
     def _build_lut(self):
         # Addressed as [x][y]
