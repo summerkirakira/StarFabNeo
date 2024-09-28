@@ -6,6 +6,8 @@ import asyncio
 import sentry_sdk
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import Qt, QCoreApplication
+
+# TODO: Figure out what this is for, it's not being handled by poetry as a dependency by default.
 import qtvscodestyle as qtvsc
 
 

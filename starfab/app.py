@@ -331,7 +331,7 @@ Contributors:
         """
         )
         msg.setText(text)
-        msg.setStandardButtons(qtw.QMessageBox.Ok)
+        msg.setStandardButtons(qtw.QMessageBox.StandardButton.Ok)
         msg.show()
 
     def on_license(self):
@@ -384,9 +384,16 @@ Contributors:
         if recent is None:
             recent = self.settings.value("recent", [])
 
+        # TODO: During init recent never gets set in settings leading to crashes, figure out why
+        # Okay so if this is hit then it means that recent has never been configured, so we need to create an empty
+        # recent list to establish a baseline otherwise other parts of the program which handle recent during init
+        # will have a conniption.
+        if recent is None:
+            recent = []
+
         recent = list(
             {_: "" for _ in recent}.keys()
-        )  # remove duplicates without loosing the order
+        )  # remove duplicates without losing the order
 
         prev_actions = self.menuRecent.actions()
         for a in prev_actions[:-2]:
@@ -693,9 +700,9 @@ Contributors:
                 self,
                 "",
                 "This will close the current environment, continue?",
-                qm.Yes | qm.No,
+                qm.StandardButton.Yes | qm.StandardButton.No,
             )
-            if ret == qm.No:
+            if ret == qm.StandardButton.Yes:
                 return
             self.handle_file_close()
 
