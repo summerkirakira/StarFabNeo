@@ -392,16 +392,21 @@ class StarFab(QMainWindow):
         if recent is None:
             recent = self.settings.value("recent", [])
 
-        # TODO: During init recent never gets set in settings leading to crashes, figure out why
         # Okay so if this is hit then it means that recent has never been configured, so we need to create an empty
         # recent list to establish a baseline otherwise other parts of the program which handle recent during init
-        # will have a conniption.
+        # will have a conniption from trying to work with a NoneType
         if recent is None:
             recent = []
 
-        recent = list(
-            {_: "" for _ in recent}.keys()
-        )  # remove duplicates without losing the order
+        # TODO: Figure out whether there's a better way to fix this, say absolutely confirming that a setting is always
+        #       given as a list prior to reaching this point? If this isn't done then a simple string is returned for
+        #       singular paths and this list comprehension then splits that string into a list of chars.
+        if type(recent) is str:
+            recent = [recent]
+        else: # Assuming is a list of strings
+            recent = list(
+                {_: "" for _ in recent}.keys()
+            )  # remove duplicates without losing the order
 
         prev_actions = self.menuRecent.actions()
         for a in prev_actions[:-2]:
