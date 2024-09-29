@@ -80,11 +80,13 @@ class StarFab(QMainWindow):
         self.actionP4K.triggered.connect(self.show_p4k_view)
         self.actionTag_Database.triggered.connect(self.show_tag_database)
 
-        self.actionAbout.triggered.connect(
-            lambda: qtg.QDesktopServices.openUrl(
-                "https://gitlab.com/scmodding/tools/starfab"
-            )
-        )
+        # TODO: Look into removing this, it may not be needed with the new About Dialog
+        #self.actionAbout.triggered.connect(
+        #    lambda: qtg.QDesktopServices.openUrl(
+        #        "https://gitlab.com/scmodding/tools/starfab"
+        #    )
+        #)
+
         self.actionClear_Recent.triggered.connect(self.clear_recent)
 
         self.status_bar_progress = qtw.QProgressBar(self)
@@ -149,7 +151,11 @@ class StarFab(QMainWindow):
 
         self.actionConsole.setIcon(qta.icon("msc.debug-console"))
         self._about_action = self.add_action(
-            "About", "ph.question", "About QupyRibbon", True, self.on_about
+            "About",
+            "ph.question",
+            "About StarFab",
+            True,
+            self.on_about
         )
         self._license_action = self.add_action(
             "License",
@@ -280,7 +286,7 @@ class StarFab(QMainWindow):
         self.about_tab = self._ribbon.add_ribbon_tab("About")
         self.info_panel = self.about_tab.add_ribbon_pane("Info")
         self.info_panel.add_ribbon_widget(RibbonButton(self, self._about_action, True))
-        # self.info_panel.add_ribbon_widget(RibbonButton(self, self._license_action, True))
+        self.info_panel.add_ribbon_widget(RibbonButton(self, self._license_action, True))
         self.about_tab.add_spacer()
 
     def on_open_file(self):
@@ -308,40 +314,42 @@ class StarFab(QMainWindow):
             self.menuBar.hide()
 
     def on_about(self):
-        text = f"""<pre>StarFab {__version__}
-        
-Crafted by the community, shaped by visionaries.
+        about_dialog = QDialog(self)
+        uic.loadUi(str(RES_PATH / "ui" / "AboutDialog.ui"),
+                   about_dialog)
 
-<a href="https://gitlab.com/scmodding/tools/starfab"
-    style="color: red; text-decoration: none"
->https://gitlab.com/scmodding/tools/starfab</a>
+        about_text = about_dialog.label_About.text()
+        about_text = about_text.format(__version__)
+        about_dialog.label_About.setText(about_text)
 
-Contributors:
-    ventorvar
-    vmxeo
-    th3st0rmtr00p3r
-</pre>
-"""
-        msg = QMessageBox(self)
-        msg.setTextFormat(qtc.Qt.RichText)
-        msg.setStyleSheet(
-            """
-        QMessageBox QLabel {
-        }
-        """
-        )
-        msg.setText(text)
-        msg.setStandardButtons(qtw.QMessageBox.StandardButton.Ok)
-        msg.show()
+        # There's some goofiness on Linux at least where these dialogs will not center on the parent QObject in spite
+        # of being provided it. So we're just going to explicitly make them in the center of the parent.
+
+        parent_center = QWidget.mapToGlobal(self, self.window().rect().center())
+        dialog_center = QWidget.mapToGlobal(about_dialog, about_dialog.rect().center())
+        about_dialog.move(parent_center - dialog_center)
+
+        about_dialog.show()
+        about_dialog.label_PixLogo.setPixmap(qtg.QPixmap(str(RES_PATH / "starfab_v.png")))
+        about_dialog.buttonBox.accepted.connect(about_dialog.accept)
 
     def on_license(self):
-        pass
-        ##TODO, implement
-        """
-        file = open('LICENSE', 'r')
-        lic = file.read()
-        QMessageBox().information(self, "License", lic)
-        """
+        # TODO: Make license text pull from source external to the Qt ui file, alternatively add similar formatting
+        #       step in about dialog to update the copyright date.
+        license_dialog = QDialog(self)
+        uic.loadUi(str(RES_PATH / "ui" / "LicenseDialog.ui"),
+                   license_dialog)
+
+        # There's some goofiness on Linux at least where these dialogs will not center on the parent QObject in spite
+        # of being provided it. So we're just going to explicitly make them in the center of the parent.
+
+        parent_center = QWidget.mapToGlobal(self, self.window().rect().center())
+        dialog_center = QWidget.mapToGlobal(license_dialog, license_dialog.rect().center())
+        license_dialog.move(parent_center - dialog_center)
+
+        license_dialog.show()
+        license_dialog.label_PixLogo.setPixmap(qtg.QPixmap(str(RES_PATH / "starfab_v.png")))
+        license_dialog.buttonBox.accepted.connect(license_dialog.accept)
 
     def startup(self):
         self.restoreGeometry(settings.value("windowGeometry"))

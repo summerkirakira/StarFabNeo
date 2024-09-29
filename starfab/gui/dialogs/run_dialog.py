@@ -19,6 +19,8 @@ class RunDialog(qtw.QDialog):
         icon.addFile(
             str(RES_PATH / "starfab.ico"), qtc.QSize(), qtg.QIcon.Normal, qtg.QIcon.Off
         )
+        # TODO: Wayland requires a bit more than this to get window icons to work, as it needs a .desktop entry to be
+        #       associated with the application.
         self.setWindowIcon(icon)
 
         self.label_PixLogo.setPixmap(qtg.QPixmap(str(RES_PATH / "starfab_v.png")))
@@ -45,6 +47,8 @@ class RunDialog(qtw.QDialog):
         self.recentList.itemClicked.connect(self._handle_recent_clicked)
         self.recentList.itemDoubleClicked.connect(self._handle_recent_double_clicked)
 
+        self.pushButton_clear_recent.clicked.connect(self._handle_recent_clear)
+
     def _set_found_paths(self):
         sc_ver = get_installed_sc_versions()
         if sc_ver.get("PTU"):
@@ -66,6 +70,10 @@ class RunDialog(qtw.QDialog):
 
     def _handle_recent_double_clicked(self):
         self._handle_load(self.recentList.currentItem().text())
+
+    def _handle_recent_clear(self):
+        self.starfab.settings.setValue("recent", [])
+        self.recentList.clear()
 
     def _handle_quick_load(self):
         self._set_found_paths()
