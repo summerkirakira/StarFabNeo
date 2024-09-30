@@ -1783,13 +1783,13 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pyproject-hooks"
-version = "1.1.0"
+version = "1.2.0"
 description = "Wrappers to call pyproject.toml-based build backend hooks."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyproject_hooks-1.1.0-py3-none-any.whl", hash = "sha256:7ceeefe9aec63a1064c18d939bdc3adf2d8aa1988a510afec15151578b232aa2"},
-    {file = "pyproject_hooks-1.1.0.tar.gz", hash = "sha256:4b37730834edbd6bd37f26ece6b44802fb1c1ee2ece0e54ddff8bfc06db86965"},
+    {file = "pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913"},
+    {file = "pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8"},
 ]
 
 [[package]]
@@ -2208,17 +2208,6 @@ packaging = "*"
 
 [package.extras]
 test = ["pytest (>=6,!=7.0.0,!=7.0.1)", "pytest-cov (>=3.0.0)", "pytest-qt"]
-
-[[package]]
-name = "qtvscodestyle"
-version = "0.1.1"
-description = "VS Code Style for PySide, PyQt."
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "QtVSCodeStyle-0.1.1-py3-none-any.whl", hash = "sha256:f9db2ccf94e87c8b225775c15311730030c6c68c16d3e1ca8ec726d64fa47f5e"},
-    {file = "QtVSCodeStyle-0.1.1.tar.gz", hash = "sha256:f04205c8d21420ac6e6bbd652554df2a57f007ffaf2712ac1a76913da7f8b6ed"},
-]
 
 [[package]]
 name = "quaternionic"
@@ -2775,4 +2764,4 @@ test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.2,<=3.12.6"
-content-hash = "6c85cb6e5a7c2baff7aaa7fd66a4a9cb6bc29efbccf15dc16626145132ce8920"
+content-hash = "e177ab0d00c80b617dec0ef41a1de0ccccf78415fca2a661cead4035fd72c97d"

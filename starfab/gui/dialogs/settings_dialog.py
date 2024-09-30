@@ -6,6 +6,7 @@ import qtawesome as qta
 from qtpy import uic
 
 import qtvscodestyle as qtvsc
+
 from scdatatools.utils import parse_bool
 from starfab.gui import qtw
 from starfab.gui.dialogs import list_dialog

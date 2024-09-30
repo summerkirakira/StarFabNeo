@@ -7,6 +7,7 @@ name = "starfab"
 version = "0.4.9"
 description = "StarFab - The Star Citizen data tool"
 authors = [ "ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
+packages = [ { include = "qtvscodestyle", from = "starfab/contrib" }, ]
 
 [tool.briefcase]
 project_name = "StarFab"
@@ -33,7 +34,6 @@ toml = "^0.10.2"
 rich = "^13.6.0"
 briefcase = "^0.3.7"
 pyrsi = "^0.1.19"
-qtvscodestyle = "^0.1.1"
 
 [tool.poetry.dev-dependencies]
 toml = "^0.10.2"
@@ -44,7 +44,7 @@ formal_name = "StarFab"
 description = "StarFab"
 icon = "starfab/resources/starfab"
 installer_icon = "starfab/resources/starfab"
-sources = [ "starfab",]
+sources = [ "starfab", "starfab/contrib", ]
 requires = [ "-r", "build/requirements.txt",]
 
 [tool.briefcase.app.starfab.macOS]

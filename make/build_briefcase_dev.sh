@@ -9,7 +9,7 @@ rm -rf windows/msi/StarFab/src/app/*
 rm -rf windows/msi/StarFab/src/app_packages/*
 
 echo "Updating briefcase"
-bc=$(./make/briefcase update -d 2>&1)
+bc=$(./make/briefcase update 2>&1)
 if [ $? != 0 ]; then
   echo $bc
   exit 1

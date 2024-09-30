@@ -7,7 +7,8 @@ import sentry_sdk
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import Qt, QCoreApplication
 
-# TODO: Figure out what this is for, it's not being handled by poetry as a dependency by default.
+# TODO: briefcase screams about this, need to look into potentially handling it differently since it's pip package is
+#       borked at least.
 import qtvscodestyle as qtvsc
 
 
@@ -68,6 +69,7 @@ def main():
     app.setOrganizationName("scdatatools")
     app.setApplicationDisplayName(f"StarFab {__version__}")
 
+    # TODO: Look into possibly handling GTK and Qt DE themes on Linux platforms as an option.
     theme = settings.value("theme", "Monokai Dimmed")
     try:
         if theme in themes:

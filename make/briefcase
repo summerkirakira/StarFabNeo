@@ -17,7 +17,7 @@ if ! [ -d "$VENV_DIR" ]; then
     . ${VENV_DIR}/Scripts/activate
     export PATH="$PATH:$OLD_PATH"
     which python
-    python -m pip install -U pip briefcase==0.3.7 &> /dev/null
+    python -m pip install -U pip briefcase==0.3.19 &> /dev/null
     which briefcase
 fi
 
