@@ -1,6 +1,10 @@
 import importlib
 import subprocess
 import sys
+from io import BytesIO
+
+from PIL import Image
+
 from distutils.util import strtobool
 
 from scdatatools.engine.textures.converter import (
