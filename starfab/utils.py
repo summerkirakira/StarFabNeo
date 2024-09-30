@@ -4,12 +4,9 @@ import sys
 from distutils.util import strtobool
 
 from scdatatools.engine.textures.converter import (
-    convert_buffer,
-    ConverterUtility,
     ConversionError,
 )
 from starfab.gui import qtw
-from starfab.settings import get_texconv, get_compressonatorcli
 
 
 def parsebool(val: any):
@@ -47,53 +44,17 @@ def show_file_in_filemanager(path):
         subprocess.Popen(["xdg-open", str(path)])
 
 
-class ImageConverter:
-    def __init__(self):
-        self.compressonatorcli = get_compressonatorcli()
-        self.texconv = get_texconv()
-        self.converter = (
-            ConverterUtility.texconv
-            if self.texconv
-            else ConverterUtility.compressonator
-        )
+def convert_image_buffer(inbuf, in_format: str, out_format="tif") -> bytes:
+    """Converts a buffer `inbuf` to the output format `out_format`"""
 
-    @property
-    def converter_bin(self):
-        return (
-            self.texconv
-            if self.converter == ConverterUtility.texconv
-            else self.compressonatorcli
-        )
+    try:
+        image: Image = Image.open(BytesIO(inbuf), formats=[in_format.upper()])
+        image_rgba: Image = image.convert("RGBA")
+        out_buffer = BytesIO()
+        image_rgba.save(out_buffer, format=out_format.upper())
+        out_buffer.seek(0)
+        del image, image_rgba
+    except ConversionError as e:
+        raise RuntimeError(f"Failed to convert buffer: {e}")
 
-    def _check_bin(self):
-        if not self.converter:
-            qtw.QMessageBox.information(
-                None,
-                "Image Converter",
-                f"Missing a DDS converter. If you're on Mac/Linux use compressonatorcli. You can install it from "
-                f"<a href='https://gpuopen.com/compressonator/'>https://www.steamgriddb.com/manager</a>. If you're on"
-                f"windows you can use texconv, download it from "
-                f"<a href='https://github.com/microsoft/DirectXTex/releases'>"
-                f"https://github.com/microsoft/DirectXTex/releases</a>. Ensure whichever tool is in your system PATH.",
-            )
-            raise RuntimeError(f"Cannot find compressonatorcli")
-
-    def convert_buffer(self, inbuf, in_format, out_format="tif") -> bytes:
-        """Converts a buffer `inbuf` to the output format `out_format`"""
-        self._check_bin()
-
-        try:
-            buf, msg = convert_buffer(
-                inbuf,
-                in_format=in_format,
-                out_format=out_format,
-                converter=self.converter,
-                converter_bin=self.converter_bin,
-            )
-        except ConversionError as e:
-            raise RuntimeError(f"Failed to convert buffer: {e}")
-
-        return buf
-
-
-image_converter = ImageConverter()
+    return out_buffer.read()

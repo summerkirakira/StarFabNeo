@@ -5,7 +5,6 @@ from starfab import settings
 from starfab.gui import qtc, qtw
 from starfab.gui.widgets.dock_widgets.common import StarFabStaticWidget
 from starfab.resources import RES_PATH
-from starfab.utils import image_converter
 
 EXPORT_SETTINGS = {
     # {scdatatools reference}: [ {widget_name}, {settings_key} ]
@@ -94,8 +93,6 @@ class ExportOptionsWidget(StarFabStaticWidget):
             opts["converters"].append("ddstexture_converter")
             opts.update({
                 "ddstexture_converter_unsplit": True,
-                "ddstexture_converter_converter": image_converter.converter,
-                "ddstexture_converter_converter_bin": image_converter.converter_bin,
                 "ddstexture_converter_replace": opts.get('overwrite', False),
             })
             if opts.get('auto_convert_textures', False):

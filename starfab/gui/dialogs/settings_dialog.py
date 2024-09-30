@@ -56,8 +56,6 @@ class SettingsDialog(qtw.QDialog):
         open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_DirIcon)
         cgfconvfind = self.cgfconverterPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
         cgfconvfind.triggered.connect(partial(self._handle_path_chooser, self.cgfconverterPath))
-        texconvfind = self.texconvPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
-        texconvfind.triggered.connect(partial(self._handle_path_chooser, self.texconvPath))
 
         self.starfab.blender_manager.updated.connect(self._sync_blender)
         self.blenderConfigButton.setIcon(qta.icon("msc.settings-gear"))
@@ -65,7 +63,6 @@ class SettingsDialog(qtw.QDialog):
         self.blenderComboBox.activated.connect(self._update_blender)
 
         self.cgfconverterPath.textChanged.connect(self._save_settings)
-        self.texconvPath.textChanged.connect(self._save_settings)
 
         # conversion
         self.opt_cryxmlbFmt.currentTextChanged.connect(self._save_settings)
@@ -106,7 +103,6 @@ class SettingsDialog(qtw.QDialog):
 
         # external tools
         self.cgfconverterPath.setText(self.starfab.settings.value("external_tools/cgf-converter"))
-        self.texconvPath.setText(self.starfab.settings.value("external_tools/texconv"))
 
         # conversion
         self.opt_cryxmlbFmt.setCurrentText(self.starfab.settings.value("convert/cryxml_fmt"))
@@ -182,7 +178,6 @@ class SettingsDialog(qtw.QDialog):
 
         # external tools
         self.starfab.settings.setValue("external_tools/cgf-converter", self.cgfconverterPath.text())
-        self.starfab.settings.setValue("external_tools/texconv", self.texconvPath.text())
 
         # conversion
         self.starfab.settings.setValue("convert/cryxml_fmt", self.opt_cryxmlbFmt.currentText())
