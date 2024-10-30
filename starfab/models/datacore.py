@@ -103,7 +103,7 @@ class DCBItem(PathArchiveTreeItem, ContentItem):
             mode = (
                 mode
                 if mode is not None
-                else get_starfab().settings.value("cryxmlbConversionFormat", "xml")
+                else get_starfab().settings.value("convert/datacore_fmt", "xml")
             )
             if mode == "xml":
                 return io.BytesIO(

@@ -69,6 +69,7 @@ class SettingsDialog(qtw.QDialog):
         # conversion
         self.opt_cryxmlbFmt.currentTextChanged.connect(self._save_settings)
         self.opt_imgFmt.currentTextChanged.connect(self._save_settings)
+        self.opt_datacoreFmt.currentTextChanged.connect(self._save_settings)
 
         # export
         self.opt_Exports_Directory.textChanged.connect(self._save_settings)
@@ -110,6 +111,7 @@ class SettingsDialog(qtw.QDialog):
         # conversion
         self.opt_cryxmlbFmt.setCurrentText(self.starfab.settings.value("convert/cryxml_fmt"))
         self.opt_imgFmt.setCurrentText(self.starfab.settings.value("convert/img_fmt"))
+        self.opt_datacoreFmt.setCurrentText(self.starfab.settings.value("convert/datacore_fmt"))
 
         # exporting
         self.opt_Exports_Directory.setText(self.starfab.settings.value("exportDirectory"))
@@ -186,6 +188,7 @@ class SettingsDialog(qtw.QDialog):
         # conversion
         self.starfab.settings.setValue("convert/cryxml_fmt", self.opt_cryxmlbFmt.currentText())
         self.starfab.settings.setValue("convert/img_fmt", self.opt_imgFmt.currentText())
+        self.starfab.settings.setValue("convert/datacore_fmt", self.opt_datacoreFmt.currentText())
 
         # exporting
         self.starfab.settings.setValue("exportDirectory", self.opt_Exports_Directory.text())

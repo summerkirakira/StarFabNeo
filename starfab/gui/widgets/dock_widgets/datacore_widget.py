@@ -216,7 +216,9 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
                     )
                     t = time.time()
                 try:
+                    mode = get_starfab().settings.value("convert/datacore_fmt", "xml")
                     outfile = edir / item.path
+                    outfile = outfile.with_suffix(f'.{mode}')
                     outfile.parent.mkdir(parents=True, exist_ok=True)
                     if outfile.is_file():
                         outfile = (
@@ -224,7 +226,7 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
                             / f"{outfile.stem}.{item.guid}{outfile.suffix}"
                         )
                     with outfile.open("wb") as o:
-                        shutil.copyfileobj(item.contents(), o)
+                        shutil.copyfileobj(item.contents(mode=mode), o)
                     qtg.QGuiApplication.processEvents()
                 except Exception as e:
                     logger.exception(
