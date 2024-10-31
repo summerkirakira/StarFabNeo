@@ -17,7 +17,6 @@ SUPPORTED_IMG_FORMATS = set(Image.EXTENSION.keys())
 SUPPORTED_IMG_FORMATS.update(['.' + bytes(_).decode('utf-8') for _ in qtg.QImageReader.supportedImageFormats()])
 DDS_CONV_FORMAT = "png"
 
-
 class QImageViewer(qtw.QGraphicsView):
     """PyQt image viewer widget for a QPixmap in a QGraphicsView scene with mouse zooming and panning.
     Displays a QImage or QPixmap (QImage is internally converted to a QPixmap).
@@ -59,7 +58,7 @@ class QImageViewer(qtw.QGraphicsView):
         self.act_save_as.triggered.connect(self._handle_save_as)
 
         # Store a local handle to the scene's current image pixmap.
-        self.image = qtw.QGraphicsPixmapItem()
+        self.image: qtw.QGraphicsPixmapItem = qtw.QGraphicsPixmapItem()
         self.scene.addItem(self.image)
 
         # Scroll bar behaviour.
@@ -113,10 +112,11 @@ class QImageViewer(qtw.QGraphicsView):
                 self.scale(factor, factor)
                 self._zoom = 0
 
-    def setImage(self, image):
+    def setImage(self, image, fit: bool = True):
         """Set the scene's current image pixmap to the input QImage or QPixmap.
         Raises a RuntimeError if the input image has type other than QImage or QPixmap.
         :type image: QImage | QPixmap
+        :type fit: bool
         """
         self._zoom = 0
         if isinstance(image, qtg.QPixmap):
@@ -135,7 +135,8 @@ class QImageViewer(qtw.QGraphicsView):
             self._empty = True
             self.setDragMode(qtw.QGraphicsView.NoDrag)
             self.image.setPixmap(qtg.QPixmap())
-        self.fitInView()
+        if fit:
+            self.fitInView()
 
     def wheelEvent(self, event):
         if self.hasImage():

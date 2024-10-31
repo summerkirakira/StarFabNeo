@@ -14,8 +14,10 @@ from qtpy.QtWidgets import QMainWindow
 
 import starfab.gui.widgets.dock_widgets.datacore_widget
 import starfab.gui.widgets.dock_widgets.file_view
+
 from scdatatools.sc import StarCitizen
 from starfab.gui.widgets.pages.content import ContentView
+from starfab.planets import HAS_COMPUSHADY
 from . import __version__, updates
 from .blender import BlenderManager
 from .gui import qtg, qtw, qtc
@@ -121,6 +123,7 @@ class StarFab(QMainWindow):
         self.data_page_btn = None
         self.content_page_btn = None
         self.nav_page_btn = None
+        self.planets_page_btn = None
 
         # -------------      actions       -----------------
         # keyboard shortcuts, for QKeySequence see https://doc.qt.io/qtforpython-5/PySide2/QtGui/QKeySequence.html
@@ -142,6 +145,10 @@ class StarFab(QMainWindow):
         self.actionContentView.triggered.connect(self._handle_workspace_action)
         self.actionNavView.setIcon(qta.icon("mdi6.map-marker-path"))
         self.actionNavView.triggered.connect(self._handle_workspace_action)
+        self.actionPlanetView.setIcon(qta.icon("ph.planet"))
+        if HAS_COMPUSHADY:
+            self.actionPlanetView.triggered.connect(self._handle_workspace_action)
+
         self._open_settings = self.actionSettings
         self.actionSettings.setIcon(qta.icon("msc.settings-gear"))
         self._show_console = self.actionConsole
@@ -183,6 +190,10 @@ class StarFab(QMainWindow):
 
         self.page_NavView = NavView(self)
         self.stackedWidgetWorkspace.addWidget(self.page_NavView)
+
+        if HAS_COMPUSHADY:
+            self.page_PlanetView = PlanetView(self)
+            self.stackedWidgetWorkspace.addWidget(self.page_PlanetView)
 
         self.dock_widgets = {}
         self.setup_dock_widgets()
@@ -242,6 +253,14 @@ class StarFab(QMainWindow):
         self.nav_page_btn.setAutoExclusive(True)
         self.nav_page_btn.released.connect(self.handle_workspace)
         self.workspace_panel.add_ribbon_widget(self.nav_page_btn)
+
+        self.planets_page_btn = RibbonButton(self, self.actionPlanetView, True)
+        self.planets_page_btn.setAutoExclusive(True)
+        self.planets_page_btn.released.connect(self.handle_workspace)
+        self.workspace_panel.add_ribbon_widget(self.planets_page_btn)
+        if not HAS_COMPUSHADY:
+            self.planets_page_btn.setEnabled(False)
+            self.planets_page_btn.setToolTip("You must install the 'compushady' package to use the planet viewer.")
 
         self.options_panel = self.home_tab.add_ribbon_pane("Options")
         self.options_panel.add_ribbon_widget(
@@ -378,7 +397,8 @@ Contributors:
             self.hide()
             self.close.emit()
         finally:
-            sys.exit(0)
+            print("closing!")
+            #sys.exit(0)
 
     def _refresh_recent(self, recent=None):
         if recent is None:
@@ -751,6 +771,9 @@ Contributors:
                                self.content_page_btn,
                                self.nav_page_btn]
 
+        if HAS_COMPUSHADY:
+            self.workspace_btns.append(self.planets_page_btn)
+
         def _clear_checked(self):
             for btn in self.workspace_btns:
                 btn.setChecked(False)
@@ -763,6 +786,8 @@ Contributors:
         else:
             self.stackedWidgetWorkspace.setCurrentWidget(self.page_OpenView)
 
+        logger.info(f"Switching to workspace: {view}")
+
         if self.sc is None:
             _clear_checked(self)
         elif view == "data":
@@ -774,3 +799,6 @@ Contributors:
         elif view == "nav":
             self.nav_page_btn.setChecked(True)
             self.stackedWidgetWorkspace.setCurrentWidget(self.page_NavView)
+        elif view == "planets":
+            self.planets_page_btn.setChecked(True)
+            self.stackedWidgetWorkspace.setCurrentWidget(self.page_PlanetView)
