@@ -6,8 +6,33 @@ build-backend = "poetry.core.masonry.api"
 name = "starfab"
 version = "0.4.9"
 description = "StarFab - The Star Citizen data tool"
-authors = [ "ventorvar <ventorvar@gmail.com>", "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>", "VMXEO <>",]
+authors = [
+    "ventorvar <ventorvar@gmail.com>",
+    "th3st0rmtr00p3r <th3st0rmtr00p3r@tkdomain.org>",
+    "VMXEO <>",
+    "Travis Law <>"
+]
 packages = [ { include = "qtvscodestyle", from = "starfab/contrib" }, ]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+QtPy = "^2.3.1"
+QtAwesome = "^1.2.3"
+PySide6 = "^6.8.0.2"
+Pillow = "^11.0.0"
+qtconsole = "^5.6.1"
+humanize = "^4.11.0"
+rpyc = "^6.0.1"
+sentry-sdk = "^2.17.0"
+pyvistaqt = "^0.11.1"
+quaternionic = "^1.0.12"
+rich = "^13.9.4"
+pyrsi = "^0.1.19"
+
+[tool.poetry.group.dev.dependencies]
+toml = "^0.10.2"
+briefcase = "^0.3.20"
+scdatatools = {path = "../../frameworks/scdatatools", develop = true}
 
 [tool.briefcase]
 project_name = "StarFab"
@@ -17,27 +42,6 @@ url = "https://gitlab.com/scmodding/tools/starfab"
 license = ""
 author = "ventorvar"
 author_email = "ventorvar@gmail.com"
-
-[tool.poetry.dependencies]
-python = ">=3.10.2,<=3.12.6"
-QtPy = "^2.3.1"
-QtAwesome = "^1.2.3"
-PySide6 = "^6.5.2"
-Pillow = "^10.0.1"
-qtconsole = "^5.4.3"
-humanize = "^4.8.0"
-rpyc = "^6.0.0"
-sentry-sdk = "^1.14.0"
-pyvistaqt = "^0.11.0"
-quaternionic = "^1.0.6"
-toml = "^0.10.2"
-rich = "^13.6.0"
-briefcase = "^0.3.7"
-pyrsi = "^0.1.19"
-
-[tool.poetry.dev-dependencies]
-toml = "^0.10.2"
-briefcase = "^0.3.7"
 
 [tool.briefcase.app.starfab]
 formal_name = "StarFab"
