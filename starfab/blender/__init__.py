@@ -252,15 +252,15 @@ class BlenderManager(QObject):
     @Slot(str)
     def _handle_connection_approval(self, request_id):
         qm = qtw.QMessageBox()
-        qm.setWindowFlag(qtc.Qt.WindowStaysOnTopHint)
+        qm.setWindowFlag(qtc.Qt.WindowType.WindowStaysOnTopHint)
         qm.raise_()
         ret = qm.question(
             self.starfab,
             "",
             f"Accept new BlenderLink connection from process {request_id}?",
-            qm.Yes | qm.No,
+            qm.StandardButton.Yes | qm.StandardButton.No,
         )
-        if ret == qm.Yes:
+        if ret == qm.StandardButton.Yes:
             procid, token = self._gen_auth_token()
             self.blenderlink.connection_approved(request_id, token)
         else:
@@ -313,8 +313,8 @@ class BlenderManager(QObject):
     def _handle_statusbar_label_clicked(self):
         if self._blenderlink_port > 0:
             cb = qtw.QApplication.clipboard()
-            cb.clear(mode=cb.Clipboard)
-            cb.setText(str(self._blenderlink_port), mode=cb.Clipboard)
+            cb.clear(mode=cb.Mode.Clipboard)
+            cb.setText(str(self._blenderlink_port), mode=cb.Mode.Clipboard)
             self.starfab.statusBar.showMessage(
                 f"Blender Link port {self._blenderlink_port} copied to clipboard"
             )

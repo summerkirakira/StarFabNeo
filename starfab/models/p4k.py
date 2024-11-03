@@ -105,7 +105,7 @@ class P4KItem(PathArchiveTreeItem, ContentItem):
         )
 
     def data(self, column, role):
-        if role == qtc.Qt.DisplayRole:
+        if role == qtc.Qt.ItemDataRole.DisplayRole:
             if column == 0:
                 return self.name
             elif column == 1:
@@ -116,7 +116,7 @@ class P4KItem(PathArchiveTreeItem, ContentItem):
                 return self.date_modified
             else:
                 return ""
-        if role == qtc.Qt.UserRole:
+        if role == qtc.Qt.ItemDataRole.UserRole:
             if column == 1:
                 return self.raw_size
             if column == 2:

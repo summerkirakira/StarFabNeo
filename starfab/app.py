@@ -497,9 +497,9 @@ class StarFab(QMainWindow):
         if "file_view" not in self.dock_widgets:
             fv = starfab.gui.widgets.dock_widgets.file_view.FileViewDock(self)
             fv.setObjectName("file_view")
-            fv.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            fv.setAllowedAreas(qtc.Qt.DockWidgetArea.LeftDockWidgetArea | qtc.Qt.DockWidgetArea.RightDockWidgetArea)
             self.dock_widgets["file_view"] = fv
-            self.addDockWidget(qtc.Qt.LeftDockWidgetArea, fv)
+            self.addDockWidget(qtc.Qt.DockWidgetArea.LeftDockWidgetArea, fv)
         self.dock_widgets["file_view"].show()
         self.dock_widgets["file_view"].raise_()
 
@@ -507,10 +507,10 @@ class StarFab(QMainWindow):
         if "audio_view" not in self.dock_widgets:
             d = starfab.gui.widgets.dock_widgets.audio_widget.AudioViewDock(self)
             d.setObjectName("audio_view")
-            d.setAllowedAreas(qtc.Qt.LeftDockWidgetArea | qtc.Qt.RightDockWidgetArea)
+            d.setAllowedAreas(qtc.Qt.DockWidgetArea.LeftDockWidgetArea | qtc.Qt.DockWidgetArea.RightDockWidgetArea)
             self.dock_widgets["audio_view"] = d
-            self.addDockWidget(qtc.Qt.RightDockWidgetArea, d)
-            self.resizeDocks([d], [500], qtc.Qt.Horizontal)
+            self.addDockWidget(qtc.Qt.DockWidgetArea.RightDockWidgetArea, d)
+            self.resizeDocks([d], [500], qtc.Qt.Orientation.Horizontal)
 
         self.dock_widgets["audio_view"].show()
         self.dock_widgets["audio_view"].raise_()
@@ -539,7 +539,7 @@ class StarFab(QMainWindow):
             cw = dock_widgets.PyConsoleDockWidget(self)
             cw.setObjectName("console")
             self.dock_widgets["console"] = cw
-            self.addDockWidget(qtc.Qt.BottomDockWidgetArea, cw)
+            self.addDockWidget(qtc.Qt.DockWidgetArea.BottomDockWidgetArea, cw)
             self.dock_widgets["console"].show()
             self.dock_widgets["console"].raise_()
 
@@ -695,7 +695,7 @@ class StarFab(QMainWindow):
             self.page_DataView.sc_tabs.setTabToolTip(
                 index, tooltip if tooltip is not None else str(obj_id)
             )
-            if (btn := self.page_DataView.sc_tabs.tabBar().tabButton(index, qtw.QTabBar.RightSide)) is not None:
+            if (btn := self.page_DataView.sc_tabs.tabBar().tabButton(index, qtw.QTabBar.ButtonPosition.RightSide)) is not None:
                 btn.setFixedSize(14, 14)
         if show_after_add:
             return self.page_DataView.sc_tabs.setCurrentWidget(self._open_tabs[obj_id])

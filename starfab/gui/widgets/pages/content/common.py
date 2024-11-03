@@ -67,8 +67,8 @@ class P4KContentSelector(ContentSelector):
         self.sc_tree.setModel(self.proxy_model)
 
         header = self.sc_tree.header()
-        header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
         self.sc_tree.hideColumn(1)
         self.sc_tree.hideColumn(2)
         self.sc_tree.hideColumn(3)
@@ -91,8 +91,8 @@ class DCBContentSelector(ContentSelector):
         self.sc_tree.setModel(self.proxy_model)
 
         header = self.sc_tree.header()
-        header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
         self.sc_tree.hideColumn(1)
 
     def _handle_item_action(self, item, model, index):

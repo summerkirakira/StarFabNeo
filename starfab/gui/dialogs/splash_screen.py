@@ -6,7 +6,7 @@ class StarFabSplashScreen(qtw.QSplashScreen):
     def __init__(self, starfab):
         self.starfab = starfab
         pixmap = qtg.QPixmap(str(RES_PATH / "splash2.png"))
-        super().__init__(pixmap, qtc.Qt.SplashScreen)
+        super().__init__(pixmap, qtc.Qt.WindowType.SplashScreen)
         self.progress_bar = qtw.QProgressBar(self)
         self.progress_bar.setGeometry(0, pixmap.height() - 40, pixmap.width(), 40)
 

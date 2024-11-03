@@ -68,7 +68,7 @@ class UpdateAvailableDialog(qtw.QDialog):
         skip_version_btn.clicked.connect(self.skip)
         btn_layout.addWidget(skip_version_btn)
 
-        btn_layout.addItem(qtw.QSpacerItem(40, 20, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Minimum))
+        btn_layout.addItem(qtw.QSpacerItem(40, 20, qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Minimum))
 
         remind_btn = qtw.QPushButton(f'Remind me later')
         remind_btn.clicked.connect(self.remind)

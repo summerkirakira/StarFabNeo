@@ -1,16 +1,17 @@
 import importlib
 import subprocess
 import sys
-from distutils.util import strtobool
 
 from scdatatools.engine.textures.converter import (
     convert_buffer,
     ConverterUtility,
     ConversionError,
 )
+
+from scdatatools.utils import strtobool
+
 from starfab.gui import qtw
 from starfab.settings import get_texconv, get_compressonatorcli
-
 
 def parsebool(val: any):
     if isinstance(val, bool):

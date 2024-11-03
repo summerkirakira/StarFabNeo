@@ -40,9 +40,9 @@ class BlueprintExportLog(qtw.QDialog):
         self.setSizeGripEnabled(True)
 
         self.btns = qtw.QDialogButtonBox()
-        self.btns.setOrientation(qtc.Qt.Horizontal)
-        self.btns.setStandardButtons(qtw.QDialogButtonBox.Ok | qtw.QDialogButtonBox.Cancel)
-        self.btns.button(qtw.QDialogButtonBox.Ok).setEnabled(False)
+        self.btns.setOrientation(qtc.Qt.Orientation.Horizontal)
+        self.btns.setStandardButtons(qtw.QDialogButtonBox.StandardButton.Ok | qtw.QDialogButtonBox.StandardButton.Cancel)
+        self.btns.button(qtw.QDialogButtonBox.StandardButton.Ok).setEnabled(False)
         self.btns.accepted.connect(self.close)
         self.btns.rejected.connect(self.cancel)
 
@@ -59,13 +59,13 @@ class BlueprintExportLog(qtw.QDialog):
 
     def cancel(self):
         self._should_cancel = True
-        btn = self.btns.button(qtw.QDialogButtonBox.Cancel)
+        btn = self.btns.button(qtw.QDialogButtonBox.StandardButton.Cancel)
         if btn is not None:
             btn.setEnabled(False)
             btn.setText('Cancelling')
 
     def closeEvent(self, event) -> None:
-        if self.btns.button(qtw.QDialogButtonBox.Ok).isEnabled():
+        if self.btns.button(qtw.QDialogButtonBox.StandardButton.Ok).isEnabled():
             event.accept()
         else:
             self.cancel()
@@ -101,11 +101,11 @@ class BlueprintExportLog(qtw.QDialog):
             model_log_file.write(f"{msg.split(' | ')[-1]}\n")
 
         if "WARN" in msg:
-            fmt.setFontWeight(qtg.QFont.Bold)
+            fmt.setFontWeight(qtg.QFont.Weight.Bold)
             fmt.setForeground(qtg.QColor("#f5ad42"))
             overview_out = True
         elif "ERROR" in msg:
-            fmt.setFontWeight(qtg.QFont.Bold)
+            fmt.setFontWeight(qtg.QFont.Weight.Bold)
             fmt.setForeground(qtg.QColor("#ff4d4d"))
             overview_out = True
         elif not verbose and level <= logging.INFO:
@@ -219,5 +219,5 @@ class BlueprintExportLog(qtw.QDialog):
         )
         if open_dir:
             show_file_in_filemanager(Path(self.outdir))
-        self.btns.button(qtw.QDialogButtonBox.Ok).setEnabled(True)
-        self.btns.removeButton(self.btns.button(qtw.QDialogButtonBox.Cancel))
+        self.btns.button(qtw.QDialogButtonBox.StandardButton.Ok).setEnabled(True)
+        self.btns.removeButton(self.btns.button(qtw.QDialogButtonBox.StandardButton.Cancel))

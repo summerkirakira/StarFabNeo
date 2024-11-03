@@ -60,10 +60,7 @@ def main():
         appid = "scdatatools.starfab"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appid)
 
-    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
 
     app = QApplication(sys.argv)
     app.setOrganizationName("scdatatools")

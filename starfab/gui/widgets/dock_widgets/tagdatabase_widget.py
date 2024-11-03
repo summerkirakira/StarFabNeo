@@ -24,21 +24,21 @@ class TagDatabaseView(StarFabSearchableTreeWidget):
 
         self.proxy_model.setFilterKeyColumn(0)
         self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
 
     def _copy_tag_name(self, item):
         cb = qtw.QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard)
-        cb.setText(str(item.tag), mode=cb.Clipboard)
+        cb.clear(mode=cb.Mode.Clipboard)
+        cb.setText(str(item.tag), mode=cb.Mode.Clipboard)
         self.starfab.statusBar.showMessage(f"Tag {item.tag} copied to the clipboard")
 
     def keyPressEvent(self, event) -> None:
-        if event.key() == qtc.Qt.Key_C:
+        if event.key() == qtc.Qt.Key.Key_C:
             if (
                 sys.platform == "darwin"
-                and qtg.QGuiApplication.keyboardModifiers() == qtc.Qt.MetaModifier
-            ) or qtg.QGuiApplication.keyboardModifiers() == qtc.Qt.ControlModifier:
+                and qtg.QGuiApplication.keyboardModifiers() == qtc.Qt.KeyboardModifier.MetaModifier
+            ) or qtg.QGuiApplication.keyboardModifiers() == qtc.Qt.KeyboardModifier.ControlModifier:
                 items = self.get_selected_items()
                 if len(items) == 1:
                     self._copy_tag_name(items[0])
@@ -64,7 +64,7 @@ class TagDatabaseView(StarFabSearchableTreeWidget):
             self.proxy_model.sort(0, qtc.Qt.SortOrder.AscendingOrder)
 
             header = self.sc_tree.header()
-            header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
             header.setStretchLastSection(False)
-            header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+            header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
             self._sync_tree_header()

@@ -2,7 +2,7 @@ from pathlib import Path
 from qtpy import uic
 
 from scdatatools.forge import dftypes
-from scdatatools.forge.dco import DataCoreRecordObject
+from scdatatools.forge.dco import DataCoreRecordObject, DataCoreObject
 from scdatatools.sc.object_container import ObjectContainerInstance, ObjectContainer
 from scdatatools.sc.object_container.plotter import ObjectContainerPlotter
 from starfab import get_starfab

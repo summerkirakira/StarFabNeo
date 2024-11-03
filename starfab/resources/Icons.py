@@ -29,7 +29,7 @@ class Icons(object):
 
     def make_icon(self, name, path):
         icon = QIcon()
-        icon.addPixmap(QPixmap(path), QIcon.Normal, QIcon.Off)
+        icon.addPixmap(QPixmap(path), QIcon.Mode.Normal, QIcon.State.Off)
         self._icons[name] = icon
 
     def icon(self, name):

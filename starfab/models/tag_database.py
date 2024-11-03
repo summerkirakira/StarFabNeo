@@ -29,7 +29,7 @@ class TagDatabaseSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
             if parent := source_parent.internalPointer():
                 try:
                     item = parent.child(source_row)
-                    if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
+                    if self.filterCaseSensitivity() == qtc.Qt.CaseSensitivity.CaseInsensitive:
                         return (
                             self._filter.lower() in item.name.lower()
                             or self._filter.lower() in item.guid
@@ -87,7 +87,7 @@ class TagDatabaseTreeItem:
         return self.parent
 
     def data(self, column, role):
-        if role == qtc.Qt.DisplayRole:
+        if role == qtc.Qt.ItemDataRole.DisplayRole:
             if column == 0:
                 return self.tag.name
             elif column == 1:

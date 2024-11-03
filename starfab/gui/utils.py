@@ -40,6 +40,6 @@ def icon_for_path(path: str, default=False):
         return _icon_cache.setdefault(ext, icon_provider.icon(qtc.QFileInfo(Path(path).absolute().as_posix())))
     if default:
         return _icon_cache.setdefault(
-            ".default", qtw.QApplication.style().standardIcon(qtw.QStyle.SP_FileIcon)
+            ".default", qtw.QApplication.style().standardIcon(qtw.QStyle.StandardPixmap.SP_FileIcon)
         )
     return None

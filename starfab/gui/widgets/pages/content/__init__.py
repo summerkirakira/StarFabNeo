@@ -37,7 +37,7 @@ class ContentView(qtw.QWidget):
         self.toolButton_Job_Remove.setIcon(qta.icon("mdi.minus-box"))
 
         self.buttonBox_Content.accepted.connect(self.handle_extract)
-        self.buttonBox_Content.button(qtw.QDialogButtonBox.Save).setText("Export")
+        self.buttonBox_Content.button(qtw.QDialogButtonBox.StandardButton.Save).setText("Export")
 
         self.toolBox = qtw.QToolBox(self.tab_Assets)
         self.toolBox.addItem(VehicleSelector(content_page=self), "Vehicles")
@@ -61,10 +61,10 @@ class ContentView(qtw.QWidget):
 
         # TODO: temporarily hide things that arent fleshed out yet
         self.content_left_tab_widget.setTabVisible(
-            self.content_left_tab_widget.indexOf(self.tab_Images), False
+            self.content_left_tab_widget.indexOf(self.tab_Images), True
         )
         self.content_right_tab_widget.setTabVisible(
-            self.content_right_tab_widget.indexOf(self.tab_Jobs), False
+            self.content_right_tab_widget.indexOf(self.tab_Jobs), True
         )
         self.groupBox_Content_Local_Files.hide()
 

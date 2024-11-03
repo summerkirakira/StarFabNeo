@@ -25,7 +25,7 @@ logger = getLogger(__name__)
 class P4KExportDialog(qtw.QDialog):
     def __init__(self, p4k_items: typing.List[P4KItem], save_to=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowFlags(self.windowFlags() & ~qtc.Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() & ~qtc.Qt.WindowType.WindowContextHelpButtonHint)
         self.setWindowTitle(self.tr("Export"))
         self.setFixedWidth(400)
 
@@ -37,10 +37,10 @@ class P4KExportDialog(qtw.QDialog):
 
         btns = qtw.QDialogButtonBox()
         btns.addButton(
-            qtw.QPushButton(self.tr("Cancel")), qtw.QDialogButtonBox.RejectRole
+            qtw.QPushButton(self.tr("Cancel")), qtw.QDialogButtonBox.ButtonRole.RejectRole
         )
         btns.addButton(
-            qtw.QPushButton(self.tr("Export")), qtw.QDialogButtonBox.AcceptRole
+            qtw.QPushButton(self.tr("Export")), qtw.QDialogButtonBox.ButtonRole.AcceptRole
         )
         btns.accepted.connect(self.export)
         btns.rejected.connect(self.close)

@@ -9,7 +9,7 @@ class CollapsableWidget(qtw.QFrame):
         self.label = label
         self.expanded = expand
         self.setObjectName("CollapseableWidget")
-        self.setSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred)
+        self.setSizePolicy(qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Preferred)
 
         self.main_layout = qtw.QVBoxLayout()
         self.setStyleSheet(
@@ -28,12 +28,12 @@ class CollapsableWidget(qtw.QFrame):
 
         self.content = qtw.QWidget()
         self.content.setLayout(layout())
-        self.main_layout.addWidget(self.expand_button, 0, qtc.Qt.AlignTop)
-        self.main_layout.addWidget(self.content, 0, qtc.Qt.AlignTop)
+        self.main_layout.addWidget(self.expand_button, 0, qtc.Qt.AlignmentFlag.AlignTop)
+        self.main_layout.addWidget(self.content, 0, qtc.Qt.AlignmentFlag.AlignTop)
         self.expand_button.clicked.connect(self.toggle)
         self.setLayout(self.main_layout)
 
-        self.expand_button.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.expand_button.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         self.expand_button.customContextMenuRequested.connect(self._show_ctx_menu)
 
         if expand:
@@ -122,13 +122,13 @@ class FlowLayout(qtw.QLayout):
         if self._hspacing >= 0:
             return self._hspacing
         else:
-            return self.smartSpacing(qtw.QStyle.PM_LayoutHorizontalSpacing)
+            return self.smartSpacing(qtw.QStyle.PixelMetric.PM_LayoutHorizontalSpacing)
 
     def verticalSpacing(self):
         if self._vspacing >= 0:
             return self._vspacing
         else:
-            return self.smartSpacing(qtw.QStyle.PM_LayoutVerticalSpacing)
+            return self.smartSpacing(qtw.QStyle.PixelMetric.PM_LayoutVerticalSpacing)
 
     def count(self):
         return len(self._items)
@@ -142,7 +142,9 @@ class FlowLayout(qtw.QLayout):
             return self._items.pop(index)
 
     def expandingDirections(self):
-        return qtc.Qt.Orientations(0)
+        # Fairly certain this is a static return of the Horizontal orientation, was previously trying to use
+        # qtc.Qt.Orientations(0) which does not exist.
+        return qtc.Qt.Orientation.Horizontal
 
     def hasHeightForWidth(self):
         return True
@@ -176,16 +178,16 @@ class FlowLayout(qtw.QLayout):
             hspace = self.horizontalSpacing()
             if hspace == -1:
                 hspace = widget.style().layoutSpacing(
-                    qtw.QSizePolicy.PushButton,
-                    qtw.QSizePolicy.PushButton,
-                    qtc.Qt.Horizontal,
+                    qtw.QSizePolicy.ControlType.PushButton,
+                    qtw.QSizePolicy.ControlType.PushButton,
+                    qtc.Qt.Orientation.Horizontal,
                 )
             vspace = self.verticalSpacing()
             if vspace == -1:
                 vspace = widget.style().layoutSpacing(
-                    qtw.QSizePolicy.PushButton,
-                    qtw.QSizePolicy.PushButton,
-                    qtc.Qt.Vertical,
+                    qtw.QSizePolicy.ControlType.PushButton,
+                    qtw.QSizePolicy.ControlType.PushButton,
+                    qtc.Qt.Orientation.Vertical,
                 )
             nextX = x + item.sizeHint().width() + hspace
             if nextX - hspace > effective.right() and lineheight > 0:
@@ -259,21 +261,21 @@ class TagBar(qtw.QFrame):
         }
         """
         )
-        self.setFrameShape(qtw.QFrame.Box)
-        self.setFrameShadow(qtw.QFrame.Plain)
+        self.setFrameShape(qtw.QFrame.Shape.Box)
+        self.setFrameShadow(qtw.QFrame.Shadow.Plain)
         self.setAutoFillBackground(True)
         # self.h_layout = FlowLayout()
         self.h_layout = qtw.QHBoxLayout()
         self.h_layout.setSpacing(4)
         self.setLayout(self.h_layout)
         self.line_edit = qtw.QLineEdit()
-        self.line_edit.setSizePolicy(qtw.QSizePolicy.Minimum, qtw.QSizePolicy.Maximum)
+        self.line_edit.setSizePolicy(qtw.QSizePolicy.Policy.Minimum, qtw.QSizePolicy.Policy.Maximum)
         self.line_edit.setStyleSheet("border: 0;")
         if self.valid_tags:
             completer = qtw.QCompleter(valid_tags)
             self.line_edit.setCompleter(completer)
             completer.activated.connect(self.create_tags)
-        self.setSizePolicy(qtw.QSizePolicy.Minimum, qtw.QSizePolicy.Minimum)
+        self.setSizePolicy(qtw.QSizePolicy.Policy.Minimum, qtw.QSizePolicy.Policy.Minimum)
         self.setContentsMargins(1, 1, 1, 1)
         self.h_layout.setContentsMargins(1, 1, 1, 1)
         self.line_edit.returnPressed.connect(self.create_tags)
@@ -283,8 +285,8 @@ class TagBar(qtw.QFrame):
     def eventFilter(self, obj, event):
         if (
             obj == self.line_edit
-            and event.type() == qtc.QEvent.KeyPress
-            and event.key() == qtc.Qt.Key_Tab
+            and event.type() == qtc.QEvent.Type.KeyPress
+            and event.key() == qtc.Qt.Key.Key_Tab
         ):
             self.create_tags()
             return True
@@ -335,10 +337,10 @@ class TagBar(qtw.QFrame):
         hbox.addWidget(label)
         x_button = qtw.QPushButton("x")
         x_button.setFixedSize(10, 10)
-        x_button.setSizePolicy(qtw.QSizePolicy.Maximum, qtw.QSizePolicy.Maximum)
+        x_button.setSizePolicy(qtw.QSizePolicy.Policy.Maximum, qtw.QSizePolicy.Policy.Maximum)
         x_button.clicked.connect(partial(self.delete_tag, text))
         hbox.addWidget(x_button)
-        tag.setSizePolicy(qtw.QSizePolicy.Maximum, qtw.QSizePolicy.Preferred)
+        tag.setSizePolicy(qtw.QSizePolicy.Policy.Maximum, qtw.QSizePolicy.Policy.Preferred)
         self.h_layout.addWidget(tag)
         self.tag_added.emit(text)
 

@@ -4,7 +4,7 @@ StarFab BlenderLink
 This is the BlenderLink client that is meant to be accessed from with a Blender instance that has been launched from
 StarFab. If so, it will use the already have the correct port and a valid auth token.
 
-You can user :func:`blenderlink_connect` to connect from a Blender that has the correct python path's/modules available
+You can use :func:`blenderlink_connect` to connect from a Blender that has the correct python path's/modules available
 to manually connect to StarFab.
 
 """

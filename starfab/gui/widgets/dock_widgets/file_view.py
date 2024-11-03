@@ -79,6 +79,6 @@ class FileViewDock(StarFabSearchableTreeDockWidget):
                 )
             )
             header = self.sc_tree.header()
-            header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
             header.setStretchLastSection(False)
-            header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+            header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)

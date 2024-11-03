@@ -26,8 +26,13 @@ class PreviewPopOut(qtw.QDialog):
     def __init__(self, preview, title=''):
         super().__init__(
             parent=None,
-            f=(qtc.Qt.WindowTitleHint | qtc.Qt.WindowSystemMenuHint | qtc.Qt.WindowMinimizeButtonHint
-               | qtc.Qt.WindowMaximizeButtonHint | qtc.Qt.WindowCloseButtonHint)
+            f=(
+                    qtc.Qt.WindowType.WindowTitleHint |
+                    qtc.Qt.WindowType.WindowSystemMenuHint |
+                    qtc.Qt.WindowType.WindowMinimizeButtonHint|
+                    qtc.Qt.WindowType.WindowMaximizeButtonHint |
+                    qtc.Qt.WindowType.WindowCloseButtonHint
+            )
         )
         self.setWindowTitle('Preview' if not title else f'Preview - {title}')
         self.preview = preview
@@ -64,7 +69,7 @@ class Preview3D(StarFabStaticWidget):
         preview_layout.setSpacing(0)
 
         self.toolbar = qtw.QToolBar(self)
-        self.toolbar.setOrientation(qtc.Qt.Vertical)
+        self.toolbar.setOrientation(qtc.Qt.Orientation.Vertical)
         preview_layout.addWidget(self.toolbar)
 
         self.plotter_class = plotter_class
@@ -321,7 +326,7 @@ class LazyCollapsablePreviewWidget(CollapsableWidget):
             prev = self._previewer(hide_buttons=['clear'], **self._preview_kwargs)
             prev.setMinimumSize(*self.min_size)
             prev.setSizePolicy(
-                qtw.QSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding)
+                qtw.QSizePolicy(qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Expanding)
             )
             self.content.layout().addWidget(prev)
             super().expand()  # this is a workaround for the orientation widget showing up bugged

@@ -159,7 +159,7 @@ class PathArchiveTreeSortFilterProxyModel(qtc.QSortFilterProxyModel):
             if not self._filter and not self.checkAdditionFilters(item):
                 return False
             elif self.checkAdditionFilters(item):
-                if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
+                if self.filterCaseSensitivity() == qtc.Qt.CaseSensitivity.CaseInsensitive:
                     return self._filter.lower() in item._path.lower()
                 else:
                     return self._filter in item._path
@@ -241,13 +241,13 @@ class PathArchiveTreeItem:
         return self.parent
 
     def data(self, column, role):
-        if role == qtc.Qt.DisplayRole:
+        if role == qtc.Qt.ItemDataRole.DisplayRole:
             if column == 0:
                 return self.name
             elif column == 1:
                 return self.suffix
             return ""
-        elif role == qtc.Qt.DecorationRole:
+        elif role == qtc.Qt.ItemDataRole.DecorationRole:
             if column == 0:
                 return self.icon
         return None
@@ -305,7 +305,7 @@ class PathArchiveTreeModel(qtc.QAbstractItemModel):
         return len(self.columns)
 
     def headerData(self, section: int, orientation: qtc.Qt.Orientation, role: int):
-        if orientation == qtc.Qt.Horizontal and role == qtc.Qt.DisplayRole:
+        if orientation == qtc.Qt.Orientation.Horizontal and role == qtc.Qt.ItemDataRole.DisplayRole:
             return self.columns[section]
         return None
 
@@ -318,7 +318,7 @@ class PathArchiveTreeModel(qtc.QAbstractItemModel):
 
     def flags(self, index):
         if not index.isValid():
-            return qtc.Qt.NoItemFlags
+            return qtc.Qt.ItemFlag.NoItemFlags
         return super().flags(index)
 
     def parentForPath(self, path):
@@ -462,21 +462,21 @@ class CheckableModelWrapper(PathArchiveTreeModel):
 
     def _sync_checked(self, item, value, index):
         self._checked[item] = value
-        self.dataChanged.emit(index, index, [qtc.Qt.EditRole])
+        self.dataChanged.emit(index, index, [qtc.Qt.ItemDataRole.EditRole])
         for i, child in enumerate(item.children):
             self._sync_checked(child, value, self.createIndex(i, 0, child))
 
     def select_all(self):
         for i, item in enumerate(self.root_item.children):
-            self._sync_checked(item, qtc.Qt.Checked, self.createIndex(i, 0, item))
+            self._sync_checked(item, qtc.Qt.CheckState.Checked, self.createIndex(i, 0, item))
 
     def deselect_all(self):
         for i, item in enumerate(self.root_item.children):
-            self._sync_checked(item, qtc.Qt.Unchecked, self.createIndex(i, 0, item))
+            self._sync_checked(item, qtc.Qt.CheckState.Unchecked, self.createIndex(i, 0, item))
 
     @property
     def checked_items(self):
-        return [i for i, checked in self._checked.items() if checked]
+        return [i for i, checked in self._checked.items() if checked is qtc.Qt.CheckState.Checked]
 
     @property
     def root_item(self):
@@ -488,8 +488,8 @@ class CheckableModelWrapper(PathArchiveTreeModel):
 
     def flags(self, index):
         if not index.isValid():
-            return qtc.Qt.NoItemFlags
-        return super().flags(index) | qtc.Qt.ItemIsUserCheckable
+            return qtc.Qt.ItemFlag.NoItemFlags
+        return super().flags(index) | qtc.Qt.ItemFlag.ItemIsUserCheckable
 
     def _update_parent(self, item):
         if item == self.root_item:

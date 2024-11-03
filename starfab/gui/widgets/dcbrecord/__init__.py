@@ -116,10 +116,10 @@ class DCBLazyCollapsableObjWidget(CollapsableWidget):
             rec = {self.obj_name: get_starfab().sc.datacore.record_to_dict(self.obj)}
 
             cb = qtw.QApplication.clipboard()
-            cb.clear(mode=cb.Clipboard)
+            cb.clear(mode=cb.Mode.Clipboard)
             cb.setText(
                 json.dumps(rec, indent=2, default=str, sort_keys=True),
-                mode=cb.Clipboard,
+                mode=cb.Mode.Clipboard,
             )
         except Exception as e:
             get_starfab().statusBar.showMessage(f"Failed to copy object: {e}")
@@ -166,7 +166,7 @@ class DCBObjWidget(qtw.QWidget):
         props_widget = qtw.QWidget(parent=self)
         props_layout = qtw.QFormLayout()
         props_layout.setContentsMargins(0, 0, 0, 0)
-        props_layout.setLabelAlignment(qtc.Qt.AlignLeft | qtc.Qt.AlignTop)
+        props_layout.setLabelAlignment(qtc.Qt.AlignmentFlag.AlignLeft | qtc.Qt.AlignmentFlag.AlignTop)
 
         for name in sorted(props):
             props_layout.addRow(

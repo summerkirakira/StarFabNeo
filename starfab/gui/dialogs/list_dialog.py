@@ -12,10 +12,9 @@ class QListDialog(qtw.QDialog):
         super().__init__(*args, **kwargs)
 
         self.setMinimumSize(400, 300)
-        self.setWindowFlags(self.windowFlags() & ~qtc.Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() & ~qtc.Qt.WindowType.WindowContextHelpButtonHint)
         self.setWindowTitle(self.tr(title))
         self.setSizeGripEnabled(True)
-        self
 
         items = items or []
         layout = qtw.QVBoxLayout()
@@ -34,11 +33,11 @@ class QListDialog(qtw.QDialog):
 
         if items:
             self.list_widget.addItems(items)
-        self.list_widget.sortItems(qtc.Qt.AscendingOrder)
+        self.list_widget.sortItems(qtc.Qt.SortOrder.AscendingOrder)
         layout.addWidget(self.list_widget)
 
         btns = qtw.QDialogButtonBox()
-        btns.setStandardButtons(qtw.QDialogButtonBox.Ok | qtw.QDialogButtonBox.Cancel)
+        btns.setStandardButtons(qtw.QDialogButtonBox.StandardButton.Ok | qtw.QDialogButtonBox.StandardButton.Cancel)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)
@@ -52,13 +51,13 @@ class QListDialog(qtw.QDialog):
         blender_path = Path(blender_path)
         if blender_path.is_file() and blender_path.stem.casefold() == 'blender':
             self.list_widget.addItem(blender_path.parent.as_posix())
-        self.list_widget.sortItems(qtc.Qt.AscendingOrder)
+        self.list_widget.sortItems(qtc.Qt.SortOrder.AscendingOrder)
 
     def _remove_item(self):
         selected_items = self.list_widget.selectedIndexes()
         for index in selected_items:
             self.list_widget.takeItem(index.row())
-        self.list_widget.sortItems(qtc.Qt.AscendingOrder)
+        self.list_widget.sortItems(qtc.Qt.SortOrder.AscendingOrder)
 
     def items(self):
         return [text for _ in range(self.list_widget.count()) if (text := self.list_widget.item(_).text().strip())]

@@ -48,7 +48,7 @@ class ListsDialog(QDialog):
         if item is not None:
             title = "Edit {0}".format(self.name)
             string, ok = QInputDialog.getText(self, title, title,
-                                              QLineEdit.Normal, item.text())
+                                              QLineEdit.EchoMode.Normal, item.text())
             if ok and string is not None:
                 item.setText(string)
 
@@ -60,8 +60,8 @@ class ListsDialog(QDialog):
         reply = QMessageBox.question(self, "Remove {0}".format(
             self.name), "Remove {0} `{1}'?".format(
             self.name, str(item.text())),
-                                     QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
             item = self.list.takeItem(row)
             del item
 

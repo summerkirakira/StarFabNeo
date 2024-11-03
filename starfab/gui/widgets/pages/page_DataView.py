@@ -19,7 +19,7 @@ class DataView(qtw.QWidget):
         self._open_tabs = {}
 
         self.sc_tabs.tabCloseRequested.connect(starfab._handle_close_tab)
-        self.sc_tabs.tabBar().setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.sc_tabs.tabBar().setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         self.sc_tabs.tabBar().customContextMenuRequested.connect(
             starfab._handle_tab_ctx_menu
         )

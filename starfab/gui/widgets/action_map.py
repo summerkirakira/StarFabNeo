@@ -29,8 +29,8 @@ class ActionMapView(StarFabStaticWidget):
         self.tree_model = None
         self.proxy_model = qtc.QSortFilterProxyModel(self)
         self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
         self.tree.installEventFilter(self)
 
         self.search_bar.textChanged.connect(self.debounce.start)
@@ -62,7 +62,7 @@ class ActionMapView(StarFabStaticWidget):
             qtg.QGuiApplication.clipboard().setText(stream.getvalue())
 
     def eventFilter(self, source, event):
-        if event.type() == qtc.QEvent.KeyPress and event.matches(qtg.QKeySequence.Copy):
+        if event.type() == qtc.QEvent.Type.KeyPress and event.matches(qtg.QKeySequence.StandardKey.Copy):
             # self.copy_selection()
             return True
         return super().eventFilter(source, event)
@@ -113,5 +113,5 @@ class ActionMapView(StarFabStaticWidget):
             self.tree.setColumnWidth(0, 250)
             self.tree.setColumnWidth(1, 250)
             self.tree.setSortingEnabled(True)
-            self.tree.sortByColumn(0, qtc.Qt.AscendingOrder)
+            self.tree.sortByColumn(0, qtc.Qt.SortOrder.AscendingOrder)
             self.tree.expandAll()

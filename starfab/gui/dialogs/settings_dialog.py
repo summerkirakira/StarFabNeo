@@ -53,10 +53,10 @@ class SettingsDialog(qtw.QDialog):
         self.autoOpenMostRecent.stateChanged.connect(self._save_settings)
 
         # external tools
-        open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.SP_DirIcon)
-        cgfconvfind = self.cgfconverterPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        open_dir_icon = qtw.QApplication.style().standardIcon(qtw.QStyle.StandardPixmap.SP_DirIcon)
+        cgfconvfind = self.cgfconverterPath.addAction(open_dir_icon, qtw.QLineEdit.ActionPosition.TrailingPosition)
         cgfconvfind.triggered.connect(partial(self._handle_path_chooser, self.cgfconverterPath))
-        texconvfind = self.texconvPath.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        texconvfind = self.texconvPath.addAction(open_dir_icon, qtw.QLineEdit.ActionPosition.TrailingPosition)
         texconvfind.triggered.connect(partial(self._handle_path_chooser, self.texconvPath))
 
         self.starfab.blender_manager.updated.connect(self._sync_blender)
@@ -73,7 +73,7 @@ class SettingsDialog(qtw.QDialog):
 
         # export
         self.opt_Exports_Directory.textChanged.connect(self._save_settings)
-        exportsdirfind = self.opt_Exports_Directory.addAction(open_dir_icon, qtw.QLineEdit.TrailingPosition)
+        exportsdirfind = self.opt_Exports_Directory.addAction(open_dir_icon, qtw.QLineEdit.ActionPosition.TrailingPosition)
         exportsdirfind.triggered.connect(
             partial(self._handle_path_chooser, self.opt_Exports_Directory, dir=True)
         )
@@ -85,7 +85,7 @@ class SettingsDialog(qtw.QDialog):
         self.editorWordWrap.currentTextChanged.connect(self._save_settings)
         self.editorShowLineNumbers.stateChanged.connect(self._save_settings)
 
-        self.buttonBox.button(qtw.QDialogButtonBox.RestoreDefaults).clicked.connect(self._reset_settings)
+        self.buttonBox.button(qtw.QDialogButtonBox.StandardButton.RestoreDefaults).clicked.connect(self._reset_settings)
         self.buttonBox.accepted.connect(self.close)
 
     def _parse_settings(self):
@@ -132,7 +132,7 @@ class SettingsDialog(qtw.QDialog):
 
         dlg = list_dialog.QListDialog('Blender Paths', items=paths, parent=self)
         try:
-            if dlg.exec_() == qtw.QDialog.Accepted:
+            if dlg.exec_() == qtw.QDialog.DialogCode.Accepted:
                 paths = [Path(_) for _ in dlg.items()]
                 self.starfab.blender_manager.set_additional_paths.emit(paths)
                 self.blenderComboBox.clear()

@@ -218,13 +218,13 @@ class Editor(QWebEngineView):
         self.editor_item = editor_item
 
         we_settings = self.settings()
-        we_settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        we_settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
-        we_settings.setAttribute(QWebEngineSettings.ErrorPageEnabled, True)
-        we_settings.setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        we_settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
+        we_settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+        we_settings.setAttribute(QWebEngineSettings.WebAttribute.ErrorPageEnabled, True)
+        we_settings.setAttribute(QWebEngineSettings.WebAttribute.PluginsEnabled, True)
 
         if parse_bool(os.environ.get('STARFAB_DEBUG_EDITOR', False)):
-            self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+            self.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
 
             self.dev_view = QWebEngineView()
             self.page().setDevToolsPage(self.dev_view.page())

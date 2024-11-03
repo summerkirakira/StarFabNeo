@@ -94,8 +94,7 @@ def _get_exec(name, settings_name):
     exe = shutil.which(name)
     if exe is not None:
         return exe
-    # TODO: Make this platform independent for POSIX support, it requires a bit of thought due to .NET dependencies
-    #       still using .exe extensions
+
     name = name + ".exe" if sys.platform == "win32" else name
     if (CONTRIB_DIR / name).is_file():
         return Path(CONTRIB_DIR / name)

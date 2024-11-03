@@ -66,7 +66,7 @@ class DCBFilterWidget(StarFabSearchableTreeFilterWidget):
         for k, v in self.filter_operators.items():
             self.filter_op.addItem(v, userData=k)
         self.filter_op.currentIndexChanged.connect(self._handle_filter_updated)
-        self.filter_op.setSizePolicy(qtw.QSizePolicy.Minimum, qtw.QSizePolicy.Minimum)
+        self.filter_op.setSizePolicy(qtw.QSizePolicy.Policy.Minimum, qtw.QSizePolicy.Policy.Minimum)
         self.filter_op.setFixedWidth(48)
         self.h_layout.addWidget(self.filter_op)
 
@@ -74,7 +74,7 @@ class DCBFilterWidget(StarFabSearchableTreeFilterWidget):
         for k, v in self.filter_types.items():
             self.filter_type.addItem(v, userData=k)
         self.filter_type.currentIndexChanged.connect(self._handle_filter_type_changed)
-        self.filter_type.setSizePolicy(qtw.QSizePolicy.Minimum, qtw.QSizePolicy.Minimum)
+        self.filter_type.setSizePolicy(qtw.QSizePolicy.Policy.Minimum, qtw.QSizePolicy.Policy.Minimum)
         self.filter_type.setFixedWidth(100)
         self.h_layout.addWidget(self.filter_type)
 
@@ -85,17 +85,17 @@ class DCBFilterWidget(StarFabSearchableTreeFilterWidget):
         starfab = get_starfab()
         if starfab.sc is not None:
             self._tag_completer = qtw.QCompleter(starfab.sc.tag_database.tag_names())
-            self._tag_completer.setCaseSensitivity(qtc.Qt.CaseInsensitive)
-            self._tag_completer.setFilterMode(qtc.Qt.MatchEndsWith)
+            self._tag_completer.setCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+            self._tag_completer.setFilterMode(qtc.Qt.MatchFlag.MatchEndsWith)
             self._type_completer = qtw.QCompleter(
                 sorted(starfab.sc.datacore.record_types)
             )
-            self._type_completer.setCaseSensitivity(qtc.Qt.CaseInsensitive)
-            self._type_completer.setFilterMode(qtc.Qt.MatchStartsWith)
+            self._type_completer.setCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+            self._type_completer.setFilterMode(qtc.Qt.MatchFlag.MatchStartsWith)
 
         close_btn = qtw.QPushButton("-")
         close_btn.setFixedSize(24, 24)
-        close_btn.setSizePolicy(qtw.QSizePolicy.Maximum, qtw.QSizePolicy.Maximum)
+        close_btn.setSizePolicy(qtw.QSizePolicy.Policy.Maximum, qtw.QSizePolicy.Policy.Maximum)
         close_btn.clicked.connect(self.close_filter)
         self.h_layout.addWidget(close_btn)
 
@@ -170,8 +170,8 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         )
 
         self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
 
         self.sc_add_filter.show()
 
@@ -185,8 +185,8 @@ class DCBTreeWidget(StarFabSearchableTreeWidget):
         self.proxy_model.sort(0, qtc.Qt.SortOrder.AscendingOrder)
 
         header = self.sc_tree.header()
-        header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
         self._sync_tree_header()
 
     def _handle_item_action(self, item, model, index):

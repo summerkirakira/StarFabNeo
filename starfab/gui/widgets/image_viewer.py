@@ -46,12 +46,12 @@ class QImageViewer(qtw.QGraphicsView):
         self.scene = qtw.QGraphicsScene()
         self.setScene(self.scene)
 
-        self.setTransformationAnchor(qtw.QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(qtw.QGraphicsView.AnchorUnderMouse)
-        self.setFrameShape(qtw.QFrame.NoFrame)
-        self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
+        self.setTransformationAnchor(qtw.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setResizeAnchor(qtw.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setFrameShape(qtw.QFrame.Shape.NoFrame)
+        self.setDragMode(qtw.QGraphicsView.DragMode.ScrollHandDrag)
         self.setBackgroundBrush(qtg.QBrush(qtg.QColor(30, 30, 30)))
-        self.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._handle_ctx_menu)
 
         self.ctx_menu = qtw.QMenu()
@@ -63,11 +63,11 @@ class QImageViewer(qtw.QGraphicsView):
         self.scene.addItem(self.image)
 
         # Scroll bar behaviour.
-        #   Qt.ScrollBarAlwaysOff: Never shows a scroll bar.
-        #   Qt.ScrollBarAlwaysOn: Always shows a scroll bar.
-        #   Qt.ScrollBarAsNeeded: Shows a scroll bar only when zoomed.
-        self.setHorizontalScrollBarPolicy(qtc.Qt.ScrollBarAsNeeded)
-        self.setVerticalScrollBarPolicy(qtc.Qt.ScrollBarAsNeeded)
+        #   Qt.ScrollBarPolicy.ScrollBarAlwaysOff: Never shows a scroll bar.
+        #   Qt.ScrollBarPolicy.ScrollBarAlwaysOn: Always shows a scroll bar.
+        #   Qt.ScrollBarPolicy.ScrollBarAsNeeded: Shows a scroll bar only when zoomed.
+        self.setHorizontalScrollBarPolicy(qtc.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(qtc.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         self._empty = True
         self._zoom = 0
@@ -129,11 +129,11 @@ class QImageViewer(qtw.QGraphicsView):
             )
         if pixmap and not pixmap.isNull():
             self._empty = False
-            self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
+            self.setDragMode(qtw.QGraphicsView.DragMode.ScrollHandDrag)
             self.image.setPixmap(pixmap)
         else:
             self._empty = True
-            self.setDragMode(qtw.QGraphicsView.NoDrag)
+            self.setDragMode(qtw.QGraphicsView.DragMode.NoDrag)
             self.image.setPixmap(qtg.QPixmap())
         self.fitInView()
 
@@ -153,17 +153,17 @@ class QImageViewer(qtw.QGraphicsView):
                 self._zoom = 0
 
     def toggleDragMode(self):
-        if self.dragMode() == qtw.QGraphicsView.ScrollHandDrag:
-            self.setDragMode(qtw.QGraphicsView.NoDrag)
+        if self.dragMode() == qtw.QGraphicsView.DragMode.ScrollHandDrag:
+            self.setDragMode(qtw.QGraphicsView.DragMode.NoDrag)
         elif not self._photo.pixmap().isNull():
-            self.setDragMode(qtw.QGraphicsView.ScrollHandDrag)
+            self.setDragMode(qtw.QGraphicsView.DragMode.ScrollHandDrag)
 
     def mousePressEvent(self, event):
         if self.image.isUnderMouse():
             pos = self.mapToScene(event.pos())
-            if event.button() == qtc.Qt.LeftButton:
+            if event.button() == qtc.Qt.MouseButton.LeftButton:
                 self.leftMouseButtonPressed.emit(pos)
-            elif event.button() == qtc.Qt.RightButton:
+            elif event.button() == qtc.Qt.MouseButton.RightButton:
                 self.rightMouseButtonPressed.emit(pos)
         super().mousePressEvent(event)
 
@@ -176,7 +176,7 @@ class QImageViewer(qtw.QGraphicsView):
     def load_from_file(self, fp):
         try:
             image = qtg.QImage.fromData(fp.read())
-            if image.format() == qtg.QImage.Format_Invalid:
+            if image.format() == qtg.QImage.Format.Format_Invalid:
                 # Try Pillow
                 fp.seek(0)
                 img = Image.open(fp)

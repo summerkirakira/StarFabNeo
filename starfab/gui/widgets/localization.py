@@ -34,8 +34,8 @@ class LocalizationView(StarFabStaticWidget):
 
     def _create_proxy_model(self):
         self.proxy_model = qtc.QSortFilterProxyModel(self)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setFilterRole(qtc.Qt.UserRole)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+        self.proxy_model.setFilterRole(qtc.Qt.ItemDataRole.UserRole)
 
     def _update_search(self):
         self.proxy_model.setFilterWildcard(self.search_bar.text())
@@ -59,7 +59,7 @@ class LocalizationView(StarFabStaticWidget):
             qtg.QGuiApplication.clipboard().setText(stream.getvalue())
 
     def eventFilter(self, source, event):
-        if event.type() == qtc.QEvent.KeyPress and event.matches(qtg.QKeySequence.Copy):
+        if event.type() == qtc.QEvent.Type.KeyPress and event.matches(qtg.QKeySequence.StandardKey.Copy):
             self.copy_selection()
             return True
         return super().eventFilter(source, event)

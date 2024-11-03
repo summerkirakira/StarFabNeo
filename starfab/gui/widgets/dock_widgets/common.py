@@ -97,7 +97,7 @@ class StarFabStaticWidget(qtw.QWidget):
         if self.__ui_file__ is not None:
             uic.loadUi(self.__ui_file__, self)
         sizePolicy = qtw.QSizePolicy(
-            qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred
+            qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Preferred
         )
         sizePolicy.setHorizontalStretch(2)
         sizePolicy.setVerticalStretch(2)
@@ -161,12 +161,12 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
 
         tree_header = self.sc_tree.header()
-        tree_header.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        tree_header.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         tree_header.customContextMenuRequested.connect(self._show_header_ctx_menu)
 
-        self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.sc_tree.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
-        self.sc_tree.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.sc_tree.setSelectionMode(qtw.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.sc_tree.setSortingEnabled(True)
 
         self.sc_add_filter.clicked.connect(self._handle_add_filter)
@@ -180,7 +180,7 @@ class StarFabSearchableTreeDockWidget(StarFabDockWidget):
 
         shortcut = qtw.QShortcut(self.sc_tree)
         shortcut.setKey(qtg.QKeySequence("Return"))
-        shortcut.setContext(qtc.Qt.WidgetShortcut)
+        shortcut.setContext(qtc.Qt.ShortcutContext.WidgetShortcut)
         shortcut.activated.connect(self._on_enter_pressed)
 
         self.sc_tree_model = None
@@ -316,13 +316,13 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
         self.sc_breadcrumbs.linkActivated.connect(self._handle_breadcrumbs)
 
         tree_header = self.sc_tree.header()
-        tree_header.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        tree_header.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         tree_header.customContextMenuRequested.connect(self._show_header_ctx_menu)
 
-        self.sc_tree.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        self.sc_tree.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         self.sc_tree.setUniformRowHeights(True)
         self.sc_tree.customContextMenuRequested.connect(self._show_ctx_menu)
-        self.sc_tree.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.sc_tree.setSelectionMode(qtw.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.sc_tree.setSortingEnabled(True)
 
         self.sc_add_filter.clicked.connect(self._handle_add_filter)
@@ -336,7 +336,7 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
 
         shortcut = qtw.QShortcut(self.sc_tree)
         shortcut.setKey(qtg.QKeySequence("Return"))
-        shortcut.setContext(qtc.Qt.WidgetShortcut)
+        shortcut.setContext(qtc.Qt.ShortcutContext.WidgetShortcut)
         shortcut.activated.connect(self._on_enter_pressed)
 
         self.sc_tree_model = None
@@ -411,7 +411,7 @@ class StarFabSearchableTreeWidget(StarFabStaticWidget):
             return
         menu = qtw.QMenu()
         for i in range(1, self.sc_tree_model.columnCount(None)):
-            action = menu.addAction(self.sc_tree_model.headerData(i, qtc.Qt.Horizontal, qtc.Qt.DisplayRole))
+            action = menu.addAction(self.sc_tree_model.headerData(i, qtc.Qt.Orientation.Horizontal, qtc.Qt.ItemDataRole.DisplayRole))
             action.column = i
             action.setCheckable(True)
             action.setChecked(not self.sc_tree.isColumnHidden(i))

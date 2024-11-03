@@ -28,19 +28,19 @@ class RibbonPane(QWidget):
         vertical_layout.setContentsMargins(1, 2, 1, 0)
         vertical_widget.setLayout(vertical_layout)
         label = QLabel(name)
-        label.setAlignment(Qt.AlignCenter)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         content_widget = QWidget(self)
         vertical_layout.addWidget(content_widget)
         vertical_layout.addWidget(label)
         content_layout = QHBoxLayout()
-        content_layout.setAlignment(Qt.AlignLeft)
+        content_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         content_layout.setSpacing(2)
         content_layout.setContentsMargins(4, 0, 4, 1)
         self.contentLayout = content_layout
         content_widget.setLayout(content_layout)
 
     def add_ribbon_widget(self, widget):
-        self.contentLayout.addWidget(widget, 0, Qt.AlignTop)
+        self.contentLayout.addWidget(widget, 0, Qt.AlignmentFlag.AlignTop)
 
     def add_grid_widget(self, width):
         widget = QWidget()
@@ -50,7 +50,7 @@ class RibbonPane(QWidget):
         grid_layout.setSpacing(4)
         grid_layout.setContentsMargins(4, 4, 4, 4)
         self.contentLayout.addWidget(widget)
-        grid_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         return grid_layout
 
 
@@ -66,5 +66,5 @@ class RibbonSeparator(QWidget):
     def paintEvent(self, event):
         qp = QtGui.QPainter()
         qp.begin(self)
-        qp.fillRect(event.rect(), Qt.lightGray)
+        qp.fillRect(event.rect(), Qt.GlobalColor.lightGray)
         qp.end()

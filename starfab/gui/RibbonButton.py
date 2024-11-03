@@ -24,11 +24,11 @@ class RibbonButton(QToolButton):
             self.setMinimumHeight(int(75 * sc))
             self.setMaximumHeight(int(80 * sc))
             # self.setStyleSheet(get_stylesheet("ribbonButton"))
-            self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
             self.setIconSize(QSize(32 * sc, 32 * sc))
         else:
             self.setMaximumWidth(180 * sc)
-            self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             self.setIconSize(QSize(16 * sc, 16 * sc))
             # self.setStyleSheet(get_stylesheet("ribbonSmallButton"))
 

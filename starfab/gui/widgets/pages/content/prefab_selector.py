@@ -10,7 +10,7 @@ class PrefabSelector(P4KContentSelector):
         super().__init__(*args, **kwargs)
         self.sc_tree_model = AlternateRootModel(self.starfab.sc_manager.p4k_model)
         self.proxy_model = P4KSortFilterProxyModelArchive(parent=self)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):

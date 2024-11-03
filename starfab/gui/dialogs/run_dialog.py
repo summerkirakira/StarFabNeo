@@ -17,7 +17,7 @@ class RunDialog(qtw.QDialog):
         uic.loadUi(str(RES_PATH / "ui" / "RunDialog.ui"), self)  # Load the ui into self
         icon = qtg.QIcon()
         icon.addFile(
-            str(RES_PATH / "starfab.ico"), qtc.QSize(), qtg.QIcon.Normal, qtg.QIcon.Off
+            str(RES_PATH / "starfab.ico"), qtc.QSize(), qtg.QIcon.Mode.Normal, qtg.QIcon.State.Off
         )
         # TODO: Wayland requires a bit more than this to get window icons to work, as it needs a .desktop entry to be
         #       associated with the application.
@@ -125,5 +125,5 @@ class RunDialog(qtw.QDialog):
         self._handle_closed_event()
 
     def keyPressEvent(self, event):
-        if event.key() == qtc.Qt.Key_Escape:
+        if event.key() == qtc.Qt.Key.Key_Escape:
             self._handle_closed_event()

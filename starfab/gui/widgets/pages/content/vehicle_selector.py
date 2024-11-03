@@ -112,7 +112,7 @@ class VehicleSelector(DCBContentSelector):
         self.model.loaded.connect(self._loaded)
         self.sc_tree_model = CheckableModelWrapper(self.model)
         self.proxy_model = DCBSortFilterProxyModel(parent=self)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
         self.sc_tree.setModel(self.proxy_model)
 
     def checked_items(self):
@@ -137,8 +137,8 @@ class VehicleSelector(DCBContentSelector):
         self.proxy_model.sort(0, qtc.Qt.SortOrder.AscendingOrder)
 
         header = self.sc_tree.header()
-        header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
         self.sc_tree.hideColumn(1)
 
     def _handle_item_action(self, item, model, index):

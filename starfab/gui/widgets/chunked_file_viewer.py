@@ -58,11 +58,11 @@ def widget_for_chunk(info, obj, chunk, inline=False):
             l = qtw.QLabel(str(chunk))
         except Exception as e:
             l = qtw.QLabel(f"Exception reading {repr(chunk)}: {repr(e)}")
-        l.setFrameStyle(qtw.QFrame.StyledPanel | qtw.QFrame.Sunken)
-        l.setTextInteractionFlags(qtc.Qt.TextSelectableByMouse)
+        l.setFrameStyle(qtw.QFrame.Shape.StyledPanel | qtw.QFrame.Shadow.Sunken)
+        l.setTextInteractionFlags(qtc.Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(l)
 
-    widget.setSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Preferred)
+    widget.setSizePolicy(qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Preferred)
     widget.setLayout(layout)
     return widget
 

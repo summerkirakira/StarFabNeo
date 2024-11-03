@@ -42,8 +42,8 @@ class P4KView(StarFabSearchableTreeWidget):
         )
 
         self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseInsensitive)
+        self.proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
 
     @qtc.Slot(str)
     def _on_ctx_triggered(self, action):
@@ -131,8 +131,8 @@ class P4KView(StarFabSearchableTreeWidget):
         self.proxy_model.sort(0, qtc.Qt.SortOrder.AscendingOrder)
 
         header = self.sc_tree.header()
-        header.setSectionResizeMode(qtw.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, qtw.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, qtw.QHeaderView.ResizeMode.Stretch)
         self.sc_tree.hideColumn(4)
         self._sync_tree_header()

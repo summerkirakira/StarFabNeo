@@ -35,7 +35,7 @@ class Document(qtc.QObject):
 
 class WebEnginePage(QtWebEngineWidgets.QWebEnginePage):
     def acceptNavigationRequest(self, url, _type, isMainFrame):
-        if _type == QtWebEngineWidgets.QWebEnginePage.NavigationTypeLinkClicked:
+        if _type == QtWebEngineWidgets.QWebEnginePage.NavigationType.NavigationTypeLinkClicked:
             qtg.QDesktopServices.openUrl(url)
             return False
         return True

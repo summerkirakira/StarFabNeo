@@ -36,7 +36,7 @@ class DCBSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
             if not self._filter and item.record is not None:
                 return True  # additional filters true and not a folder
             if self._filter:
-                if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
+                if self.filterCaseSensitivity() == qtc.Qt.CaseSensitivity.CaseInsensitive:
                     return (
                         self._filter.lower() in item._path.lower()
                         or self._filter.lower() in item.guid

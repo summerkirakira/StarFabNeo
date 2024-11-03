@@ -36,7 +36,7 @@ class AudioTreeSortFilterProxyModel(PathArchiveTreeSortFilterProxyModel):
             if not self._filter and not self.checkAdditionFilters(item):
                 return False
             elif self.checkAdditionFilters(item):
-                if self.filterCaseSensitivity() == qtc.Qt.CaseInsensitive:
+                if self.filterCaseSensitivity() == qtc.Qt.CaseSensitivity.CaseInsensitive:
                     return (
                         self._filter.lower() in item.name.lower()
                         or self._filter.lower() in item.wems
@@ -121,7 +121,9 @@ class AudioTreeItem(PathArchiveTreeItem, ContentItem):
             self._background = qtg.QBrush()
 
     def data(self, column, role):
-        if role == qtc.Qt.DisplayRole:
+        # TODO: Determine if there's a bug here, I think this was just copy-pasted from somewhere else, so the
+        #       columns 1 and 2 may not be valid. They may not even be called at all.
+        if role == qtc.Qt.ItemDataRole.DisplayRole:
             if column == 0:
                 return self.name
             elif column == 1:
@@ -130,7 +132,7 @@ class AudioTreeItem(PathArchiveTreeItem, ContentItem):
                 return self.guid
             else:
                 return ""
-        elif role == qtc.Qt.BackgroundRole:
+        elif role == qtc.Qt.ItemDataRole.BackgroundRole:
             return self._background
         return super().data(column, role)
 

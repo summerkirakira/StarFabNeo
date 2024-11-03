@@ -21,9 +21,9 @@ class PyConsoleDockWidget(qtw.QDockWidget):
         super().__init__(parent=starfab, *args, **kwargs)
         self.starfab = starfab
         self.setAllowedAreas(
-            qtc.Qt.BottomDockWidgetArea
-            | qtc.Qt.RightDockWidgetArea
-            | qtc.Qt.LeftDockWidgetArea
+            qtc.Qt.DockWidgetArea.BottomDockWidgetArea |
+            qtc.Qt.DockWidgetArea.RightDockWidgetArea |
+            qtc.Qt.DockWidgetArea.LeftDockWidgetArea
         )
 
         self.kernel_manager = QtInProcessKernelManager()

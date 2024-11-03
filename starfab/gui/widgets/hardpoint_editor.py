@@ -17,7 +17,7 @@ OPTION_EMPTY_LABEL = '--------'
 class HardpointEditor(qtw.QWidget):
     def __init__(self, export_options, preview=None, parent=None):
         super().__init__(parent=parent)
-        self.setSizePolicy(qtw.QSizePolicy(qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding))
+        self.setSizePolicy(qtw.QSizePolicy(qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Expanding))
         self.starfab = get_starfab()
         self.export_options = export_options
         self.setFixedWidth(500)
@@ -30,9 +30,9 @@ class HardpointEditor(qtw.QWidget):
         self.form_widget = qtw.QWidget()
         self.form_widget.setMinimumWidth(400)
         self.form_layout = qtw.QFormLayout(self.form_widget)
-        self.scroll.setVerticalScrollBarPolicy(qtc.Qt.ScrollBarAsNeeded)
+        self.scroll.setVerticalScrollBarPolicy(qtc.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll.setFixedWidth(500)
-        self.scroll.setHorizontalScrollBarPolicy(qtc.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(qtc.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.form_widget)
         self.setMinimumHeight(400)
@@ -132,7 +132,7 @@ class HardpointEditor(qtw.QWidget):
         cb.addItem(OPTION_EMPTY_LABEL)
         for opt in sorted(hp_options, key=lambda o: o.disp_name, reverse=True):
             cb.addItem(opt.disp_name)
-            cb.setItemData(cb.count(), opt.description, qtc.Qt.ToolTipRole)
+            cb.setItemData(cb.count(), opt.description, qtc.Qt.ItemDataRole.ToolTipRole)
             self.hardpoint_options[hp_name][opt.disp_name] = opt
             if opt.name == hp_default:
                 default_text = opt.disp_name

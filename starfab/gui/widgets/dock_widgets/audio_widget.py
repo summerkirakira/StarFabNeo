@@ -77,26 +77,26 @@ class AudioTreeWidget(StarFabSearchableTreeWidget):
         self.splitter.setSizes([1024, 50])
         self.wem_list.hide()
 
-        # self.wem_list.setContextMenuPolicy(qtc.Qt.CustomContextMenu)
+        # self.wem_list.setContextMenuPolicy(qtc.Qt.ContextMenuPolicy.CustomContextMenu)
         # self.wem_list.customContextMenuRequested.connect(self._show_ctx_menu)
-        self.wem_list.setSelectionMode(qtw.QAbstractItemView.ExtendedSelection)
+        self.wem_list.setSelectionMode(qtw.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.wem_list.doubleClicked.connect(self._on_wem_doubleclick)
 
-        self.playButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaPlay))
+        self.playButton.setIcon(self.style().standardIcon(qtw.QStyle.StandardPixmap.SP_MediaPlay))
         self.playButton.clicked.connect(
             lambda b: self.play()
         )  # lambda consumes the checked bool
-        self.pauseButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaPause))
+        self.pauseButton.setIcon(self.style().standardIcon(qtw.QStyle.StandardPixmap.SP_MediaPause))
         self.pauseButton.clicked.connect(self.pause)
         self.pauseButton.hide()
         self.prevButton.setIcon(
-            self.style().standardIcon(qtw.QStyle.SP_MediaSkipBackward)
+            self.style().standardIcon(qtw.QStyle.StandardPixmap.SP_MediaSkipBackward)
         )
         self.prevButton.clicked.connect(self.play_previous)
-        self.stopButton.setIcon(self.style().standardIcon(qtw.QStyle.SP_MediaStop))
+        self.stopButton.setIcon(self.style().standardIcon(qtw.QStyle.StandardPixmap.SP_MediaStop))
         self.stopButton.clicked.connect(self.stop)
         self.nextButton.setIcon(
-            self.style().standardIcon(qtw.QStyle.SP_MediaSkipForward)
+            self.style().standardIcon(qtw.QStyle.StandardPixmap.SP_MediaSkipForward)
         )
         self.nextButton.clicked.connect(self.play_next)
 

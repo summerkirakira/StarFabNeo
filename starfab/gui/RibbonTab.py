@@ -10,7 +10,7 @@ class RibbonTab(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 1)
         layout.setSpacing(0)
-        layout.setAlignment(Qt.AlignLeft)
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
     def add_ribbon_pane(self, name):
         ribbon_pane = RibbonPane(self, name)
@@ -18,5 +18,5 @@ class RibbonTab(QWidget):
         return ribbon_pane
 
     def add_spacer(self):
-        self.layout().addSpacerItem(QSpacerItem(1, 1, QSizePolicy.MinimumExpanding))
+        self.layout().addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.MinimumExpanding))
         self.layout().setStretch(self.layout().count() - 1, 1)

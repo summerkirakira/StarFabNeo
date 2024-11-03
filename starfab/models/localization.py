@@ -60,7 +60,7 @@ class LocalizationModel(qtc.QAbstractTableModel):
         return len(self.names)
 
     def headerData(self, section, orientation, role=None):
-        if role == qtc.Qt.DisplayRole and orientation == qtc.Qt.Horizontal:
+        if role == qtc.Qt.ItemDataRole.DisplayRole and orientation == qtc.Qt.Orientation.Horizontal:
             try:
                 return self.columns[section]
             except IndexError:
@@ -70,11 +70,11 @@ class LocalizationModel(qtc.QAbstractTableModel):
     def data(self, index, role=None):
         if index.isValid() and index.row() <= len(self.names):
             name = self.names[index.row()]
-            if role == qtc.Qt.DisplayRole or role == qtc.Qt.ToolTipRole:
+            if role == qtc.Qt.ItemDataRole.DisplayRole or role == qtc.Qt.ItemDataRole.ToolTipRole:
                 if index.column() == 0:
                     return name
                 return self.translations[self.columns[index.column()]].get(name, "")
-            elif index.column() == 0 and role == qtc.Qt.UserRole:
+            elif index.column() == 0 and role == qtc.Qt.ItemDataRole.UserRole:
                 # User role will be the proxy filtering. send it back all the data so it will search all columns
                 return f"{self.names[index.row()]} " + " ".join(
                     self.translations[lang].get(name, "") for lang in self.languages
