@@ -33,6 +33,7 @@ pyrsi = "^0.1.19"
 toml = "^0.10.2"
 briefcase = "^0.3.20"
 scdatatools = {path = "../../frameworks/scdatatools", develop = true}
+ruff = "^0.7.2"
 
 [tool.briefcase]
 project_name = "StarFab"
