@@ -32,8 +32,8 @@ pyrsi = "^0.1.19"
 [tool.poetry.group.dev.dependencies]
 toml = "^0.10.2"
 briefcase = "^0.3.20"
-scdatatools = {path = "../../frameworks/scdatatools", develop = true}
 ruff = "^0.7.2"
+scdatatools = {path = "../../frameworks/scdatatools", develop = true}
 
 [tool.briefcase]
 project_name = "StarFab"

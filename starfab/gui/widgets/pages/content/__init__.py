@@ -61,10 +61,10 @@ class ContentView(qtw.QWidget):
 
         # TODO: temporarily hide things that arent fleshed out yet
         self.content_left_tab_widget.setTabVisible(
-            self.content_left_tab_widget.indexOf(self.tab_Images), True
+            self.content_left_tab_widget.indexOf(self.tab_Images), False
         )
         self.content_right_tab_widget.setTabVisible(
-            self.content_right_tab_widget.indexOf(self.tab_Jobs), True
+            self.content_right_tab_widget.indexOf(self.tab_Jobs), False
         )
         self.groupBox_Content_Local_Files.hide()
 
